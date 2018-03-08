@@ -103,7 +103,7 @@ set(OpenCV_LIBS "/usr/local/opt/opencv3/lib")
 
 ################################################################################
 # Link libs
-set(LIBRARIES Threads::Threads g2o_core g2o_solver_eigen g2o_types_slam2d g2o_stuff opencv_core opencv_features2d opencv_imgproc opencv_highgui opencv_calib3d)
+set(LIBRARIES Threads::Threads g2o_core g2o_solver_eigen g2o_types_sim3 g2o_types_sim3 g2o_stuff opencv_core opencv_features2d opencv_imgproc opencv_highgui opencv_calib3d)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
@@ -111,6 +111,7 @@ add_library(${PROJECT_NAME}-core STATIC
 ${CMAKE_CURRENT_SOURCE_DIR}/src/selflocalization.cpp
 #${CMAKE_CURRENT_SOURCE_DIR}/src/imageextractor.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/mapping.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/converter.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbbowvector.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbdescriptor.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbextractor.cpp
