@@ -20,15 +20,15 @@
 * Adapted for Open-DLV in 2018
 */
 
-#ifndef CONVERTER_H
-#define CONVERTER_H
+#ifndef ORBCONVERTER_H
+#define ORBCONVERTER_H
 
 #include <opencv2/core/core.hpp>
 
 #include <Eigen/Dense>
 #include"g2o/types/sim3/types_seven_dof_expmap.h"
 
-class Converter
+class Orbconverter
 {
 public:
     static std::vector<cv::Mat> toDescriptorVector(const cv::Mat &Descriptors);
@@ -50,4 +50,4 @@ public:
     static std::vector<float> toQuaternion(const cv::Mat &M);
 };
 
-#endif // CONVERTER_H
+#endif // ORBCONVERTER_H

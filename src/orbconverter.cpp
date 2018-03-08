@@ -22,9 +22,9 @@
 */
 
 
-#include "converter.hpp"
+#include "orbconverter.hpp"
 
-std::vector<cv::Mat> Converter::toDescriptorVector(const cv::Mat &Descriptors)
+std::vector<cv::Mat> Orbconverter::toDescriptorVector(const cv::Mat &Descriptors)
 {
     std::vector<cv::Mat> descriptorVector;
     descriptorVector.reserve(Descriptors.rows);
@@ -34,7 +34,7 @@ std::vector<cv::Mat> Converter::toDescriptorVector(const cv::Mat &Descriptors)
     return descriptorVector;
 }
 
-g2o::SE3Quat Converter::toSE3Quat(const cv::Mat &cvMat)
+g2o::SE3Quat Orbconverter::toSE3Quat(const cv::Mat &cvMat)
 {
     Eigen::Matrix3d R;
     R << cvMat.at<float>(0,0), cvMat.at<float>(0,1), cvMat.at<float>(0,2),
@@ -46,13 +46,13 @@ g2o::SE3Quat Converter::toSE3Quat(const cv::Mat &cvMat)
     return g2o::SE3Quat(R,t);
 }
 
-cv::Mat Converter::toCvMat(const g2o::SE3Quat &g2oSE3)
+cv::Mat Orbconverter::toCvMat(const g2o::SE3Quat &g2oSE3)
 {
     Eigen::Matrix<double,4,4> eigMat = g2oSE3.to_homogeneous_matrix();
     return toCvMat(eigMat);
 }
 
-cv::Mat Converter::toCvMat(const g2o::Sim3 &g2oSim3)
+cv::Mat Orbconverter::toCvMat(const g2o::Sim3 &g2oSim3)
 {
     Eigen::Matrix3d eigR = g2oSim3.rotation().toRotationMatrix();
     Eigen::Vector3d eigt = g2oSim3.translation();
@@ -60,7 +60,7 @@ cv::Mat Converter::toCvMat(const g2o::Sim3 &g2oSim3)
     return toCvSE3(s*eigR,eigt);
 }
 
-cv::Mat Converter::toCvMat(const Eigen::Matrix<double,4,4> &matrix)
+cv::Mat Orbconverter::toCvMat(const Eigen::Matrix<double,4,4> &matrix)
 {
     cv::Mat cvMat(4,4,CV_32F);
     for(int i=0;i<4;i++)
@@ -70,7 +70,7 @@ cv::Mat Converter::toCvMat(const Eigen::Matrix<double,4,4> &matrix)
     return cvMat.clone();
 }
 
-cv::Mat Converter::toCvMat(const Eigen::Matrix3d &matrix)
+cv::Mat Orbconverter::toCvMat(const Eigen::Matrix3d &matrix)
 {
     cv::Mat cvMat(3,3,CV_32F);
     for(int i=0;i<3;i++)
@@ -80,7 +80,7 @@ cv::Mat Converter::toCvMat(const Eigen::Matrix3d &matrix)
     return cvMat.clone();
 }
 
-cv::Mat Converter::toCvMat(const Eigen::Vector3d &vector)
+cv::Mat Orbconverter::toCvMat(const Eigen::Vector3d &vector)
 {
     cv::Mat cvMat(3,1,CV_32F);
     for(int i=0;i<3;i++)
@@ -89,7 +89,7 @@ cv::Mat Converter::toCvMat(const Eigen::Vector3d &vector)
     return cvMat.clone();
 }
 
-cv::Mat Converter::toCvSE3(const Eigen::Matrix3d &R, const Eigen::Vector3d &t)
+cv::Mat Orbconverter::toCvSE3(const Eigen::Matrix3d &R, const Eigen::Vector3d &t)
 {
     cv::Mat cvMat = cv::Mat::eye(4,4,CV_32F);
     for(int i=0;i<3;i++)
@@ -107,7 +107,7 @@ cv::Mat Converter::toCvSE3(const Eigen::Matrix3d &R, const Eigen::Vector3d &t)
     return cvMat.clone();
 }
 
-Eigen::Vector3d Converter::toVector3d(const cv::Mat &cvVector)
+Eigen::Vector3d Orbconverter::toVector3d(const cv::Mat &cvVector)
 {
     Eigen::Vector3d vector;
     vector << cvVector.at<double>(0), cvVector.at<double>(1), cvVector.at<double>(2);
@@ -115,7 +115,7 @@ Eigen::Vector3d Converter::toVector3d(const cv::Mat &cvVector)
     return vector;
 }
 
-Eigen::Vector3d Converter::toVector3d(const cv::Point3f &cvPoint)
+Eigen::Vector3d Orbconverter::toVector3d(const cv::Point3f &cvPoint)
 {
     Eigen::Vector3d vector;
     vector << cvPoint.x, cvPoint.y, cvPoint.z;
@@ -123,7 +123,7 @@ Eigen::Vector3d Converter::toVector3d(const cv::Point3f &cvPoint)
     return vector;
 }
 
-Eigen::Matrix3d Converter::toMatrix3d(const cv::Mat &cvMat3)
+Eigen::Matrix3d Orbconverter::toMatrix3d(const cv::Mat &cvMat3)
 {
     Eigen::Matrix3d matrix;
 
@@ -134,7 +134,7 @@ Eigen::Matrix3d Converter::toMatrix3d(const cv::Mat &cvMat3)
     return matrix;
 }
 
-std::vector<float> Converter::toQuaternion(const cv::Mat &matrix)
+std::vector<float> Orbconverter::toQuaternion(const cv::Mat &matrix)
 {
     Eigen::Matrix3d eigMat = toMatrix3d(matrix);
     Eigen::Quaterniond quaternion(eigMat);

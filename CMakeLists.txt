@@ -111,8 +111,8 @@ add_library(${PROJECT_NAME}-core STATIC
 ${CMAKE_CURRENT_SOURCE_DIR}/src/selflocalization.cpp
 #${CMAKE_CURRENT_SOURCE_DIR}/src/imageextractor.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/mapping.cpp
-${CMAKE_CURRENT_SOURCE_DIR}/src/converter.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbbowvector.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/orbconverter.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbdescriptor.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbextractor.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbfeaturevector.cpp

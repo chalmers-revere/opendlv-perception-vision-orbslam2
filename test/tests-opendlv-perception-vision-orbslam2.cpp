@@ -20,11 +20,19 @@
 
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
+#include <Eigen/Dense>
+#include "orbconverter.hpp"
+#include <opencv2/core/core.hpp>
 
 #include <cstdint>
 
-TEST_CASE("Test simulator.") {
-    int32_t a = 5;
-    int32_t b = 6;
-    REQUIRE(a + b == 11);
+TEST_CASE("Test converter") {
+    Eigen::Matrix<double,4,4> matrix = Eigen::Matrix<double,4,4>::Zero(4,4);
+    matrix << 1,2,3,4,
+           5,6,7,8,
+           9,10,11,12,
+           13,14,15,16;
+    cv::Mat cvMat = Orbconverter::toCvMat(matrix);
+    std::cout << cvMat.at<int>(0,0) << std::endl;
+    REQUIRE(!cvMat.empty());
 }
