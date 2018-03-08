@@ -15,7 +15,7 @@
 
 cmake_minimum_required(VERSION 3.2)
 
-project(opendlv-logic-sensation-selflocalization)
+project(opendlv-perception-vision-orbslam2)
 
 ################################################################################
 # Defining the relevant versions of OpenDLV Standard Message Set and libcluon.
@@ -83,14 +83,44 @@ include_directories(SYSTEM /usr/local/include)
 link_directories(SYSTEM /usr/lib) #Access g2o
 link_directories(SYSTEM /usr/local/lib) #Access g2o
 
+################################################################################
+# Include openCV
+set(CMAKE_PREFIX_PATH "/usr/local/opt/opencv3/share/OpenCV")
+
+set(OpenCV_INCLUDE_DIRS "/usr/local/opt/opencv3/include")
+set(OpenCV_LIBS "/usr/local/opt/opencv3/lib")
+
+#include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
+
+#find_package(OpenCV REQUIRED)
+#if(NOT OpenCV_FOUND)
+#   find_package(OpenCV 2.4.3)
+#   if(NOT OpenCV_FOUND)
+#      message(FATAL_ERROR "OpenCV > 2.4.3 not found.")
+#   endif()
+#endif()
+
 
 ################################################################################
 # Link libs
-set(LIBRARIES Threads::Threads g2o_core g2o_solver_eigen g2o_types_slam2d g2o_stuff)
+set(LIBRARIES Threads::Threads g2o_core g2o_solver_eigen g2o_types_slam2d g2o_stuff opencv_core opencv_features2d opencv_imgproc opencv_highgui opencv_calib3d)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-add_library(${PROJECT_NAME}-core STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/slam.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/cone.cpp ${CMAKE_BINARY_DIR}/opendlv-standard-message-set.cpp)
+add_library(${PROJECT_NAME}-core STATIC 
+${CMAKE_CURRENT_SOURCE_DIR}/src/selflocalization.cpp
+#${CMAKE_CURRENT_SOURCE_DIR}/src/imageextractor.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/mapping.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/orbbowvector.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/orbdescriptor.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/orbextractor.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/orbfeaturevector.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/orbframe.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/orbkeyframe.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/orbmap.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/orbvocabulary.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/tracking.cpp
+ ${CMAKE_BINARY_DIR}/opendlv-standard-message-set.cpp)
 
 ################################################################################
 # Create executable.
@@ -100,7 +130,7 @@ target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}-core ${LIBRARIES}) #Links 
 ################################################################################
 # Enable unit testing.
 enable_testing()
-add_executable(${PROJECT_NAME}-runner ${CMAKE_CURRENT_SOURCE_DIR}/test/tests-opendlv-logic-sensation-selflocalization.cpp)
+add_executable(${PROJECT_NAME}-runner ${CMAKE_CURRENT_SOURCE_DIR}/test/tests-opendlv-perception-vision-orbslam2.cpp)
 target_link_libraries(${PROJECT_NAME}-runner ${LIBRARIES}  ${PROJECT_NAME}-core)
 add_test(NAME ${PROJECT_NAME}-runner COMMAND ${PROJECT_NAME}-runner)
 

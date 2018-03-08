@@ -13,10 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Part to build opendlv-logic-sensation-selflocalization. 
-FROM alpine:3.7 as builder
+# Part to build opendlv-perception-vision-orbslam2. 
+FROM alpine:edge as builder
 MAINTAINER Christian Berger "christian.berger@gu.se"
 #Get OS stuff
+RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 RUN apk update && \
     apk --no-cache add \
         cmake \
@@ -25,30 +26,37 @@ RUN apk update && \
         make \
         upx \
         git \
-        mercurial
+        mercurial \
+        opencv-dev@testing
 #Install libs
 WORKDIR /tmp
 RUN hg clone https://bitbucket.org/eigen/eigen && cd eigen && mkdir build && cd build && cmake .. && make -j4 install
-RUN git clone https://github.com/RainerKuemmerle/g2o && cd g2o && mkdir build && cd build && cmake -DG2O_BUILD_APPS=OFF -DG2O_BUILD_EXAMPLES=OFF .. && make -j4 install 
+RUN git clone https://github.com/RainerKuemmerle/g2o && cd g2o && mkdir build && cd build && cmake -DG2O_BUILD_APPS=OFF -DG2O_BUILD_EXAMPLES=OFF .. && make -j4 install
 
 #install Microservice
 ADD . /opt/sources
 WORKDIR /opt/sources
 RUN mkdir -p build && \
     cd build && \
-    cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/tmp/opendlv-logic-sensation-selflocalization-dest .. && \
-    make && make test && make install && upx -9 /tmp/opendlv-logic-sensation-selflocalization-dest/bin/opendlv-logic-sensation-selflocalization
+    cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/tmp/opendlv-perception-vision-orbslam2-dest .. && \
+    make && make test && make install && upx -9 /tmp/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2
 
 
-# Part to deploy opendlv-logic-sensation-selflocalization
-FROM alpine:3.7
+
+# Part to deploy opendlv-perception-vision-orbslam2
+FROM alpine:edge
 MAINTAINER Christian Berger "christian.berger@gu.se"
+
+RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
+RUN apk update && \
+    apk --no-cache add \
+        opencv@testing
 #Start microservice
 WORKDIR /usr/bin
 COPY --from=builder /usr/local/include/ /usr/include/
 COPY --from=builder /usr/local/lib/ /usr/lib/
 COPY --from=builder /usr/lib/ /usr/lib/
-COPY --from=builder /tmp/opendlv-logic-sensation-selflocalization-dest/bin/opendlv-logic-sensation-selflocalization .
+COPY --from=builder /tmp/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2 .
 #RUN apk update && apk add g++ #This is extremely ugly and needs to be fixed
-CMD ["/usr/bin/opendlv-logic-sensation-selflocalization"]
+CMD ["/usr/bin/opendlv-perception-vision-orbslam2"]
 
