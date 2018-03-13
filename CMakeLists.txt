@@ -103,7 +103,7 @@ set(OpenCV_LIBS "/usr/local/opt/opencv3/lib")
 
 ################################################################################
 # Link libs
-set(LIBRARIES Threads::Threads g2o_core g2o_solver_eigen g2o_types_slam2d g2o_stuff opencv_core opencv_features2d opencv_imgproc opencv_highgui opencv_calib3d)
+set(LIBRARIES Threads::Threads g2o_core g2o_solver_eigen g2o_types_slam2d g2o_stuff opencv_core opencv_imgcodecs opencv_features2d opencv_imgproc opencv_highgui opencv_calib3d)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
@@ -131,7 +131,7 @@ target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}-core ${LIBRARIES}) #Links 
 # Enable unit testing.
 enable_testing()
 add_executable(${PROJECT_NAME}-runner ${CMAKE_CURRENT_SOURCE_DIR}/test/tests-opendlv-perception-vision-orbslam2.cpp)
-target_link_libraries(${PROJECT_NAME}-runner ${LIBRARIES}  ${PROJECT_NAME}-core)
+target_link_libraries(${PROJECT_NAME}-runner ${PROJECT_NAME}-core ${LIBRARIES})
 add_test(NAME ${PROJECT_NAME}-runner COMMAND ${PROJECT_NAME}-runner)
 
 ################################################################################
