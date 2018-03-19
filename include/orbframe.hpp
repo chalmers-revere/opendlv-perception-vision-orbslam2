@@ -20,11 +20,8 @@
 #ifndef LOGIC_SENSATION_SELFLOCALIZATION_ORBFRAME_HPP
 #define LOGIC_SENSATION_SELFLOCALIZATION_ORBFRAME_HPP
 
-#include "opendavinci/GeneratedHeaders_OpenDaVINCI.h"
-#include "opendavinci/generated/odcore/data/CompactPointCloud.h"
-#include "opendavinci/odcore/base/Mutex.h"
-#include "opendavinci/odcore/wrapper/SharedMemory.h"
-#include "opendavinci/odcore/wrapper/SharedMemoryFactory.h"
+#include "cluon-complete.hpp"
+#include "opendlv-standard-message-set.hpp"
 #include <memory>
 #include <cmath>
 #include <iostream>
@@ -34,9 +31,9 @@
 #include <list>
 #include <utility>
 
-#include <opendavinci/odcore/data/TimeStamp.h>
-#include <opendavinci/odcore/strings/StringToolbox.h>
-#include <opendavinci/odcore/wrapper/Eigen.h>
+// #include <opendavinci/odcore/data/TimeStamp.h>
+// #include <opendavinci/odcore/strings/StringToolbox.h>
+// #include <opendavinci/odcore/wrapper/Eigen.h>
 
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/core/core.hpp>
