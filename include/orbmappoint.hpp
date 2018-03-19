@@ -111,31 +111,31 @@ public:
     void SetBAGlobalForKF(long unsigned int BAGlobalForKF);
 
 private:
-    long unsigned int SequenceId = 0;
-    long int m_firstKeyframeId;
-    long int m_FirstKeyFrame;
-    int m_observingKeyFramesCount;
+    long unsigned int m_sequenceId = 0;
+    long int m_firstKeyframeId = {};
+    long int m_FirstKeyFrame = {};
+    int m_observingKeyFramesCount = {};
 
     // Variables used by the tracking
-    float mTrackProjX;
-    float mTrackProjY;
-    float mTrackProjXR;
-    bool mbTrackInView;
-    int mnTrackScaleLevel;
-    float mTrackViewCos;
-    long unsigned int mnTrackReferenceForFrame;
-    long unsigned int mnLastFrameSeen;
+    float mTrackProjX = {};
+    float mTrackProjY = {};
+    float mTrackProjXR = {};
+    bool mbTrackInView = {};
+    int mnTrackScaleLevel = {};
+    float mTrackViewCos = {};
+    long unsigned int mnTrackReferenceForFrame = {};
+    long unsigned int mnLastFrameSeen = {};
 
     // Variables used by local mapping
-    long unsigned int mnBALocalForKF;
-    long unsigned int mnFuseCandidateForKF;
+    long unsigned int mnBALocalForKF = {};
+    long unsigned int mnFuseCandidateForKF = {};
 
     // Variables used by loop closing
-    long unsigned int mnLoopPointForKF;
-    long unsigned int mnCorrectedByKF;
-    long unsigned int mnCorrectedReference;    
-    cv::Mat mPosGBA;
-    long unsigned int mnBAGlobalForKF;
+    long unsigned int mnLoopPointForKF = {};
+    long unsigned int mnCorrectedByKF = {};
+    long unsigned int mnCorrectedReference = {};
+    cv::Mat mPosGBA = {};
+    long unsigned int mnBAGlobalForKF = {};
 
 
     static std::mutex mGlobalMutex;
@@ -143,37 +143,37 @@ private:
     // mutexed below
 
      // Position in absolute coordinates
-     cv::Mat m_worldPosition;
+     cv::Mat m_worldPosition = {};
 
      // Keyframes observing the point and associated index in keyframe
-     std::map<std::shared_ptr<OrbFrame>,size_t> m_observingKeyframes;
+     std::map<std::shared_ptr<OrbFrame>,size_t> m_observingKeyframes = {};
 
      // Mean viewing direction
-     cv::Mat m_meanViewingDirection;
+     cv::Mat m_meanViewingDirection = {};
 
      // Best descriptor to fast matching
-     cv::Mat m_descriptor;
+     cv::Mat m_descriptor = {};
 
      // Reference KeyFrame
-     std::shared_ptr<OrbFrame> m_refenceKeyFrame;
+     std::shared_ptr<OrbFrame> m_refenceKeyFrame = {};
 
      // Tracking counters
-     int m_visibleCounter;
-     int m_foundCounter;
+     int m_visibleCounter = {};
+     int m_foundCounter = {};
 
      // Bad flag (we do not currently erase MapPoint from memory)
-     bool m_corrupt;
-    std::shared_ptr<OrbMapPoint> m_replaced;
+     bool m_corrupt = {};
+    std::shared_ptr<OrbMapPoint> m_replaced = {};
 
      // Scale invariance distances
-     float m_minDistance;
-     float m_maxDistance;
+     float m_minDistance = {};
+     float m_maxDistance = {};
 
-     std::shared_ptr<OrbMap> m_map;
+     std::shared_ptr<OrbMap> m_map = {};
 
-    std::mutex m_constructorMutex;
-    std::mutex mMutexPos;
-    std::mutex mMutexFeatures;
+    std::mutex m_constructorMutex = {};
+    std::mutex mMutexPos = {};
+    std::mutex mMutexFeatures = {};
 };
 
 }
