@@ -132,7 +132,7 @@ target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}-core ${LIBRARIES}) #Links 
 ################################################################################
 # Enable unit testing.
 enable_testing()
-add_executable(${PROJECT_NAME}-runner ${CMAKE_CURRENT_SOURCE_DIR}/test/tests-opendlv-perception-vision-orbslam2.cpp)
+add_executable(${PROJECT_NAME}-runner ${CMAKE_CURRENT_SOURCE_DIR}/test/tests-opendlv-perception-vision-orbslam2.cpp ${CMAKE_CURRENT_SOURCE_DIR}/test/tests-opendlv-perception-vision-orbslam2-orbmap.cpp)
 target_link_libraries(${PROJECT_NAME}-runner ${PROJECT_NAME}-core ${LIBRARIES})
 add_test(NAME ${PROJECT_NAME}-runner COMMAND ${PROJECT_NAME}-runner)
 
