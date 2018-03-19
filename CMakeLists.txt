@@ -116,7 +116,9 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src/orbdescriptor.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbextractor.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbfeaturevector.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbframe.cpp
-${CMAKE_CURRENT_SOURCE_DIR}/src/orbkeyframe.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/orbkeypoint.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/orbmappoint.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/bowmatcher.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbmap.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbvocabulary.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/tracking.cpp
