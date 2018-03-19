@@ -56,10 +56,10 @@ find_package(Threads REQUIRED)
 # Extract cluon-msc from cluon-complete.hpp.
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/cluon-msc
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/src/${CLUON_COMPLETE} ${CMAKE_BINARY_DIR}/cluon-complete.hpp
+    COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/include/${CLUON_COMPLETE} ${CMAKE_BINARY_DIR}/cluon-complete.hpp
     COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/cluon-complete.hpp ${CMAKE_BINARY_DIR}/cluon-complete.cpp
     COMMAND ${CMAKE_CXX_COMPILER} -o ${CMAKE_BINARY_DIR}/cluon-msc ${CMAKE_BINARY_DIR}/cluon-complete.cpp -std=c++14 -pthread -D HAVE_CLUON_MSC
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/${CLUON_COMPLETE})
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/${CLUON_COMPLETE})
 
 ################################################################################
 # Generate opendlv-standard-message-set.{hpp,cpp} from ${OPENDLV_STANDARD_MESSAGE_SET} file.
@@ -105,7 +105,7 @@ set(OpenCV_LIBS "/usr/local/opt/opencv3/lib")
 # Link libs
 set(LIBRARIES Threads::Threads g2o_core g2o_solver_eigen g2o_types_slam2d g2o_stuff opencv_core opencv_imgcodecs opencv_features2d opencv_imgproc opencv_highgui opencv_calib3d)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_library(${PROJECT_NAME}-core STATIC 
 ${CMAKE_CURRENT_SOURCE_DIR}/src/selflocalization.cpp
