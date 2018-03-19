@@ -20,11 +20,14 @@
 #include "opendlv-standard-message-set.hpp"
 // Include local header files.
 #include "orbmap.hpp"
-TESTCASE('testConstructor')
+#include "orbkeypoint.hpp"
+#include "orbframe.hpp"
+#include <opencv2/core/core.hpp>
+TEST_CASE("testConstructor")
 {
     opendlv::logic::sensation::OrbMap orbMap();
 }
-TESTCASE('testAddOrbKeyFrame')
+TEST_CASE("testAddOrbKeyFrame")
 {
     opendlv::logic::sensation::OrbMap orbMap;
     cv::Mat left, right, tcw;
@@ -37,7 +40,7 @@ TESTCASE('testAddOrbKeyFrame')
     std::shared_ptr<opendlv::logic::sensation::OrbFrame> keyFrame(frame);
     TS_ASSERT_THROWS_NOTHING(orbMap.PushOrbKeyFrame(keyFrame));
 }
-TESTCASE('testMaxKeyFrameId')
+TEST_CASE("testMaxKeyFrameId")
 {
     opendlv::logic::sensation::OrbMap orbMap;
     cv::Mat left, right, tcw;
@@ -50,26 +53,25 @@ TESTCASE('testMaxKeyFrameId')
     std::shared_ptr<opendlv::logic::sensation::OrbFrame> keyFrame(frame);
     TS_ASSERT_THROWS_NOTHING(orbMap.PushOrbKeyFrame(keyFrame));
     TS_ASSERT_EQUALS(orbMap.MaxKeyFrameId(), 10);
-}// Include local header files.
-#include "../include/orbmap.hpp"
-TESTCASE('testIncrementMajorChangeIndex')
+}
+TEST_CASE("testIncrementMajorChangeIndex")
 {
     opendlv::logic::sensation::OrbMap orbMap;
     TS_ASSERT_THROWS_NOTHING(orbMap.IncrementMajorChangeIndex());
 }
-TESTCASE('testLastMajorChangeIndex')
+TEST_CASE("testLastMajorChangeIndex")
 {
     opendlv::logic::sensation::OrbMap orbMap;
     TS_ASSERT_THROWS_NOTHING(orbMap.IncrementMajorChangeIndex());
     TS_ASSERT_EQUALS(orbMap.LastMajorChangeIndex(), 1);
 }
-TESTCASE('testAddOrbMapPoint')
+TEST_CASE("testAddOrbMapPoint")
 {
     opendlv::logic::sensation::OrbMap orbMap;
     std::shared_ptr<opendlv::logic::sensation::OrbMapPoint> mapPoint;
     TS_ASSERT_THROWS_NOTHING(orbMap.PushOrbMapPoint(mapPoint));
 }
-TESTCASE('testSetReferenceMapPoints')
+TEST_CASE("testSetReferenceMapPoints")
 {
     opendlv::logic::sensation::OrbMap orbMap;
     std::shared_ptr<opendlv::logic::sensation::OrbMapPoint> mapPoint;
@@ -77,7 +79,7 @@ TESTCASE('testSetReferenceMapPoints')
     referenceMapPoints.push_back(mapPoint);
     TS_ASSERT_THROWS_NOTHING(orbMap.SetReferenceMapPoints(referenceMapPoints));
 }
-TESTCASE('testOrbKeyFramesCount')
+TEST_CASE("testOrbKeyFramesCount")
 {
     opendlv::logic::sensation::OrbMap orbMap;
     cv::Mat left, right, tcw;
@@ -91,14 +93,14 @@ TESTCASE('testOrbKeyFramesCount')
     TS_ASSERT_THROWS_NOTHING(orbMap.PushOrbKeyFrame(keyFrame));
     TS_ASSERT_EQUALS(orbMap.OrbKeyFramesCount(), 1);
 }
-TESTCASE('testOrbMapPointsCount')
+TEST_CASE("testOrbMapPointsCount")
 {
     opendlv::logic::sensation::OrbMap orbMap;
     std::shared_ptr<opendlv::logic::sensation::OrbMapPoint> mapPoint;
     TS_ASSERT_THROWS_NOTHING(orbMap.PushOrbMapPoint(mapPoint));
     TS_ASSERT_EQUALS(orbMap.OrbMapPointsCount(), 1);
 }
-TESTCASE('testDeleteOrbKeyFrame')
+TEST_CASE("testDeleteOrbKeyFrame")
 {
     opendlv::logic::sensation::OrbMap orbMap;
     cv::Mat left, right, tcw;
@@ -114,7 +116,7 @@ TESTCASE('testDeleteOrbKeyFrame')
     TS_ASSERT_THROWS_NOTHING(orbMap.DeleteOrbKeyFrame(keyFrame));
     TS_ASSERT_EQUALS(orbMap.OrbKeyFramesCount(), 0);
 }
-TESTCASE('testDeleteOrbMapPoint')
+TEST_CASE("testDeleteOrbMapPoint")
 {
     opendlv::logic::sensation::OrbMap orbMap;
     std::shared_ptr<opendlv::logic::sensation::OrbMapPoint> mapPoint;
@@ -123,7 +125,7 @@ TESTCASE('testDeleteOrbMapPoint')
     TS_ASSERT_THROWS_NOTHING(orbMap.DeleteOrbMapPoint(mapPoint));
     TS_ASSERT_EQUALS(orbMap.OrbMapPointsCount(), 0);
 }
-TESTCASE('testReset')
+TEST_CASE("testReset")
 {
     opendlv::logic::sensation::OrbMap orbMap;
     std::shared_ptr<opendlv::logic::sensation::OrbMapPoint> mapPoint;
