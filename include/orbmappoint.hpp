@@ -24,10 +24,8 @@
 #include <memory>
 #include <mutex>
 #include <vector>
-
 #include <orbframe.hpp>
 #include <orbmap.hpp>
-
 namespace opendlv {
 namespace logic {
 namespace sensation {
@@ -82,7 +80,7 @@ public:
     float GetMaxDistanceInvariance();
     int PredictScale(const float &currentDist, std::shared_ptr<OrbFrame> keyFrame);
 
-    static long unsigned int m_nextId;
+    long unsigned int m_nextId;
 
     int GetTrackScaleLevel();
     bool GetTrackInView();
