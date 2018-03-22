@@ -67,6 +67,18 @@ class OrbExtractor {
   ~OrbExtractor();
   /*Called by other classes to get keypoints and descriptors*/
   void ExtractFeatures(cv::InputArray image,std::vector<cv::KeyPoint>& keypoints,cv::OutputArray descriptors);
+  /*Getters for scale factors and other properties*/
+  int getLevels();
+
+  double getScaleFactor();
+
+  std::vector<float> getScaleFactors();
+
+  std::vector<float> getInverseScaleFactors();
+
+  std::vector<float> getScaleSigmaSquares();
+
+  std::vector<float> getInverseScaleSigmaSquares();
 
   std::vector<cv::Mat> m_vImagePyramid;
  private:
