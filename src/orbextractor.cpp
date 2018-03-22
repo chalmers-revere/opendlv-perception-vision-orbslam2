@@ -513,6 +513,32 @@ OrbExtractor::~OrbExtractor()
 {
 }
 
+/*Getters*/
+int OrbExtractor::getLevels(){
+    return m_nLevels;
+}
+
+double OrbExtractor::getScaleFactor(){
+    return m_scaleFactor;
+}
+
+std::vector<float> OrbExtractor::getScaleFactors(){
+    return m_vScaleFactor;
+}
+
+std::vector<float> OrbExtractor::getInverseScaleFactors(){
+     return m_vInvScaleFactor;
+}
+
+std::vector<float> OrbExtractor::getScaleSigmaSquares(){
+     return m_vLevelSigma2;
+}
+
+std::vector<float> OrbExtractor::getInverseScaleSigmaSquares(){
+     return m_vInvLevelSigma2;
+}
+
+/*Called to Extract Orb features from an inputImage*/
 void OrbExtractor::ExtractFeatures(cv::InputArray inputImage,std::vector<cv::KeyPoint>& a_keypoints,cv::OutputArray a_descriptors){
     if(inputImage.empty()){
         std::cout << "No Image for ORB features" << std::endl;
