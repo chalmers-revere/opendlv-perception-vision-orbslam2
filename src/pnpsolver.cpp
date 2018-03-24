@@ -41,8 +41,8 @@
 #include <algorithm>
 
 PnPsolver::PnPsolver(OrbFrame &F, const std::vector<std::shared_ptr<OrbMapPoint>> &matchingMapPoints):
-    pws(0), us(0), alphas(0), pcs(0), m_maximumNumberOfCorrespondences(0), number_of_correspondences(0), m_matchingMapPoints(), mnInliersi(0),
-    m_nIterations(0), mnBestInliers(0), m_numberOfCorrespondences(0)
+    pws(0), us(0), alphas(0), pcs(0), m_maximumNumberOfCorrespondences(0), number_of_correspondences(0), m_matchingMapPoints(),
+    m_nIterations(0), m_nbestInliers(0), m_numberOfCorrespondences(0)
 {
     //Constructor depends on Frame 
     std::vector<float> sigmaSqLevels = F.GetLevelSigma2();
@@ -109,7 +109,7 @@ void PnPsolver::setRansacParameters(double probability, int minInliers, int maxI
 
     m_numberOfCorrespondences = m_points2D.size(); // number of correspondences
 
-    mvbInliersi.resize(m_numberOfCorrespondences);
+    m_currentInliers.resize(m_numberOfCorrespondences);
 
     // Adjust Parameters according to number of correspondences
     int nMinInliers = static_cast<int>(m_numberOfCorrespondences*m_ransacEpsilon);
@@ -137,16 +137,16 @@ void PnPsolver::setRansacParameters(double probability, int minInliers, int maxI
         mvMaxError[i] = m_sigma2D[i]*th2;
 }
 
-cv::Mat PnPsolver::find(std::vector<bool> &vbInliers, int &nInliers)
+cv::Mat PnPsolver::find(std::vector<bool> &inliers, int &nInliers)
 {
     bool flag;
-    return iterate(m_ransacMaxIts,flag,vbInliers,nInliers);    
+    return iterate(m_ransacMaxIts,flag,inliers,nInliers);    
 }
 
-cv::Mat PnPsolver::iterate(int nIterations, bool &stop, std::vector<bool> &vbInliers, int &nInliers)
+cv::Mat PnPsolver::iterate(int nIterations, bool &stop, std::vector<bool> &inliers, int &nInliers)
 {
     stop = false;
-    vbInliers.clear();
+    inliers.clear();
     nInliers=0;
 
     setMaximumNumberOfCorrespondences(m_ransacMinSet);
@@ -171,7 +171,7 @@ cv::Mat PnPsolver::iterate(int nIterations, bool &stop, std::vector<bool> &vbInl
         // Get min set of points
         for(short i = 0; i < m_ransacMinSet; ++i)
         {
-            int randi =  4;//randomInt(0, vAvailableIndices.size()-1);
+            int randi = randomInt(0, availableIndices.size()-1);
 
             int index = availableIndices[randi];
 
@@ -187,13 +187,13 @@ cv::Mat PnPsolver::iterate(int nIterations, bool &stop, std::vector<bool> &vbInl
         // Check inliers
         CheckInliers();
 
-        if(mnInliersi>=m_ransacMinInliers)
+        if(m_nCurrentInliers>=m_ransacMinInliers)
         {
             // If it is the best solution so far, save it
-            if(mnInliersi>mnBestInliers)
+            if(m_nCurrentInliers>m_nbestInliers)
             {
-                mvbBestInliers = mvbInliersi;
-                mnBestInliers = mnInliersi;
+                m_bestInliers = m_currentInliers;
+                m_nbestInliers = m_nCurrentInliers;
 
                 cv::Mat Rcw(3,3,CV_64F,m_Ri);
                 cv::Mat tcw(3,1,CV_64F,m_ti);
@@ -206,12 +206,12 @@ cv::Mat PnPsolver::iterate(int nIterations, bool &stop, std::vector<bool> &vbInl
 
             if(Refine())
             {
-                nInliers = mnRefinedInliers;
-                //vbInliers = std::vector<bool>(mvpMapPointMatches.size(),false);
+                nInliers = m_nRefinedInliers;
+                inliers = std::vector<bool>(m_matchingMapPoints.size(),false);
                 for(int i=0; i<m_numberOfCorrespondences; i++)
                 {
-                    if(mvbRefinedInliers[i])
-                        vbInliers[m_keyPointIndices[i]] = true;
+                    if(m_refinedInliers[i])
+                        inliers[m_keyPointIndices[i]] = true;
                 }
                 return mRefinedTcw.clone();
             }
@@ -222,14 +222,14 @@ cv::Mat PnPsolver::iterate(int nIterations, bool &stop, std::vector<bool> &vbInl
     if(m_nIterations>=m_ransacMaxIts)
     {
         stop=true;
-        if(mnBestInliers>=m_ransacMinInliers)
+        if(m_nbestInliers>=m_ransacMinInliers)
         {
-            nInliers=mnBestInliers;
-            //vbInliers = std::vector<bool>(mvpMapPointMatches.size(),false);
+            nInliers=m_nbestInliers;
+            inliers = std::vector<bool>(m_matchingMapPoints.size(),false);
             for(int i=0; i<m_numberOfCorrespondences; i++)
             {
-                if(mvbBestInliers[i])
-                    vbInliers[m_keyPointIndices[i]] = true;
+                if(m_bestInliers[i])
+                    inliers[m_keyPointIndices[i]] = true;
             }
             return mBestTcw.clone();
         }
@@ -241,11 +241,11 @@ cv::Mat PnPsolver::iterate(int nIterations, bool &stop, std::vector<bool> &vbInl
 bool PnPsolver::Refine()
 {
     std::vector<int> vIndices;
-    vIndices.reserve(mvbBestInliers.size());
+    vIndices.reserve(m_bestInliers.size());
 
-    for(size_t i=0; i<mvbBestInliers.size(); i++)
+    for(size_t i=0; i<m_bestInliers.size(); i++)
     {
-        if(mvbBestInliers[i])
+        if(m_bestInliers[i])
         {
             vIndices.push_back(i);
         }
@@ -267,10 +267,10 @@ bool PnPsolver::Refine()
     // Check inliers
     CheckInliers();
 
-    mnRefinedInliers =mnInliersi;
-    mvbRefinedInliers = mvbInliersi;
+    m_nRefinedInliers =m_nCurrentInliers;
+    m_refinedInliers = m_currentInliers;
 
-    if(mnInliersi>m_ransacMinInliers)
+    if(m_nCurrentInliers>m_ransacMinInliers)
     {
         cv::Mat Rcw(3,3,CV_64F,m_Ri);
         cv::Mat tcw(3,1,CV_64F,m_ti);
@@ -288,7 +288,7 @@ bool PnPsolver::Refine()
 
 void PnPsolver::CheckInliers()
 {
-    mnInliersi=0;
+    m_nCurrentInliers=0;
 
     for(int i=0; i<m_numberOfCorrespondences; i++)
     {
@@ -309,12 +309,12 @@ void PnPsolver::CheckInliers()
 
         if(error2<mvMaxError[i])
         {
-            mvbInliersi[i]=true;
-            mnInliersi++;
+            m_currentInliers[i]=true;
+            m_nCurrentInliers++;
         }
         else
         {
-            mvbInliersi[i]=false;
+            m_currentInliers[i]=false;
         }
     }
 }
@@ -838,7 +838,7 @@ void PnPsolver::gauss_newton(const CvMat * L_6x10, const CvMat * Rho,
   }
 }
 
-void PnPsolver::qr_solve(CvMat * A, CvMat * b, CvMat * X) //use of pointers is strange
+void PnPsolver::qr_solve(CvMat * A, CvMat * b, CvMat * X) //use of pointers is strange, maybe try to rewrite?
 {
   static int max_nr = 0;
   static double * A1, * A2;
@@ -999,5 +999,10 @@ void PnPsolver::mat_to_quat(const double R[3][3], double q[4])
   q[1] *= scale;
   q[2] *= scale;
   q[3] *= scale;
+}
+
+int PnPsolver::randomInt(int min, int max){
+	int d = max - min + 1;
+	return int(((double)rand()/((double)RAND_MAX + 1.0)) * d) + min;
 }
 

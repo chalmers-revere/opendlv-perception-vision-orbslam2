@@ -105,6 +105,9 @@ class PnPsolver {
 
   void mat_to_quat(const double R[3][3], double q[4]);
 
+  int randomInt(int min, int max);
+
+
 
   double uc = 0, vc = 0, fu = 0, fv = 0;
 
@@ -131,19 +134,19 @@ class PnPsolver {
   double m_Ri[3][3];
   double m_ti[3];
   cv::Mat mTcwi= {};
-  std::vector<bool> mvbInliersi= {};
-  int mnInliersi= {};
+  std::vector<bool> m_currentInliers= {};
+  int m_nCurrentInliers= {};
 
   // Current Ransac State
   int m_nIterations;
-  std::vector<bool> mvbBestInliers = {};
-  int mnBestInliers;
+  std::vector<bool> m_bestInliers = {};
+  int m_nbestInliers;
   cv::Mat mBestTcw= {};
 
   // Refined
   cv::Mat mRefinedTcw = {};
-  std::vector<bool> mvbRefinedInliers = {};
-  int mnRefinedInliers= {};
+  std::vector<bool> m_refinedInliers = {};
+  int m_nRefinedInliers= {};
 
   // Number of Correspondences
   int m_numberOfCorrespondences;
