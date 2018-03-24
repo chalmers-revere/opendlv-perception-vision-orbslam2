@@ -32,10 +32,6 @@
 #include <list>
 #include <utility>
 
-namespace opendlv {
-namespace logic {
-namespace sensation {
-
 class OrbFrame;
 class OrbMapPoint;
 
@@ -111,8 +107,5 @@ class OrbMap {
     std::mutex m_orbMapPointCreationMutex = {};
 };
 
-} // namespace sensation
-} // namespace logic
-} // namespace opendlv
 
 #endif //ORBMAP_HPP

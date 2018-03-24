@@ -26,9 +26,7 @@
 #include <vector>
 #include <orbframe.hpp>
 #include <orbmap.hpp>
-namespace opendlv {
-namespace logic {
-namespace sensation {
+
 
 class OrbFrame;
 class OrbMap;
@@ -80,6 +78,7 @@ public:
     float GetMaxDistanceInvariance();
     int PredictScale(const float &currentDist, std::shared_ptr<OrbFrame> keyFrame);
 
+    long unsigned int Id;
     long unsigned int m_nextId;
 
     int GetTrackScaleLevel();
@@ -107,12 +106,15 @@ public:
     void SetCorrectedReference(long unsigned int CorrectedReference);
     void SetPosGBA(long unsigned int PosGBA);
     void SetBAGlobalForKF(long unsigned int BAGlobalForKF);
+    static std::mutex mGlobalMutex;
+    cv::Mat mPosGBA = {};
+    long unsigned int mnBAGlobalForKF = {};
 
 private:
     long unsigned int m_sequenceId = 0;
     long int m_firstKeyframeId = {};
     long int m_FirstKeyFrame = {};
-    int m_observingKeyFramesCount = {};
+    long unsigned int m_observingKeyFramesCount = {};
 
     // Variables used by the tracking
     float mTrackProjX = {};
@@ -132,11 +134,8 @@ private:
     long unsigned int mnLoopPointForKF = {};
     long unsigned int mnCorrectedByKF = {};
     long unsigned int mnCorrectedReference = {};
-    cv::Mat mPosGBA = {};
-    long unsigned int mnBAGlobalForKF = {};
 
 
-    static std::mutex mGlobalMutex;
 
     // mutexed below
 
@@ -173,9 +172,5 @@ private:
     std::mutex mMutexPos = {};
     std::mutex mMutexFeatures = {};
 };
-
-}
-}
-}
 
 #endif // ORBMAPPOINT_HPP
