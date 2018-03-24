@@ -20,9 +20,6 @@
 #include "orbframe.hpp"
 #include <orbmappoint.hpp>
 
-namespace opendlv {
-namespace logic {
-namespace sensation {
 OrbMap::OrbMap():m_OrbKeyFrameOrigins(), m_keyFrames(), m_mapPoints(), m_referenceMapPoints(), m_maxOrbKeyFrameId(0), m_majorChangeIndex(0)
 {
 }
@@ -101,6 +98,3 @@ void OrbMap::Reset(){
     this->m_maxOrbKeyFrameId = 0;
 
 }
-} // namespace sensation
-} // namespace logic
-} // namespace opendlv

@@ -19,10 +19,6 @@
 #include "orbkeypoint.hpp"
 
 
-namespace opendlv {
-namespace logic {
-namespace sensation {
-
 //Stereo constructor
 OrbKeyPoint::OrbKeyPoint(cv::KeyPoint keypoint, float depth, bool outlier)
     :m_keyPoint(keypoint), m_depth(depth), m_outlier(outlier)
@@ -34,7 +30,3 @@ OrbKeyPoint::~OrbKeyPoint()
 {
 
 }
-
-} // namespace sensation
-} // namespace logic
-} // namespace opendlv

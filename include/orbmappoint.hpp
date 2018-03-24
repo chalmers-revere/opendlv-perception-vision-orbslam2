@@ -26,9 +26,6 @@
 #include <vector>
 #include <orbframe.hpp>
 #include <orbmap.hpp>
-namespace opendlv {
-namespace logic {
-namespace sensation {
 
 class OrbFrame;
 class OrbMap;
@@ -173,9 +170,5 @@ private:
     std::mutex mMutexPos = {};
     std::mutex mMutexFeatures = {};
 };
-
-}
-}
-}
 
 #endif // ORBMAPPOINT_HPP

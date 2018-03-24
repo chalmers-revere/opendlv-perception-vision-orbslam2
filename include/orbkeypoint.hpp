@@ -22,10 +22,6 @@
 #include <opencv/cv.h>
 
 
-namespace opendlv {
-namespace logic {
-namespace sensation {
-
 class OrbKeyPoint
 {
 public:
@@ -39,8 +35,5 @@ private:
     bool m_outlier;
 };
 
-} // namespace sensation
-} // namespace logic
-} // namespace opendlv
 
 #endif //OPENDLV_KEYPOINT_HPP

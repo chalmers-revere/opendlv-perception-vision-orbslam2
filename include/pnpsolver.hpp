@@ -33,12 +33,13 @@
 #define PNPSOLVER_H
 
 #include <opencv2/core/core.hpp>
-//#include "MapPoint.h"
-//#include "Frame.h"
+#include <memory>
+#include <orbmappoint.hpp>
+#include <orbframe.hpp>
 
 class PnPsolver {
  public:
-  PnPsolver(/*const Frame &F, const std::vector<MapPoint*> &vpMapPointMatches*/);
+  PnPsolver(OrbFrame &F, const std::vector<std::shared_ptr<OrbMapPoint>> &m_matchingMapPoints);
   PnPsolver(PnPsolver const &) = delete;
   PnPsolver &operator=(PnPsolver const &) = delete;
   ~PnPsolver();
@@ -114,17 +115,17 @@ class PnPsolver {
   double cws[4][3], ccs[4][3];
   double cws_determinant = {};
 
-  //std::vector<MapPoint*> mvpMapPointMatches;
+  std::vector<std::shared_ptr<OrbMapPoint>> m_matchingMapPoints;
 
   // 2D Points
-  std::vector<cv::Point2f> mvP2D = {};
-  std::vector<float> mvSigma2 ={};
+  std::vector<cv::Point2f> m_points2D = {};
+  std::vector<float> m_sigma2D ={};
 
   // 3D Points
-  std::vector<cv::Point3f> mvP3Dw = {};
+  std::vector<cv::Point3f> m_Points3Dw = {};
 
   // Index in Frame
-  std::vector<size_t> mvKeyPointIndices = {};
+  std::vector<size_t> m_keyPointIndices = {};
 
   // Current Estimation
   double m_Ri[3][3];

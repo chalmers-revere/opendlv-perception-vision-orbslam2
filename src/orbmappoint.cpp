@@ -18,9 +18,6 @@
  */
 
 #include <orbmappoint.hpp>
-namespace opendlv {
-namespace logic {
-namespace sensation {
 
 OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map)
 : m_nextId(), m_firstKeyframeId(refenceKeyFrame->Id), m_FirstKeyFrame(refenceKeyFrame->Id), m_refenceKeyFrame(refenceKeyFrame), m_map(map)
@@ -259,7 +256,3 @@ if (PosGBA != 0){};
 void OrbMapPoint::SetBAGlobalForKF(long unsigned int BAGlobalForKF) {
 if (BAGlobalForKF != 0){};
 }
-
-} // namespace sensation
-} // namespace logic
-} // namespace opendlv

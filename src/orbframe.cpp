@@ -19,10 +19,6 @@
 #include <orbframe.hpp>
 
 
-namespace opendlv {
-namespace logic {
-namespace sensation {
-
 long unsigned int OrbFrame::NextId=0;
 
     //Stereo constructor
@@ -433,7 +429,3 @@ std::shared_ptr<OrbMapPoint> OrbFrame::GetMapPoint(const size_t &index)
     std::unique_lock<std::mutex> lockFeatures(m_mutexFeatures);
     return m_mapPoints[index];
 }
-
-} // namespace sensation
-} // namespace logic
-} // namespace opendlv

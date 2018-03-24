@@ -42,10 +42,6 @@
 #include <orbkeypoint.hpp>
 #include <orbmappoint.hpp>
 
-namespace opendlv {
-namespace logic {
-namespace sensation {
-
 class OrbMapPoint;
 
 class OrbFrame 
@@ -171,9 +167,5 @@ private:
     std::mutex m_mutexConnections = {};
     std::mutex m_mutexFeatures = {};
 };
-
-} // namespace sensation
-} // namespace logic
-} // namespace opendlv
 
 #endif

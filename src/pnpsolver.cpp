@@ -40,37 +40,39 @@
 //#include "Thirdparty/DBoW2/DUtils/Random.h"
 #include <algorithm>
 
-PnPsolver::PnPsolver(/*const Frame &F, const vector<MapPoint*> &vpMapPointMatches*/):
-    pws(0), us(0), alphas(0), pcs(0), m_maximumNumberOfCorrespondences(0), number_of_correspondences(0), mnInliersi(0),
+PnPsolver::PnPsolver(OrbFrame &F, const std::vector<std::shared_ptr<OrbMapPoint>> &matchingMapPoints):
+    pws(0), us(0), alphas(0), pcs(0), m_maximumNumberOfCorrespondences(0), number_of_correspondences(0), m_matchingMapPoints(), mnInliersi(0),
     m_nIterations(0), mnBestInliers(0), m_numberOfCorrespondences(0)
 {
     //Constructor depends on Frame 
-    /*mvpMapPointMatches = vpMapPointMatches;
-    mvP2D.reserve(F.mvpMapPoints.size());
-    mvSigma2.reserve(F.mvpMapPoints.size());
-    mvP3Dw.reserve(F.mvpMapPoints.size());
-    mvKeyPointIndices.reserve(F.mvpMapPoints.size());
-    mvAllIndices.reserve(F.mvpMapPoints.size());
+    std::vector<float> sigmaSqLevels = F.GetLevelSigma2();
+    m_matchingMapPoints = matchingMapPoints;
+    m_points2D.reserve(sigmaSqLevels.size());
+    m_sigma2D.reserve(sigmaSqLevels.size());
+    m_Points3Dw.reserve(sigmaSqLevels.size());
+    m_keyPointIndices.reserve(sigmaSqLevels.size());
+    m_allIndices.reserve(sigmaSqLevels.size());
 
     int idx=0;
-    for(size_t i=0, iend=vpMapPointMatches.size(); i<iend; i++)
+    std::vector<cv::KeyPoint> undistortedKeyPoints = F.GetUndistortedKeyPoints();
+    for(size_t i=0, iend=matchingMapPoints.size(); i<iend; i++)
     {
-        MapPoint* pMP = vpMapPointMatches[i];
+        std::shared_ptr<OrbMapPoint> mapPointPtr = matchingMapPoints[i];
 
-        if(pMP)
+        if(mapPointPtr)
         {
-            if(!pMP->isBad())
+            if(!mapPointPtr->IsCorrupt())
             {
-                const cv::KeyPoint &kp = F.mvKeysUn[i];
+                const cv::KeyPoint &keyPt = undistortedKeyPoints[i];
 
-                mvP2D.push_back(kp.pt);
-                mvSigma2.push_back(F.mvLevelSigma2[kp.octave]);
+                m_points2D.push_back(keyPt.pt);
+                m_sigma2D.push_back(sigmaSqLevels[keyPt.octave]);
 
-                cv::Mat Pos = pMP->GetWorldPos();
-                mvP3Dw.push_back(cv::Point3f(Pos.at<float>(0),Pos.at<float>(1), Pos.at<float>(2)));
+                cv::Mat Pos = mapPointPtr->GetWorldPosition();
+                m_Points3Dw.push_back(cv::Point3f(Pos.at<float>(0),Pos.at<float>(1), Pos.at<float>(2)));
 
-                mvKeyPointIndices.push_back(i);
-                mvAllIndices.push_back(idx);               
+                m_keyPointIndices.push_back(i);
+                m_allIndices.push_back(idx);               
 
                 idx++;
             }
@@ -78,11 +80,12 @@ PnPsolver::PnPsolver(/*const Frame &F, const vector<MapPoint*> &vpMapPointMatche
     }
 
     // Set camera calibration parameters
-    fu = F.fx;
+    //TODO: Decide how to handle these parameters, easiest is to encapsulate in frame
+    /*fu = F.fx;
     fv = F.fy;
     uc = F.cx;
-    vc = F.cy;
-    */
+    vc = F.cy;*/
+    
 
     setRansacParameters();
 }
@@ -104,7 +107,7 @@ void PnPsolver::setRansacParameters(double probability, int minInliers, int maxI
     m_ransacEpsilon = epsilon;
     m_ransacMinSet = minSet;
 
-    m_numberOfCorrespondences = mvP2D.size(); // number of correspondences
+    m_numberOfCorrespondences = m_points2D.size(); // number of correspondences
 
     mvbInliersi.resize(m_numberOfCorrespondences);
 
@@ -129,9 +132,9 @@ void PnPsolver::setRansacParameters(double probability, int minInliers, int maxI
 
     m_ransacMaxIts = std::max(1,std::min(nIterations,m_ransacMaxIts));
 
-    mvMaxError.resize(mvSigma2.size());
-    for(size_t i=0; i<mvSigma2.size(); i++)
-        mvMaxError[i] = mvSigma2[i]*th2;
+    mvMaxError.resize(m_sigma2D.size());
+    for(size_t i=0; i<m_sigma2D.size(); i++)
+        mvMaxError[i] = m_sigma2D[i]*th2;
 }
 
 cv::Mat PnPsolver::find(std::vector<bool> &vbInliers, int &nInliers)
@@ -172,7 +175,7 @@ cv::Mat PnPsolver::iterate(int nIterations, bool &stop, std::vector<bool> &vbInl
 
             int index = availableIndices[randi];
 
-            addCorrespondence(mvP3Dw[index].x,mvP3Dw[index].y,mvP3Dw[index].z,mvP2D[index].x,mvP2D[index].y);
+            addCorrespondence(m_Points3Dw[index].x,m_Points3Dw[index].y,m_Points3Dw[index].z,m_points2D[index].x,m_points2D[index].y);
 
             availableIndices[randi] = availableIndices.back();//is this just delete?
             availableIndices.pop_back();
@@ -208,7 +211,7 @@ cv::Mat PnPsolver::iterate(int nIterations, bool &stop, std::vector<bool> &vbInl
                 for(int i=0; i<m_numberOfCorrespondences; i++)
                 {
                     if(mvbRefinedInliers[i])
-                        vbInliers[mvKeyPointIndices[i]] = true;
+                        vbInliers[m_keyPointIndices[i]] = true;
                 }
                 return mRefinedTcw.clone();
             }
@@ -226,7 +229,7 @@ cv::Mat PnPsolver::iterate(int nIterations, bool &stop, std::vector<bool> &vbInl
             for(int i=0; i<m_numberOfCorrespondences; i++)
             {
                 if(mvbBestInliers[i])
-                    vbInliers[mvKeyPointIndices[i]] = true;
+                    vbInliers[m_keyPointIndices[i]] = true;
             }
             return mBestTcw.clone();
         }
@@ -255,7 +258,7 @@ bool PnPsolver::Refine()
     for(size_t i=0; i<vIndices.size(); i++)
     {
         int idx = vIndices[i];
-        addCorrespondence(mvP3Dw[idx].x,mvP3Dw[idx].y,mvP3Dw[idx].z,mvP2D[idx].x,mvP2D[idx].y);
+        addCorrespondence(m_Points3Dw[idx].x,m_Points3Dw[idx].y,m_Points3Dw[idx].z,m_points2D[idx].x,m_points2D[idx].y);
     }
 
     // Compute camera pose
@@ -289,18 +292,18 @@ void PnPsolver::CheckInliers()
 
     for(int i=0; i<m_numberOfCorrespondences; i++)
     {
-        cv::Point3f P3Dw = mvP3Dw[i];
-        cv::Point2f P2D = mvP2D[i];
+        cv::Point3f pointIn3d = m_Points3Dw[i];
+        cv::Point2f pointIn2d = m_points2D[i];
 
-        double Xc = m_Ri[0][0]*P3Dw.x+m_Ri[0][1]*P3Dw.y+m_Ri[0][2]*P3Dw.z+m_ti[0];
-        double Yc = m_Ri[1][0]*P3Dw.x+m_Ri[1][1]*P3Dw.y+m_Ri[1][2]*P3Dw.z+m_ti[1];
-        double invZc = 1/(m_Ri[2][0]*P3Dw.x+m_Ri[2][1]*P3Dw.y+m_Ri[2][2]*P3Dw.z+m_ti[2]);
+        double Xc = m_Ri[0][0]*pointIn3d.x+m_Ri[0][1]*pointIn3d.y+m_Ri[0][2]*pointIn3d.z+m_ti[0];
+        double Yc = m_Ri[1][0]*pointIn3d.x+m_Ri[1][1]*pointIn3d.y+m_Ri[1][2]*pointIn3d.z+m_ti[1];
+        double invZc = 1/(m_Ri[2][0]*pointIn3d.x+m_Ri[2][1]*pointIn3d.y+m_Ri[2][2]*pointIn3d.z+m_ti[2]);
 
         double ue = uc + fu * Xc * invZc;
         double ve = vc + fv * Yc * invZc;
 
-        double distX = P2D.x-ue;
-        double distY = P2D.y-ve;
+        double distX = pointIn2d.x-ue;
+        double distY = pointIn2d.y-ve;
 
         double error2 = distX*distX+distY*distY;
 
