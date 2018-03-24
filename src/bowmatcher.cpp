@@ -16,14 +16,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
+#include "bowmatcher.hpp"
+#include "orbframe.hpp"
 
-#include "cluon-complete.hpp"
-#include "opendlv-standard-message-set.hpp"
-#include "orbkeyframe.hpp"
+namespace opendlv {
+namespace logic {
+namespace sensation {
 
-OrbKeyFrame::OrbKeyFrame()
+//Stereo constructor
+BowMatcher::BowMatcher()
 {
+    
 }
-OrbKeyFrame::~OrbKeyFrame()
+
+BowMatcher::~BowMatcher()
 {
+
 }
+
+} // namespace sensation
+} // namespace logic
+} // namespace opendlv

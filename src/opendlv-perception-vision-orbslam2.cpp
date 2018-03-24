@@ -55,6 +55,7 @@ int32_t main(int32_t argc, char **argv) {
     using namespace std::literals::chrono_literals;
     while (od4.isRunning()) {
       std::this_thread::sleep_for(1s);
+      selflocalization.nextContainer(data);
       std::chrono::system_clock::time_point tp;
     }
   }

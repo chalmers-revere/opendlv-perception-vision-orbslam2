@@ -48,7 +48,7 @@ Selflocalization::Selflocalization() :
 
 {	
 	
-
+  setUp();
 	/*
 	m_pVocabulary = new OrbVocabulary();
 	m_pVocabulary->loadFromTextFile(vocFilePath);
@@ -108,47 +108,47 @@ void Selflocalization::nextContainer(cluon::data::Envelope &a_container)
 {
 	//cv::Mat img;
 	
-	if (a_container.dataType() == opendlv::proxy::ImageReadingShared::ID()){
+	//if (a_container.dataType() == opendlv::proxy::ImageReadingShared::ID()){
 
-		/*cluon::data::TimeStamp currTime = a_container.sampleTimeStamp();
-		double currentTime = currTime.microseconds();
+	cluon::data::TimeStamp currTime = a_container.sampleTimeStamp();
+	double currentTime = currTime.microseconds();
+  std::cout << "CurrentTime: " << currentTime << std::endl;
 
 
-    	opendlv::proxy::ImageReadingShared sharedImg = cluon::extractMessage<opendlv::proxy::ImageReadingShared>(std::move(a_container));
+  /*  	opendlv::proxy::ImageReadingShared sharedImg = cluon::extractMessage<opendlv::proxy::ImageReadingShared>(std::move(a_container));
 
 
     	img = m_pImageGrab->ExtractSharedImage(&sharedImg);
 
-    	if(m_cameraType){
+  if(m_cameraType){
+ 		int width = img.cols;
+		int height = img.rows;
+ 		cv::Mat imgL(img, cv::Rect(0, 0, width/2, height));
+		cv::Mat imgR(img, cv::Rect(width/2, 0, width/2, height));
+		//GO TO TRACKING
 
-   			int width = img.cols;
- 			int height = img.rows;
- 			cv::Mat imgL(img, cv::Rect(0, 0, width/2, height));
-			cv::Mat imgR(img, cv::Rect(width/2, 0, width/2, height));
+	cv::Mat Tcw = m_pImageGrab->ImageToGreyscaleStereo(imgL,imgR,currentTime);
 
-			//GO TO TRACKING
+*/
+	//}else{
+	  //GO TO TRACKING
+	  //cv::Mat Tcw = m_pImageGrab->ImageToGreyscaleMono(img,currentTime);
+    /*ORB testcode*/
+	  std::vector<cv::KeyPoint> TestMat;
+		cv::Mat testArr;
+    cv::Mat Tcw = cv::imread("/media/test2.jpg",CV_LOAD_IMAGE_COLOR);
+    cv::cvtColor(Tcw,Tcw,cv::COLOR_RGB2GRAY);
+    cv::Mat Tcw_keypoints;
+		m_pExtractOrb->ExtractFeatures(Tcw, TestMat, testArr);
+    cv::drawKeypoints( Tcw, TestMat, Tcw_keypoints, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+		cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
+    cv::imshow( "Display window", Tcw_keypoints );                   // Show our image inside it.
+		cv::waitKey(0);
 
-			cv::Mat Tcw = m_pImageGrab->ImageToGreyscaleStereo(imgL,imgR,currentTime);
-
-
-		}else{
-
-			//GO TO TRACKING
-			
-			cv::Mat Tcw = m_pImageGrab->ImageToGreyscaleMono(img,currentTime);
-			std::vector<cv::KeyPoint> TestMat;
-			cv::Mat testArr;
-			m_pExtractOrb->ExtractFeatures(Tcw, TestMat, testArr);
-			//Example code for drawing something in an image and plotting stuff in it
-			cv::rectangle( Tcw, cv::Point( 15, 20 ), cv::Point( 70, 50), cv::Scalar( 0, 0, 255 ), +1, 4 );
-			cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
-    			cv::imshow( "Display window", Tcw );                   // Show our image inside it.
-			cv::waitKey(0);
-
-		}*/
+	//}
 
    			//std::cout << "[" << getName() << "] " << "[Unable to extract shared image." << std::endl;
-   	}
+   	//}
 
 //if stereo
 
@@ -168,7 +168,7 @@ void Selflocalization::setUp()
 
 	//string vocFilePath = kv.getValue<string>("logic-sensation-selflocalization.vocabularyfilepath");
 
-	std::string vocFilePath = "ORBvoc.txt"; //Create mount
+	std::string vocFilePath = "/media/ORBvoc.txt"; //Create mount
 	m_pVocabulary = std::shared_ptr<OrbVocabulary>(new OrbVocabulary(vocFilePath));
 	int size = m_pVocabulary->getSize();
 	std::cout << "Size of Vocabulary: " << size << std::endl;

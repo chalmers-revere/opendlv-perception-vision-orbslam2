@@ -17,15 +17,36 @@
  * USA.
  */
 
-#ifndef ORBMAP_HPP
-#define ORBMAP_HPP
+#ifndef BOWMATCHER_HPP
+#define BOWMATCHER_HPP
 
 
-class OrbMap {
- public:
-  OrbMap();
-  ~OrbMap();
+#include <algorithm>
+#include <cmath>
+#include <iostream>
+#include <list>
+#include <memory>
+#include <mutex>
+#include <utility>
+#include <vector>
+
+namespace opendlv {
+namespace logic {
+namespace sensation {
+
+class OrbFrame;
+
+class BowMatcher {
+    public:
+    /**
+     *  Çonstructor
+     */
+    BowMatcher();
+    ~BowMatcher();
 };
 
+} // namespace sensation
+} // namespace logic
+} // namespace opendlv
 
-#endif //ORBMAP_HPP
+#endif //BOWMATCHER_HPP

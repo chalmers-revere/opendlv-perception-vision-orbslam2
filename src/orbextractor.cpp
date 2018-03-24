@@ -513,13 +513,39 @@ OrbExtractor::~OrbExtractor()
 {
 }
 
+/*Getters*/
+int OrbExtractor::getLevels(){
+    return m_nLevels;
+}
+
+double OrbExtractor::getScaleFactor(){
+    return m_scaleFactor;
+}
+
+std::vector<float> OrbExtractor::getScaleFactors(){
+    return m_vScaleFactor;
+}
+
+std::vector<float> OrbExtractor::getInverseScaleFactors(){
+     return m_vInvScaleFactor;
+}
+
+std::vector<float> OrbExtractor::getScaleSigmaSquares(){
+     return m_vLevelSigma2;
+}
+
+std::vector<float> OrbExtractor::getInverseScaleSigmaSquares(){
+     return m_vInvLevelSigma2;
+}
+
+/*Called to Extract Orb features from an inputImage*/
 void OrbExtractor::ExtractFeatures(cv::InputArray inputImage,std::vector<cv::KeyPoint>& a_keypoints,cv::OutputArray a_descriptors){
     if(inputImage.empty()){
         std::cout << "No Image for ORB features" << std::endl;
     }
     cv::Mat image = inputImage.getMat();
-    assert(image.type() == CV_8UC1);
     
+    assert(image.type() == CV_8UC1);
     ComputePyramid(image);
     std::vector<std::vector<cv::KeyPoint>> allKeypoints;
     ComputeKeyPointsOctTree(allKeypoints);
@@ -571,7 +597,7 @@ void OrbExtractor::ExtractFeatures(cv::InputArray inputImage,std::vector<cv::Key
     }
     // And add the keypoints to the output
     a_keypoints.insert(a_keypoints.end(), keypoints.begin(), keypoints.end());
-    }
+  }
     
 }
 
@@ -594,7 +620,6 @@ void OrbExtractor::ComputePyramid(cv::Mat image)
         cv::Size wholeSize(sz.width + EDGE_THRESHOLD*2, sz.height + EDGE_THRESHOLD*2);
         cv::Mat temp(wholeSize, image.type());
         m_vImagePyramid[level] = temp(cv::Rect(EDGE_THRESHOLD, EDGE_THRESHOLD, sz.width, sz.height));
-
         // Compute the resized image
         if( level != 0 )
         {
