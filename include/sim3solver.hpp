@@ -64,67 +64,67 @@ class Sim3Solver {
  protected:
 
     // KeyFrames and matches
-    std::shared_ptr<OrbFrame> m_keyFrame1;
-    std::shared_ptr<OrbFrame> m_keyFrame2;
+    std::shared_ptr<OrbFrame> m_keyFrame1 = {};
+    std::shared_ptr<OrbFrame> m_keyFrame2= {};
 
-    std::vector<cv::Mat> mvX3Dc1;
-    std::vector<cv::Mat> mvX3Dc2;
-    std::vector<std::shared_ptr<OrbMapPoint>> m_mapPoints1;
-    std::vector<std::shared_ptr<OrbMapPoint>> m_mapPoints2;
-    std::vector<std::shared_ptr<OrbMapPoint>> m_matchedMapPoints;
-    std::vector<size_t> mvnIndices1;
-    std::vector<size_t> m_SigmaSquare1;
-    std::vector<size_t> m_SigmaSquare2;
-    std::vector<size_t> m_maxError1;
-    std::vector<size_t> m_maxError2;
+    std::vector<cv::Mat> mvX3Dc1 = {};
+    std::vector<cv::Mat> mvX3Dc2 = {};
+    std::vector<std::shared_ptr<OrbMapPoint>> m_mapPoints1 = {};
+    std::vector<std::shared_ptr<OrbMapPoint>> m_mapPoints2 = {};
+    std::vector<std::shared_ptr<OrbMapPoint>> m_matchedMapPoints = {};
+    std::vector<size_t> mvnIndices1 = {};
+    std::vector<size_t> m_SigmaSquare1 = {};
+    std::vector<size_t> m_SigmaSquare2 = {};
+    std::vector<size_t> m_maxError1 = {};
+    std::vector<size_t> m_maxError2 = {};
 
-    int Ni;
-    int m_sizeMatchedMP;
+    int Ni = {};
+    int m_sizeMatchedMP = {};
 
     // Current Estimation
-    cv::Mat mR12i;
-    cv::Mat mt12i;
-    float ms12i;
-    cv::Mat mT12i;
-    cv::Mat mT21i;
-    std::vector<bool> mvbInliersi;
-    int mnInliersi;
+    cv::Mat mR12i = {};
+    cv::Mat mt12i = {};
+    float ms12i = {};
+    cv::Mat mT12i = {};
+    cv::Mat mT21i = {};
+    std::vector<bool> mvbInliersi = {};
+    int mnInliersi = {};
 
     // Current Ransac State
     int mnIterations;
-    std::vector<bool> mvbBestInliers;
+    std::vector<bool> mvbBestInliers = {};
     int mnBestInliers;
-    cv::Mat mBestT12;
-    cv::Mat mBestRotation;
-    cv::Mat mBestTranslation;
-    float mBestScale;
+    cv::Mat mBestT12 = {};
+    cv::Mat mBestRotation = {};
+    cv::Mat mBestTranslation = {};
+    float mBestScale = {};
 
     // Scale is fixed to 1 in the stereo/RGBD case
-    bool mbFixScale;
+    bool mbFixScale = {};
 
     // Indices for random selection
-    std::vector<size_t> mvAllIndices;
+    std::vector<size_t> mvAllIndices = {};
 
     // Projections
-    std::vector<cv::Mat> mvP1im1;
-    std::vector<cv::Mat> mvP2im2;
+    std::vector<cv::Mat> mvP1im1 = {};
+    std::vector<cv::Mat> mvP2im2 = {};
 
     // RANSAC probability
-    double mRansacProb;
+    double mRansacProb = {};
 
     // RANSAC min inliers
-    int mRansacMinInliers;
+    int mRansacMinInliers = {};
 
     // RANSAC max iterations
-    int mRansacMaxIts;
+    int mRansacMaxIts = {};
 
     // Threshold inlier/outlier. e = dist(Pi,T_ij*Pj)^2 < 5.991*mSigma2
-    float mTh;
-    float mSigma2;
+    float mTh = {};
+    float mSigma2 = {};
 
     // Calibration
-    cv::Mat m_calibrationK1;
-	  cv::Mat m_calibrationK2;
+    cv::Mat m_calibrationK1 = {};
+	  cv::Mat m_calibrationK2 = {};
 };
 
 
