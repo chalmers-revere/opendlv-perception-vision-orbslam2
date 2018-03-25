@@ -121,6 +121,12 @@ public:
     std::vector<bool> GetBoolOutliers(){return m_outlier; } //FIX LOGIC
     void SetBoolOutliers(bool inBool, int index){m_outlier[index] = inBool;}
 
+    long unsigned int GetBALocalForKF(){return mnBALocalForKF; }
+    void SetBALocalForKF(long unsigned int inBALocal){ mnBALocalForKF = inBALocal; }
+
+    long unsigned int GetBAFixedForKF(){return mnBAFixedForKF; }
+    void SetBAFixedForKF(long unsigned int inBAFixed){ mnBAFixedForKF = inBAFixed; }
+
     std::vector<cv::KeyPoint> GetCvKeyPoints(){return m_keyPoints;}
 
     bool IsCorrupt(){ return true; } //FIX LOGIC
@@ -142,7 +148,9 @@ public:
 
 private:
 
-
+       // Variables used by the local mapping
+    long unsigned int mnBALocalForKF = {};
+    long unsigned int mnBAFixedForKF = {};
     int m_numberOfKeypoints = 0;
     std::vector<bool> m_outlier = {};
     std::vector<cv::KeyPoint> m_keyPoints = {}, m_keyPointsRight = {};

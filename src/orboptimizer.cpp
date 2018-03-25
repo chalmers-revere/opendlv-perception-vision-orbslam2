@@ -458,3 +458,333 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
 
     return nInitialCorrespondences-nBad;
 }
+
+void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbFrame> pKF, bool* pbStopFlag, std::shared_ptr<OrbMap> pMap)
+{    
+    // Local KeyFrames: First Breath Search from Current Keyframe
+    std::list<std::shared_ptr<OrbFrame>> lLocalKeyFrames;
+
+    lLocalKeyFrames.push_back(pKF);
+    //pKF->mnBALocalForKF = pKF->Id;
+
+    pKF->SetBALocalForKF(pKF->Id);
+
+    const std::vector<std::shared_ptr<OrbFrame>> vNeighKFs = pKF->GetVectorCovisibleKeyFrames();
+    for(int i=0, iend=vNeighKFs.size(); i<iend; i++)
+    {
+        std::shared_ptr<OrbFrame> pKFi = vNeighKFs[i];
+        pKFi->SetBALocalForKF(pKF->Id);;
+        if(!pKFi->IsCorrupt())
+            lLocalKeyFrames.push_back(pKFi);
+    }
+
+    // Local MapPoints seen in Local KeyFrames
+    std::list<std::shared_ptr<OrbMapPoint>> lLocalMapPoints;
+    for(std::list<std::shared_ptr<OrbFrame>>::iterator lit=lLocalKeyFrames.begin() , lend=lLocalKeyFrames.end(); lit!=lend; lit++)
+    {
+        std::vector<std::shared_ptr<OrbMapPoint>> vpMPs = (*lit)->GetMapPointMatches();
+        for(std::vector<std::shared_ptr<OrbMapPoint>>::iterator vit=vpMPs.begin(), vend=vpMPs.end(); vit!=vend; vit++)
+        {
+            std::shared_ptr<OrbMapPoint> pMP = *vit;
+            if(pMP)
+                if(!pMP->IsCorrupt())
+                    if(pMP->GetBALocalForKF()!=pKF->Id)
+                    {
+                        lLocalMapPoints.push_back(pMP);
+                        pMP->SetBALocalForKF(pKF->Id);
+                    }
+        }
+    }
+
+    // Fixed Keyframes. Keyframes that see Local MapPoints but that are not Local Keyframes
+    std::list<std::shared_ptr<OrbFrame>> lFixedCameras;
+    for(std::list<std::shared_ptr<OrbMapPoint>>::iterator lit=lLocalMapPoints.begin(), lend=lLocalMapPoints.end(); lit!=lend; lit++)
+    {
+        std::map<std::shared_ptr<OrbFrame>,size_t> observations = (*lit)->GetObservingKeyframes();
+        for(std::map<std::shared_ptr<OrbFrame>,size_t>::iterator mit=observations.begin(), mend=observations.end(); mit!=mend; mit++)
+        {
+            std::shared_ptr<OrbFrame> pKFi = mit->first;
+
+            if(pKFi->GetBALocalForKF()!=pKF->Id && pKFi->GetBAFixedForKF()!=pKF->Id)
+            {                
+                pKFi->SetBAFixedForKF(pKF->Id);
+                if(!pKFi->IsCorrupt())
+                    lFixedCameras.push_back(pKFi);
+            }
+        }
+    }
+
+    // Setup optimizer
+    g2o::SparseOptimizer optimizer;
+    auto linearSolver = g2o::make_unique<orbLinearSolver>();
+    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<orbBlockSolver>(std::move(linearSolver)));
+	optimizer.setAlgorithm(solver);
+
+    if(pbStopFlag)
+        optimizer.setForceStopFlag(pbStopFlag);
+
+    unsigned long maxKFid = 0;
+
+    // Set Local KeyFrame vertices
+    for(std::list<std::shared_ptr<OrbFrame>>::iterator lit=lLocalKeyFrames.begin(), lend=lLocalKeyFrames.end(); lit!=lend; lit++)
+    {
+        std::shared_ptr<OrbFrame> pKFi = *lit;
+        g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
+        vSE3->setEstimate(Orbconverter::toSE3Quat(pKFi->GetPose()));
+        vSE3->setId(pKFi->Id);
+        vSE3->setFixed(pKFi->Id==0);
+        optimizer.addVertex(vSE3);
+        if(pKFi->Id>maxKFid)
+            maxKFid=pKFi->Id;
+    }
+
+    // Set Fixed KeyFrame vertices
+    for(std::list<std::shared_ptr<OrbFrame>>::iterator lit=lFixedCameras.begin(), lend=lFixedCameras.end(); lit!=lend; lit++)
+    {
+        std::shared_ptr<OrbFrame> pKFi = *lit;
+        g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
+        vSE3->setEstimate(Orbconverter::toSE3Quat(pKFi->GetPose()));
+        vSE3->setId(pKFi->Id);
+        vSE3->setFixed(true);
+        optimizer.addVertex(vSE3);
+        if(pKFi->Id>maxKFid)
+            maxKFid=pKFi->Id;
+    }
+
+    // Set MapPoint vertices
+    const int nExpectedSize = (lLocalKeyFrames.size()+lFixedCameras.size())*lLocalMapPoints.size();
+
+    std::vector<g2o::EdgeSE3ProjectXYZ*> vpEdgesMono;
+    vpEdgesMono.reserve(nExpectedSize);
+
+    std::vector<std::shared_ptr<OrbFrame>> vpEdgeKFMono;
+    vpEdgeKFMono.reserve(nExpectedSize);
+
+    std::vector<std::shared_ptr<OrbMapPoint>> vpMapPointEdgeMono;
+    vpMapPointEdgeMono.reserve(nExpectedSize);
+
+    std::vector<g2o::EdgeStereoSE3ProjectXYZ*> vpEdgesStereo;
+    vpEdgesStereo.reserve(nExpectedSize);
+
+    std::vector<std::shared_ptr<OrbFrame>> vpEdgeKFStereo;
+    vpEdgeKFStereo.reserve(nExpectedSize);
+
+    std::vector<std::shared_ptr<OrbMapPoint>> vpMapPointEdgeStereo;
+    vpMapPointEdgeStereo.reserve(nExpectedSize);
+
+    const float thHuberMono = static_cast<float>(std::sqrt(5.991));
+    const float thHuberStereo = static_cast<float>(std::sqrt(7.815));
+
+    for(std::list<std::shared_ptr<OrbMapPoint>>::iterator lit=lLocalMapPoints.begin(), lend=lLocalMapPoints.end(); lit!=lend; lit++)
+    {
+        std::shared_ptr<OrbMapPoint> pMP = *lit;
+        g2o::VertexSBAPointXYZ* vPoint = new g2o::VertexSBAPointXYZ();
+        vPoint->setEstimate(Orbconverter::toVector3d(pMP->GetWorldPosition()));
+        int id = pMP->Id+maxKFid+1;
+        vPoint->setId(id);
+        vPoint->setMarginalized(true);
+        optimizer.addVertex(vPoint);
+
+        const std::map<std::shared_ptr<OrbFrame>,size_t> observations = pMP->GetObservingKeyframes();
+        std::vector<cv::KeyPoint> vectorKP = pKF->GetUndistortedKeyPoints();
+        std::vector<float> vectorRight = pKF->GetRight();
+                
+
+        //Set edges
+        for(std::map<std::shared_ptr<OrbFrame>,size_t>::const_iterator mit=observations.begin(), mend=observations.end(); mit!=mend; mit++)
+        {
+            std::shared_ptr<OrbFrame> pKFi = mit->first;
+        	std::vector<float> invSigma2Vector = pKFi->GetInverseLevelSigma2();
+
+
+            if(!pKFi->IsCorrupt())
+            {                
+	
+            const cv::KeyPoint &kpUn = vectorKP[mit->second];
+
+                // Monocular observation
+                if(vectorRight[mit->second]<0)
+                {
+                    Eigen::Matrix<double,2,1> obs;
+                    obs << kpUn.pt.x, kpUn.pt.y;
+
+                    g2o::EdgeSE3ProjectXYZ* e = new g2o::EdgeSE3ProjectXYZ();
+
+                    e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id)));
+                    e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKFi->Id)));
+                    e->setMeasurement(obs);
+                    const float invSigma2 = invSigma2Vector[kpUn.octave];
+                    e->setInformation(Eigen::Matrix2d::Identity()*invSigma2);
+
+                    g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
+                    e->setRobustKernel(rk);
+                    rk->setDelta(thHuberMono);
+
+                    e->fx = pKFi->fx;
+                    e->fy = pKFi->fy;
+                    e->cx = pKFi->cx;
+                    e->cy = pKFi->cy;
+
+                    optimizer.addEdge(e);
+                    vpEdgesMono.push_back(e);
+                    vpEdgeKFMono.push_back(pKFi);
+                    vpMapPointEdgeMono.push_back(pMP);
+                }
+                else // Stereo observation
+                {
+                    Eigen::Matrix<double,3,1> obs;
+                    const float kp_ur = vectorRight[mit->second];
+                    obs << kpUn.pt.x, kpUn.pt.y, kp_ur;
+
+                    g2o::EdgeStereoSE3ProjectXYZ* e = new g2o::EdgeStereoSE3ProjectXYZ();
+
+                    e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id)));
+                    e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKFi->Id)));
+                    e->setMeasurement(obs);
+                    const float invSigma2 = invSigma2Vector[kpUn.octave];
+                    Eigen::Matrix3d Info = Eigen::Matrix3d::Identity()*invSigma2;
+                    e->setInformation(Info);
+
+                    g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
+                    e->setRobustKernel(rk);
+                    rk->setDelta(thHuberStereo);
+
+                    e->fx = pKFi->fx;
+                    e->fy = pKFi->fy;
+                    e->cx = pKFi->cx;
+                    e->cy = pKFi->cy;
+                    e->bf = pKFi->mbf;
+
+                    optimizer.addEdge(e);
+                    vpEdgesStereo.push_back(e);
+                    vpEdgeKFStereo.push_back(pKFi);
+                    vpMapPointEdgeStereo.push_back(pMP);
+                }
+            }
+        }
+    }
+
+    if(pbStopFlag)
+        if(*pbStopFlag)
+            return;
+
+    optimizer.initializeOptimization();
+    optimizer.optimize(5);
+
+    bool bDoMore= true;
+
+    if(pbStopFlag)
+        if(*pbStopFlag)
+            bDoMore = false;
+
+    if(bDoMore)
+    {
+
+    // Check inlier observations
+    for(size_t i=0, iend=vpEdgesMono.size(); i<iend;i++)
+    {
+        g2o::EdgeSE3ProjectXYZ* e = vpEdgesMono[i];
+        std::shared_ptr<OrbMapPoint> pMP = vpMapPointEdgeMono[i];
+
+        if(pMP->IsCorrupt())
+            continue;
+
+        if(e->chi2()>5.991 || !e->isDepthPositive())
+        {
+            e->setLevel(1);
+        }
+
+        e->setRobustKernel(0);
+    }
+
+    for(size_t i=0, iend=vpEdgesStereo.size(); i<iend;i++)
+    {
+        g2o::EdgeStereoSE3ProjectXYZ* e = vpEdgesStereo[i];
+        std::shared_ptr<OrbMapPoint> pMP = vpMapPointEdgeStereo[i];
+
+        if(pMP->IsCorrupt())
+            continue;
+
+        if(e->chi2()>7.815 || !e->isDepthPositive())
+        {
+            e->setLevel(1);
+        }
+
+        e->setRobustKernel(0);
+    }
+
+    // Optimize again without the outliers
+
+    optimizer.initializeOptimization(0);
+    optimizer.optimize(10);
+
+    }
+
+    std::vector<std::pair<std::shared_ptr<OrbFrame>,std::shared_ptr<OrbMapPoint>> > vToErase;
+    vToErase.reserve(vpEdgesMono.size()+vpEdgesStereo.size());
+
+    // Check inlier observations       
+    for(size_t i=0, iend=vpEdgesMono.size(); i<iend;i++)
+    {
+        g2o::EdgeSE3ProjectXYZ* e = vpEdgesMono[i];
+        std::shared_ptr<OrbMapPoint> pMP = vpMapPointEdgeMono[i];
+
+        if(pMP->IsCorrupt())
+            continue;
+
+        if(e->chi2()>5.991 || !e->isDepthPositive())
+        {
+            std::shared_ptr<OrbFrame> pKFi = vpEdgeKFMono[i];
+            vToErase.push_back(make_pair(pKFi,pMP));
+        }
+    }
+
+    for(size_t i=0, iend=vpEdgesStereo.size(); i<iend;i++)
+    {
+        g2o::EdgeStereoSE3ProjectXYZ* e = vpEdgesStereo[i];
+        std::shared_ptr<OrbMapPoint> pMP = vpMapPointEdgeStereo[i];
+
+        if(pMP->IsCorrupt())
+            continue;
+
+        if(e->chi2()>7.815 || !e->isDepthPositive())
+        {
+            std::shared_ptr<OrbFrame> pKFi = vpEdgeKFStereo[i];
+            vToErase.push_back(make_pair(pKFi,pMP));
+        }
+    }
+
+    // Get Map Mutex
+    std::unique_lock<std::mutex> lock(pMap->m_MapUpdateMutex);
+
+    if(!vToErase.empty())
+    {
+        for(size_t i=0;i<vToErase.size();i++)
+        {
+            std::shared_ptr<OrbFrame> pKFi = vToErase[i].first;
+            std::shared_ptr<OrbMapPoint> pMPi = vToErase[i].second;
+            pKFi->EraseMapPointMatch(pMPi);
+            pMPi->EraseObservingKeyframe(pKFi);
+        }
+    }
+
+    // Recover optimized data
+
+    //Keyframes
+    for(std::list<std::shared_ptr<OrbFrame>>::iterator lit=lLocalKeyFrames.begin(), lend=lLocalKeyFrames.end(); lit!=lend; lit++)
+    {
+        std::shared_ptr<OrbFrame> pKFl = *lit;
+        g2o::VertexSE3Expmap* vSE3 = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(pKFl->Id));
+        g2o::SE3Quat SE3quat = vSE3->estimate();
+        pKFl->SetPose(Orbconverter::toCvMat(SE3quat));
+    }
+
+    //Points
+    for(std::list<std::shared_ptr<OrbMapPoint>>::iterator lit=lLocalMapPoints.begin(), lend=lLocalMapPoints.end(); lit!=lend; lit++)
+    {
+        std::shared_ptr<OrbMapPoint> pMP = *lit;
+        g2o::VertexSBAPointXYZ* vPoint = static_cast<g2o::VertexSBAPointXYZ*>(optimizer.vertex(pMP->Id+maxKFid+1));
+        pMP->SetWorldPosition(Orbconverter::toCvMat(vPoint->estimate()));
+        pMP->UpdateMeanAndDepthValues();
+    }
+}

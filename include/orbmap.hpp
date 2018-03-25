@@ -93,6 +93,7 @@ class OrbMap {
      */
     void Reset();
 
+    std::mutex m_MapUpdateMutex = {};
 
  private:
     std::vector<std::shared_ptr<OrbFrame>> m_OrbKeyFrameOrigins;
@@ -103,7 +104,6 @@ class OrbMap {
     int m_majorChangeIndex;
     
     std::mutex m_mapMutex = {};
-    std::mutex m_MapUpdateMutex = {};
     std::mutex m_orbMapPointCreationMutex = {};
 };
 

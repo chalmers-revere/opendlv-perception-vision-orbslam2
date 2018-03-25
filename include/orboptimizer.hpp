@@ -40,10 +40,10 @@ class OrbOptimizer {
                                  int nIterations = 5, bool *pbStopFlag=NULL, const unsigned long nLoopKF=0,
                                  const bool bRobust = true);
     int static PoseOptimization(std::shared_ptr<OrbFrame> pFrame);
-    /*void static LocalBundleAdjustment(std::shared_ptr<OrbFrame> keyframe, bool *pbStopFlag, Map *pMap);
+    void static LocalBundleAdjustment(std::shared_ptr<OrbFrame> keyframe, bool *pbStopFlag, std::shared_ptr<OrbMap> pMap);
 
     // if bFixScale is true, 6DoF optimization (stereo,rgbd), 7DoF otherwise (mono)
-    void static OptimizeEssentialGraph(Map* pMap, KeyFrame* pLoopKF, KeyFrame* pCurKF,
+    /*void static OptimizeEssentialGraph(Map* pMap, KeyFrame* pLoopKF, KeyFrame* pCurKF,
                                        const LoopClosing::KeyFrameAndPose &NonCorrectedSim3,
                                        const LoopClosing::KeyFrameAndPose &CorrectedSim3,
                                        const map<KeyFrame *, set<KeyFrame *> > &LoopConnections,
