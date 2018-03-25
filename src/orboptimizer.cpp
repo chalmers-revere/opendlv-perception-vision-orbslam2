@@ -788,3 +788,209 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbFrame> pKF, bool* pb
         pMP->UpdateMeanAndDepthValues();
     }
 }
+
+//OPTIMIZE GRAPH HERE
+
+
+int OrbOptimizer::OptimizeSim3(std::shared_ptr<OrbFrame> pKF1, std::shared_ptr<OrbFrame> pKF2, std::vector<std::shared_ptr<OrbMapPoint>> &vpMatches1, g2o::Sim3 &g2oS12, const float th2, const bool bFixScale)
+{
+    g2o::SparseOptimizer optimizer;
+    auto linearSolver = g2o::make_unique<orbLinearSolver>();
+    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<orbBlockSolver>(std::move(linearSolver)));
+	optimizer.setAlgorithm(solver);
+
+    // Calibration
+    const cv::Mat &K1 = pKF1->GetCalibrationMatrix();
+    const cv::Mat &K2 = pKF2->GetCalibrationMatrix();
+
+    // Camera poses
+    const cv::Mat R1w = pKF1->GetRotation();
+    const cv::Mat t1w = pKF1->GetTranslation();
+    const cv::Mat R2w = pKF2->GetRotation();
+    const cv::Mat t2w = pKF2->GetTranslation();
+
+    // Set Sim3 vertex
+    g2o::VertexSim3Expmap * vSim3 = new g2o::VertexSim3Expmap();    
+    vSim3->_fix_scale=bFixScale;
+    vSim3->setEstimate(g2oS12);
+    vSim3->setId(0);
+    vSim3->setFixed(false);
+    vSim3->_principle_point1[0] = K1.at<float>(0,2);
+    vSim3->_principle_point1[1] = K1.at<float>(1,2);
+    vSim3->_focal_length1[0] = K1.at<float>(0,0);
+    vSim3->_focal_length1[1] = K1.at<float>(1,1);
+    vSim3->_principle_point2[0] = K2.at<float>(0,2);
+    vSim3->_principle_point2[1] = K2.at<float>(1,2);
+    vSim3->_focal_length2[0] = K2.at<float>(0,0);
+    vSim3->_focal_length2[1] = K2.at<float>(1,1);
+    optimizer.addVertex(vSim3);
+
+    // Set MapPoint vertices
+    const int N = vpMatches1.size();
+    const std::vector<std::shared_ptr<OrbMapPoint>> vpMapPoints1 = pKF1->GetMapPointMatches();
+    std::vector<g2o::EdgeSim3ProjectXYZ*> vpEdges12;
+    std::vector<g2o::EdgeInverseSim3ProjectXYZ*> vpEdges21;
+    std::vector<size_t> vnIndexEdge;
+
+    vnIndexEdge.reserve(2*N);
+    vpEdges12.reserve(2*N);
+    vpEdges21.reserve(2*N);
+
+    const float deltaHuber = static_cast<float>(std::sqrt(th2));
+
+    int nCorrespondences = 0;
+
+    for(int i=0; i<N; i++)
+    {
+        if(!vpMatches1[i])
+            continue;
+
+        std::shared_ptr<OrbMapPoint> pMP1 = vpMapPoints1[i];
+        std::shared_ptr<OrbMapPoint> pMP2 = vpMatches1[i];
+
+        const int id1 = 2*i+1;
+        const int id2 = 2*(i+1);
+
+        const int i2 = pMP2->GetObeservationIndexOfKeyFrame(pKF2);
+
+        if(pMP1 && pMP2)
+        {
+            if(!pMP1->IsCorrupt() && !pMP2->IsCorrupt() && i2>=0)
+            {
+                g2o::VertexSBAPointXYZ* vPoint1 = new g2o::VertexSBAPointXYZ();
+                cv::Mat P3D1w = pMP1->GetWorldPosition();
+                cv::Mat P3D1c = R1w*P3D1w + t1w;
+                vPoint1->setEstimate(Orbconverter::toVector3d(P3D1c));
+                vPoint1->setId(id1);
+                vPoint1->setFixed(true);
+                optimizer.addVertex(vPoint1);
+
+                g2o::VertexSBAPointXYZ* vPoint2 = new g2o::VertexSBAPointXYZ();
+                cv::Mat P3D2w = pMP2->GetWorldPosition();
+                cv::Mat P3D2c = R2w*P3D2w + t2w;
+                vPoint2->setEstimate(Orbconverter::toVector3d(P3D2c));
+                vPoint2->setId(id2);
+                vPoint2->setFixed(true);
+                optimizer.addVertex(vPoint2);
+            }
+            else
+                continue;
+        }
+        else
+            continue;
+
+        nCorrespondences++;
+
+        std::vector<cv::KeyPoint> vectorKP1 = pKF1->GetUndistortedKeyPoints();
+		std::vector<cv::KeyPoint> vectorKP2 = pKF2->GetUndistortedKeyPoints();
+        // Set edge x1 = S12*X2
+        Eigen::Matrix<double,2,1> obs1;
+        const cv::KeyPoint &kpUn1 = vectorKP1[i];
+        obs1 << kpUn1.pt.x, kpUn1.pt.y;
+
+        g2o::EdgeSim3ProjectXYZ* e12 = new g2o::EdgeSim3ProjectXYZ();
+        e12->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id2)));
+        e12->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(0)));
+        e12->setMeasurement(obs1);
+
+
+        std::vector<float> invSigma2Vector1 = pKF1->GetInverseLevelSigma2();
+        const float &invSigmaSquare1 = invSigma2Vector1[kpUn1.octave];
+        e12->setInformation(Eigen::Matrix2d::Identity()*invSigmaSquare1);
+
+        g2o::RobustKernelHuber* rk1 = new g2o::RobustKernelHuber;
+        e12->setRobustKernel(rk1);
+        rk1->setDelta(deltaHuber);
+        optimizer.addEdge(e12);
+
+        // Set edge x2 = S21*X1
+        Eigen::Matrix<double,2,1> obs2;
+        const cv::KeyPoint &kpUn2 = vectorKP2[i2];
+        obs2 << kpUn2.pt.x, kpUn2.pt.y;
+
+        g2o::EdgeInverseSim3ProjectXYZ* e21 = new g2o::EdgeInverseSim3ProjectXYZ();
+
+        e21->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id1)));
+        e21->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(0)));
+        e21->setMeasurement(obs2);
+
+
+        std::vector<float> invSigma2Vector2 = pKF2->GetInverseLevelSigma2();
+        float invSigmaSquare2 = invSigma2Vector2[kpUn2.octave];
+        e21->setInformation(Eigen::Matrix2d::Identity()*invSigmaSquare2);
+
+        g2o::RobustKernelHuber* rk2 = new g2o::RobustKernelHuber;
+        e21->setRobustKernel(rk2);
+        rk2->setDelta(deltaHuber);
+        optimizer.addEdge(e21);
+
+        vpEdges12.push_back(e12);
+        vpEdges21.push_back(e21);
+        vnIndexEdge.push_back(i);
+    }
+
+    // Optimize!
+    optimizer.initializeOptimization();
+    optimizer.optimize(5);
+
+    // Check inliers
+    int nBad=0;
+    for(size_t i=0; i<vpEdges12.size();i++)
+    {
+        g2o::EdgeSim3ProjectXYZ* e12 = vpEdges12[i];
+        g2o::EdgeInverseSim3ProjectXYZ* e21 = vpEdges21[i];
+        if(!e12 || !e21)
+            continue;
+
+        if(e12->chi2()>th2 || e21->chi2()>th2)
+        {
+            size_t idx = vnIndexEdge[i];
+            vpMatches1[idx]=static_cast<std::shared_ptr<OrbMapPoint>>(NULL);
+            optimizer.removeEdge(e12);
+            optimizer.removeEdge(e21);
+            vpEdges12[i]=static_cast<g2o::EdgeSim3ProjectXYZ*>(NULL);
+            vpEdges21[i]=static_cast<g2o::EdgeInverseSim3ProjectXYZ*>(NULL);
+            nBad++;
+        }
+    }
+
+    int nMoreIterations;
+    if(nBad>0)
+        nMoreIterations=10;
+    else
+        nMoreIterations=5;
+
+    if(nCorrespondences-nBad<10)
+        return 0;
+
+    // Optimize again only with inliers
+
+    optimizer.initializeOptimization();
+    optimizer.optimize(nMoreIterations);
+
+    int nIn = 0;
+    for(size_t i=0; i<vpEdges12.size();i++)
+    {
+        g2o::EdgeSim3ProjectXYZ* e12 = vpEdges12[i];
+        g2o::EdgeInverseSim3ProjectXYZ* e21 = vpEdges21[i];
+        if(!e12 || !e21)
+            continue;
+
+        if(e12->chi2()>th2 || e21->chi2()>th2)
+        {
+            size_t idx = vnIndexEdge[i];
+            vpMatches1[idx]=static_cast<std::shared_ptr<OrbMapPoint>>(NULL);
+        }
+        else
+            nIn++;
+    }
+
+    // Recover optimized Sim3
+    g2o::VertexSim3Expmap* vSim3_recov = static_cast<g2o::VertexSim3Expmap*>(optimizer.vertex(0));
+    g2oS12= vSim3_recov->estimate();
+
+    return nIn;
+}
+
+
+

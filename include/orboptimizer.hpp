@@ -47,11 +47,11 @@ class OrbOptimizer {
                                        const LoopClosing::KeyFrameAndPose &NonCorrectedSim3,
                                        const LoopClosing::KeyFrameAndPose &CorrectedSim3,
                                        const map<KeyFrame *, set<KeyFrame *> > &LoopConnections,
-                                       const bool &bFixScale);
+                                       const bool &bFixScale);*/
 
     // if bFixScale is true, optimize SE3 (stereo,rgbd), Sim3 otherwise (mono)
-    static int OptimizeSim3(std::shared_ptr<OrbFrame> keyFrame1, std::shared_ptr<OrbFrame> keyFrame2, std::shared_ptr<OrbMapPoint> &vpMatches1, g2o::Sim3 &g2oS12, const float th2, const bool bFixScale);
-	*/
+    static int OptimizeSim3(std::shared_ptr<OrbFrame> keyFrame1, std::shared_ptr<OrbFrame> keyFrame2, std::vector<std::shared_ptr<OrbMapPoint>> &vpMatches1, g2o::Sim3 &g2oS12, const float th2, const bool bFixScale);
+	
 };
 
 
