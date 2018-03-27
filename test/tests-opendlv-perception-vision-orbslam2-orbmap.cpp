@@ -35,7 +35,7 @@ TEST_CASE("testAddOrbKeyFrame")
     right = cv::Mat::zeros(1000, 1000, CV_32F);
     tcw = cv::Mat::zeros(1000, 1000, CV_32F);
     std::vector<opendlv::logic::sensation::OrbKeyPoint> keyPoints{};
-    opendlv::logic::sensation::OrbFrame *frame = new opendlv::logic::sensation::OrbFrame(left, right, keyPoints, tcw);
+    opendlv::logic::sensation::OrbFrame *frame = new opendlv::logic::sensation::OrbFrame(left, right, keyPoints, tcw, 0);
     frame->Id = 10;
     std::shared_ptr<opendlv::logic::sensation::OrbFrame> keyFrame(frame);
     REQUIRE_NOTHROW(orbMap.PushOrbKeyFrame(keyFrame));
@@ -48,7 +48,7 @@ TEST_CASE("testMaxKeyFrameId")
     right = cv::Mat::zeros(1000, 1000, CV_32F);
     tcw = cv::Mat::zeros(1000, 1000, CV_32F);
     std::vector<opendlv::logic::sensation::OrbKeyPoint> keyPoints{};
-    opendlv::logic::sensation::OrbFrame *frame = new opendlv::logic::sensation::OrbFrame(left, right, keyPoints, tcw);
+    opendlv::logic::sensation::OrbFrame *frame = new opendlv::logic::sensation::OrbFrame(left, right, keyPoints, tcw, 0);
     frame->Id = 10;
     std::shared_ptr<opendlv::logic::sensation::OrbFrame> keyFrame(frame);
     REQUIRE_NOTHROW(orbMap.PushOrbKeyFrame(keyFrame));
@@ -87,7 +87,7 @@ TEST_CASE("testOrbKeyFramesCount")
     right = cv::Mat::zeros(1000, 1000, CV_32F);
     tcw = cv::Mat::zeros(1000, 1000, CV_32F);
     std::vector<opendlv::logic::sensation::OrbKeyPoint> keyPoints{};
-    opendlv::logic::sensation::OrbFrame *frame = new opendlv::logic::sensation::OrbFrame(left, right, keyPoints, tcw);
+    opendlv::logic::sensation::OrbFrame *frame = new opendlv::logic::sensation::OrbFrame(left, right, keyPoints, tcw, 0);
     frame->Id = 10;
     std::shared_ptr<opendlv::logic::sensation::OrbFrame> keyFrame(frame);
     REQUIRE_NOTHROW(orbMap.PushOrbKeyFrame(keyFrame));
@@ -108,7 +108,7 @@ TEST_CASE("testDeleteOrbKeyFrame")
     right = cv::Mat::zeros(1000, 1000, CV_32F);
     tcw = cv::Mat::zeros(1000, 1000, CV_32F);
     std::vector<opendlv::logic::sensation::OrbKeyPoint> keyPoints{};
-    opendlv::logic::sensation::OrbFrame *frame = new opendlv::logic::sensation::OrbFrame(left, right, keyPoints, tcw);
+    opendlv::logic::sensation::OrbFrame *frame = new opendlv::logic::sensation::OrbFrame(left, right, keyPoints, tcw, 0);
     frame->Id = 10;
     std::shared_ptr<opendlv::logic::sensation::OrbFrame> keyFrame(frame);
     REQUIRE_NOTHROW(orbMap.PushOrbKeyFrame(keyFrame));
@@ -137,7 +137,7 @@ TEST_CASE("testReset")
     right = cv::Mat::zeros(1000, 1000, CV_32F);
     tcw = cv::Mat::zeros(1000, 1000, CV_32F);
     std::vector<opendlv::logic::sensation::OrbKeyPoint> keyPoints{};
-    opendlv::logic::sensation::OrbFrame *frame = new opendlv::logic::sensation::OrbFrame(left, right, keyPoints, tcw);
+    opendlv::logic::sensation::OrbFrame *frame = new opendlv::logic::sensation::OrbFrame(left, right, keyPoints, tcw, 0);
     frame->Id = 10;
     std::shared_ptr<opendlv::logic::sensation::OrbFrame> keyFrame(frame);
     REQUIRE_NOTHROW(orbMap.PushOrbKeyFrame(keyFrame));

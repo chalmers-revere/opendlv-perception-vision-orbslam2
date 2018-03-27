@@ -45,6 +45,8 @@ public:
     void SetWorldPosition(const cv::Mat &Position);
     cv::Mat GetWorldPosition();
 
+    cv::Mat GetMeanViewingDistance();
+
     cv::Mat GetMeanViewingDirection();
     std::shared_ptr<OrbFrame> GetReferenceKeyFrame();
 
@@ -96,7 +98,7 @@ public:
     long unsigned int GetBAGlobalForKF();
 
     void SetTrackScaleLevel(long unsigned int TrackScaleLevel);
-    void SetTrackInView(long unsigned int TrackInView);
+    void SetTrackInView(bool trackInView);
     void SetackViewCos(long unsigned int ackViewCos);
     void SetTrackReferenceForFrame(long unsigned int TrackReferenceForFrame);
     void SetLastFrameSeen(long unsigned int LastFrameSeen);
@@ -108,6 +110,14 @@ public:
     void SetPosGBA(long unsigned int PosGBA);
     void SetBAGlobalForKF(long unsigned int BAGlobalForKF);
 
+    // Variables used by the tracking
+    float mTrackProjX = {};
+    float mTrackProjY = {};
+    float mTrackProjXR = {};
+    bool m_trackInView = {};
+    int mnTrackScaleLevel = {};
+    float mTrackViewCos = {};
+
 private:
     long unsigned int m_sequenceId = 0;
     long int m_firstKeyframeId = {};
@@ -115,12 +125,6 @@ private:
     int m_observingKeyFramesCount = {};
 
     // Variables used by the tracking
-    float mTrackProjX = {};
-    float mTrackProjY = {};
-    float mTrackProjXR = {};
-    bool mbTrackInView = {};
-    int mnTrackScaleLevel = {};
-    float mTrackViewCos = {};
     long unsigned int mnTrackReferenceForFrame = {};
     long unsigned int mnLastFrameSeen = {};
 
