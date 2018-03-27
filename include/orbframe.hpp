@@ -41,6 +41,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <orbkeypoint.hpp>
 #include <orbmappoint.hpp>
+#include <orbextractor.hpp>
 
 class OrbMapPoint;
 
@@ -114,6 +115,22 @@ public:
     std::vector<float> GetInverseLevelSigma2() { return m_inverseLevelSigma2; }
     void SetInverseLevelSigma2(std::vector<float> inverseLevelSigma2) { m_inverseLevelSigma2 = inverseLevelSigma2; }
 
+    cv::Mat GetCalibrationMatrix(){ return m_calibrationK; } //RETURN FROM ORBExTRACTOR?
+    int GetNumberOfKeyPoints(){return m_numberOfKeypoints; } //ADDED
+    std::vector<float> GetRight(){return m_right; }
+    std::vector<bool> GetBoolOutliers(){return m_outlier; } //FIX LOGIC
+    void SetBoolOutliers(bool inBool, int index){m_outlier[index] = inBool;}
+
+    long unsigned int GetBALocalForKF(){return mnBALocalForKF; }
+    void SetBALocalForKF(long unsigned int inBALocal){ mnBALocalForKF = inBALocal; }
+
+    long unsigned int GetBAFixedForKF(){return mnBAFixedForKF; }
+    void SetBAFixedForKF(long unsigned int inBAFixed){ mnBAFixedForKF = inBAFixed; }
+
+    std::vector<cv::KeyPoint> GetCvKeyPoints(){return m_keyPoints;}
+
+    bool IsCorrupt(){ return true; } //FIX LOGIC
+
     static bool WeightComp( int a, int b)
     {
         return a>b;
@@ -122,15 +139,26 @@ public:
     long unsigned int Id;
     static long unsigned int NextId;
 
+    // Calibration parameters
+    const float fx, fy, cx, cy, invfx, invfy, mbf, mb, mThDepth;
+    //Variables used for loop closing
+    cv::Mat mTcwGBA;
+    cv::Mat mTcwBefGBA;
+    long unsigned int mnBAGlobalForKF;
+
 private:
 
+       // Variables used by the local mapping
+    long unsigned int mnBALocalForKF = {};
+    long unsigned int mnBAFixedForKF = {};
     int m_numberOfKeypoints = 0;
-
+    std::vector<bool> m_outlier = {};
     std::vector<cv::KeyPoint> m_keyPoints = {}, m_keyPointsRight = {};
     std::vector<cv::KeyPoint> m_undistortedKeyPoints = {};
     std::vector<float> m_right = {}; // negative value for monocular points
     std::vector<float> m_depth = {}; // negative value for monocular points
     cv::Mat m_descriptors = {};
+    cv::Mat m_calibrationK = {};
 
     std::vector<OrbKeyPoint> m_keypoints = {};
     cv::Mat m_leftGreyImage, m_rightGreyImage;

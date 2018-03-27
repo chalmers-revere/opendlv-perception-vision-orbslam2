@@ -30,9 +30,6 @@
 #include <utility>
 #include <vector>
 
-namespace opendlv {
-namespace logic {
-namespace sensation {
 
 class OrbFrame;
 
@@ -45,8 +42,5 @@ class BowMatcher {
     ~BowMatcher();
 };
 
-} // namespace sensation
-} // namespace logic
-} // namespace opendlv
 
 #endif //BOWMATCHER_HPP

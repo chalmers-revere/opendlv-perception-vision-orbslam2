@@ -19,9 +19,6 @@
 #include "bowmatcher.hpp"
 #include "orbframe.hpp"
 
-namespace opendlv {
-namespace logic {
-namespace sensation {
 
 //Stereo constructor
 BowMatcher::BowMatcher()
@@ -33,7 +30,3 @@ BowMatcher::~BowMatcher()
 {
 
 }
-
-} // namespace sensation
-} // namespace logic
-} // namespace opendlv

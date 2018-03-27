@@ -23,8 +23,13 @@ long unsigned int OrbFrame::NextId=0;
 
     //Stereo constructor
 OrbFrame::OrbFrame(cv::Mat leftGreyImage, cv::Mat rightGreyImage, std::vector<OrbKeyPoint> keyPoints, cv::Mat tcw):
-        Id(NextId++), m_keypoints(keyPoints), m_leftGreyImage(leftGreyImage), m_rightGreyImage(rightGreyImage), m_tcw(tcw)
+        Id(NextId++), fx(), fy(), cx(), cy(), invfx(), invfy(), mbf(), mb(), mThDepth(), mTcwGBA(), mTcwBefGBA() ,mnBAGlobalForKF(),
+         m_keypoints(keyPoints), m_leftGreyImage(leftGreyImage), m_rightGreyImage(rightGreyImage), m_tcw(tcw)
+        
 {
+    //IS THIS CORRECT WITH OURLIERS?!?
+    m_numberOfKeypoints = keyPoints.size();
+    m_outlier = std::vector<bool>(m_numberOfKeypoints,false);
     SetPose(m_tcw);
 }
 

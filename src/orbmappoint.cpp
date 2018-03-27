@@ -20,7 +20,7 @@
 #include <orbmappoint.hpp>
 
 OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map)
-: m_nextId(), m_firstKeyframeId(refenceKeyFrame->Id), m_FirstKeyFrame(refenceKeyFrame->Id), m_refenceKeyFrame(refenceKeyFrame), m_map(map)
+: Id(), m_nextId(), m_firstKeyframeId(refenceKeyFrame->Id), m_FirstKeyFrame(refenceKeyFrame->Id), m_refenceKeyFrame(refenceKeyFrame), m_map(map)
 {
     position.copyTo(m_worldPosition);
     m_meanViewingDirection = cv::Mat::zeros(3,1,CV_32F);
@@ -31,7 +31,7 @@ OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> refe
 }
 
 OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> frame, std::shared_ptr<OrbMap> map, const int &keyPointIndex)
-: m_nextId(), m_map(map)
+: Id(), m_nextId(), m_map(map)
 {
     position.copyTo(m_worldPosition);
     cv::Mat cameraCenter = frame->GetCameraCenter();
