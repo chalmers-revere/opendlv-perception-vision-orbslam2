@@ -80,6 +80,12 @@ cv::Mat OrbMapPoint::GetWorldPosition() {
     return cv::Mat();
 }
 
+    cv::Mat OrbMapPoint::GetMeanViewingDistance()
+    {
+        std::unique_lock<std::mutex> lock(mMutexPos);
+        return m_meanViewingDirection.clone();
+    }
+
 cv::Mat OrbMapPoint::GetMeanViewingDirection() {
     return cv::Mat();
 }
@@ -168,8 +174,9 @@ int OrbMapPoint::GetTrackScaleLevel() {
     return 0;
 }
 
-bool OrbMapPoint::GetTrackInView() {
-    return false;
+bool OrbMapPoint::GetTrackInView()
+{
+    return m_trackInView;
 }
 
 float OrbMapPoint::GTrackViewCos() {
@@ -216,8 +223,9 @@ void OrbMapPoint::SetTrackScaleLevel(long unsigned int TrackScaleLevel) {
 if (TrackScaleLevel != 0){};
 }
 
-void OrbMapPoint::SetTrackInView(long unsigned int TrackInView) {
-if (TrackInView != 0){};
+void OrbMapPoint::SetTrackInView(bool trackInView)
+{
+    m_trackInView = trackInView;
 }
 
 void OrbMapPoint::SetackViewCos(long unsigned int ackViewCos) {

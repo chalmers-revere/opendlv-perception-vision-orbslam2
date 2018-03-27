@@ -46,22 +46,36 @@ namespace opendlv {
 namespace logic {
 namespace sensation {
 
+#define FRAME_GRID_ROWS 48
+#define FRAME_GRID_COLS 64
+
 class OrbMapPoint;
 
 class OrbFrame 
 {
 public:
     // Copy constructor.
-    OrbFrame(cv::Mat leftGreyImage, cv::Mat rightGreyImage, std::vector<OrbKeyPoint>, cv::Mat tcw);
+    OrbFrame(cv::Mat leftGreyImage, cv::Mat rightGreyImage, std::vector<OrbKeyPoint>, cv::Mat tcw, double timestamp);
     ~OrbFrame();
 
     void SetPose(const cv::Mat &Tcw);
+    void UpdatePoseMatrices();
+
+
     cv::Mat GetPose();
     cv::Mat GetPoseInverse();
     cv::Mat GetCameraCenter();
     cv::Mat GetStereoCenter();
     cv::Mat GetRotation();
+    cv::Mat GetRotationInverse();
     cv::Mat GetTranslation();
+
+    bool IsInFrustum(std::shared_ptr<OrbMapPoint> mapPoint, float viewingCosLimit);
+    bool PositionInGrid(const cv::KeyPoint &keyPoint, int &positionX, int &positionY);
+
+    std::vector<size_t> GetFeaturesInArea(const float &x, const float  &y, const float  &r, const int minLevel=-1, const int maxLevel=-1) const;
+
+    cv::Mat UnprojectStereo(const int &i);
 
     void ComputeBoW();
 
@@ -86,10 +100,10 @@ public:
     void AddLoopEdge(std::shared_ptr<OrbFrame> pKF);
     std::set<std::shared_ptr<OrbFrame>> GetLoopEdges();
 
-    void AddMapPoint(std::shared_ptr<OrbMapPoint> pMP, const size_t &idx);
+    void AddMapPoint(std::shared_ptr<OrbMapPoint> mapPoint, const size_t &idx);
     void EraseMapPointMatch(const size_t &idx);
-    void EraseMapPointMatch(std::shared_ptr<OrbMapPoint> pMP);
-    void ReplaceMapPointMatch(const size_t &idx, std::shared_ptr<OrbMapPoint> pMP);
+    void EraseMapPointMatch(std::shared_ptr<OrbMapPoint> mapPoint);
+    void ReplaceMapPointMatch(const size_t &idx, std::shared_ptr<OrbMapPoint> mapPoint);
     std::set<std::shared_ptr<OrbMapPoint>> GetMapPoints();
     std::vector<std::shared_ptr<OrbMapPoint>> GetMapPointMatches();
     int TrackedMapPoints(const int &minObs);
@@ -128,6 +142,23 @@ public:
 
 private:
 
+
+    // Calibration matrix and OpenCV distortion parameters.
+    cv::Mat mK = {};
+    static float fx;
+    static float fy;
+    static float cx;
+    static float cy;
+    static float invfx;
+    static float invfy;
+    cv::Mat mDistCoef = {};
+
+    // Undistorted Image Bounds (computed once).
+    static float mnMinX;
+    static float mnMaxX;
+    static float mnMinY;
+    static float mnMaxY;
+
     int m_numberOfKeypoints = 0;
 
     std::vector<cv::KeyPoint> m_keyPoints = {}, m_keyPointsRight = {};
@@ -146,11 +177,17 @@ private:
     std::vector<float> m_levelSigma2 = {};
     std::vector<float> m_inverseLevelSigma2 = {};
 
-    cv::Mat m_tcw = {};
+    // camera pose
+    cv::Mat m_cameraPose = {};
     cv::Mat m_twc = {};
-    cv::Mat m_ow = {};
+    cv::Mat m_cameraCenter = {};
 
     cv::Mat m_cw = {};
+    cv::Mat m_rotation = {};
+    cv::Mat m_inverseRotation = {};
+
+    // Frame timestamp.
+    double m_timestamp;
 
     std::vector<std::shared_ptr<OrbMapPoint> > m_mapPoints = {};
 
@@ -164,6 +201,18 @@ private:
     std::set<std::shared_ptr<OrbFrame> > m_loopEdges = {};
 
     bool m_dontErase = false;
+
+
+    // Keypoints are assigned to cells in a grid to reduce matching complexity when projecting MapPoints.
+    static float mfGridElementWidthInv;
+    static float mfGridElementHeightInv;
+    std::vector<std::size_t> mGrid[FRAME_GRID_COLS][FRAME_GRID_ROWS];
+
+    // Stereo baseline multiplied by fx.
+    float m_baseLineFx = {};
+
+    // Stereo baseline in meters.
+    float m_baseLine = {};
 
     float m_halfBaseline = 0.0f;
 
