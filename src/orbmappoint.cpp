@@ -61,6 +61,7 @@ OrbMapPoint::~OrbMapPoint()
 
 std::map<std::shared_ptr<OrbFrame>,size_t> OrbMapPoint::GetObservingKeyframes()
 {
+    // use proper mutex
     return m_observingKeyframes;
 }
 
@@ -69,12 +70,27 @@ bool OrbMapPoint::IsCorrupt()
     return false;
 }
 
+// src/orboptimizer.cpp
+// 233:            pMP->SetWorldPosition(Orbconverter::toCvMat(vPoint->estimate()));
+// 787:        pMP->SetWorldPosition(Orbconverter::toCvMat(vPoint->estimate()));
 void OrbMapPoint::SetWorldPosition(const cv::Mat &Position) {
-    if(Position.empty()){}
+    // use proper mutex here
+    pos.copyTo(m_worldPosition);
 }
+// src/sim3solver.cpp
+// 98:            cv::Mat X3D1w = mapPoint1->GetWorldPosition();
+// 101:            cv::Mat X3D2w = mapPoint2->GetWorldPosition();
 
+// src/orboptimizer.cpp
+// 96:        vPoint->setEstimate(Orbconverter::toVector3d(pMP->GetWorldPosition()));
+// 318:                cv::Mat Xw = pMP->GetWorldPosition();
+// 356:                cv::Mat Xw = pMP->GetWorldPosition();
+// 582:        vPoint->setEstimate(Orbconverter::toVector3d(pMP->GetWorldPosition()));
+// 861:                cv::Mat P3D1w = pMP1->GetWorldPosition();
+// 869:                cv::Mat P3D2w = pMP2->GetWorldPosition();
 cv::Mat OrbMapPoint::GetWorldPosition() {
-    return cv::Mat();
+    // use proper mutex
+    return m_worldPosition.copy();
 }
 
 cv::Mat OrbMapPoint::GetMeanViewingDirection() {
@@ -84,9 +100,11 @@ cv::Mat OrbMapPoint::GetMeanViewingDirection() {
 std::shared_ptr<OrbFrame> OrbMapPoint::GetReferenceKeyFrame() {
     return std::shared_ptr<OrbFrame>();
 }
-
+// src/orbframe.cpp
+// 416:                    if(m_mapPoints[i]->GetObservingKeyFrameCount()>=minimumObservations)
 int OrbMapPoint::GetObservingKeyFrameCount() {
-    return 0;
+    // use mutex
+    return m_observingKeyFramesCount;
 }
 
 int OrbMapPoint::GetSequenceId() {
@@ -96,11 +114,41 @@ int OrbMapPoint::GetSequenceId() {
 void OrbMapPoint::AddObservingKeyframe(std::shared_ptr<OrbFrame> keyFrame, size_t idx) {
     if(keyFrame.get() && idx) {}
 }
-
+// src/orboptimizer.cpp
+// 767:            pMPi->EraseObservingKeyframe(pKFi);
 void OrbMapPoint::EraseObservingKeyframe(std::shared_ptr<OrbFrame> keyFrame) {
-    if(keyFrame.get()) {}
-}
+    bool mapPointIsCorrupt = false;
+    // aquire proper mutex
 
+    // check if OrbKeyFrame in m_observingKeyframes
+    if(m_observingKeyframes.count(keyFrame))
+    {
+        int keyFrameId = m_observingKeyframes[keyFrame];
+        // determine if monocular or stereo keyframe
+        if(keyFrame->mvuRight[keyFrameId]>=0)
+            m_observingKeyFramesCount -= 2;
+        else
+            m_observingKeyFramesCount -= 1;
+
+        m_observingKeyframes.erase(keyFrame);
+
+        if(m_refenceKeyFrame == keyFrame)
+            m_refenceKeyFrame = m_observingKeyframes.begin()->first;
+
+        
+        if(m_observingKeyFramesCount <= 2)
+            SetCorruptFlag();
+    }
+}
+// src/orbframe.cpp
+// 383:    int index = mapPoint->GetObeservationIndexOfKeyFrame(std::shared_ptr<OrbFrame>(this));
+
+// src/sim3solver.cpp
+// 69:            int indexKF1 = mapPoint1->GetObeservationIndexOfKeyFrame(localKeyFrame1);
+// 70:            int indexKF2 = mapPoint2->GetObeservationIndexOfKeyFrame(localKeyFrame2);
+
+// src/orboptimizer.cpp
+// 854:        const int i2 = pMP2->GetObeservationIndexOfKeyFrame(pKF2);
 int OrbMapPoint::GetObeservationIndexOfKeyFrame(std::shared_ptr<OrbFrame> keyFrame) {
     if(keyFrame.get()) {}
     return 0;
@@ -138,11 +186,14 @@ float OrbMapPoint::GetFoundRatio() {
 void OrbMapPoint::ComputeDistinctiveDescriptors() {
 
 }
-
+// include/orbframe.hpp
+// 97:    cv::Mat GetDescriptors() { return m_descriptors; }
 cv::Mat OrbMapPoint::GetDescriptor() {
     return cv::Mat();
 }
-
+// src/orboptimizer.cpp
+// 234:            pMP->UpdateMeanAndDepthValues();
+// 788:        pMP->UpdateMeanAndDepthValues();
 void OrbMapPoint::UpdateMeanAndDepthValues() {
 
 }
@@ -180,7 +231,12 @@ long unsigned int OrbMapPoint::GetTrackReferenceForFrame() {
 long unsigned int OrbMapPoint::GetLastFrameSeen() {
     return 0;
 }
+// include/orbframe.hpp
+// 124:    long unsigned int GetBALocalForKF(){return mnBALocalForKF; }
 
+// src/orboptimizer.cpp
+// 491:                    if(pMP->GetBALocalForKF()!=pKF->Id)
+// 508:            if(pKFi->GetBALocalForKF()!=pKF->Id && pKFi->GetBAFixedForKF()!=pKF->Id)
 long unsigned int OrbMapPoint::GetBALocalForKF() {
     return 0;
 }
@@ -228,7 +284,13 @@ if (TrackReferenceForFrame != 0){};
 void OrbMapPoint::SetLastFrameSeen(long unsigned int LastFrameSeen) {
 if (LastFrameSeen != 0){};
 }
+// include/orbframe.hpp
+// 125:    void SetBALocalForKF(long unsigned int inBALocal){ mnBALocalForKF = inBALocal; }
 
+// src/orboptimizer.cpp
+// 470:    pKF->SetBALocalForKF(pKF->Id);
+// 476:        pKFi->SetBALocalForKF(pKF->Id);;
+// 494:                        pMP->SetBALocalForKF(pKF->Id);
 void OrbMapPoint::SetBALocalForKF(long unsigned int BALocalForKF) {
 if (BALocalForKF != 0){};
 }
