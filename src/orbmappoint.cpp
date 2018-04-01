@@ -121,22 +121,23 @@ void OrbMapPoint::EraseObservingKeyframe(std::shared_ptr<OrbFrame> keyFrame) {
     // aquire proper mutex
 
     // check if OrbKeyFrame in m_observingKeyframes
-    if(m_observingKeyframes.count(keyFrame))
+    if(this->m_observingKeyframes.count(keyFrame))
     {
-        int keyFrameId = m_observingKeyframes[keyFrame];
+        int keyFrameId = this->m_observingKeyframes[keyFrame];
         // determine if monocular or stereo keyframe
         if(keyFrame->mvuRight[keyFrameId]>=0)
-            m_observingKeyFramesCount -= 2;
+            this->m_observingKeyFramesCount -= 2;
         else
-            m_observingKeyFramesCount -= 1;
+            this->m_observingKeyFramesCount -= 1;
 
-        m_observingKeyframes.erase(keyFrame);
+        this->m_observingKeyframes.erase(keyFrame);
 
         if(m_refenceKeyFrame == keyFrame)
-            m_refenceKeyFrame = m_observingKeyframes.begin()->first;
+            m_refenceKeyFrame = this->m_observingKeyframes.begin()->first;
 
         
-        if(m_observingKeyFramesCount <= 2)
+        if(this->m_observingKeyFramesCount <= 2)
+            // release mutex
             SetCorruptFlag();
     }
 }
@@ -150,8 +151,11 @@ void OrbMapPoint::EraseObservingKeyframe(std::shared_ptr<OrbFrame> keyFrame) {
 // src/orboptimizer.cpp
 // 854:        const int i2 = pMP2->GetObeservationIndexOfKeyFrame(pKF2);
 int OrbMapPoint::GetObeservationIndexOfKeyFrame(std::shared_ptr<OrbFrame> keyFrame) {
-    if(keyFrame.get()) {}
-    return 0;
+    // use proper mutex
+    if(this->m_observingKeyframes.count(keyFrame))
+        return this->m_observingKeyframes[keyFrame];
+    else
+        return -1;
 }
 
 bool OrbMapPoint::KeyFrameInObservingKeyFrames(std::shared_ptr<OrbFrame> keyFrame) {
@@ -189,13 +193,52 @@ void OrbMapPoint::ComputeDistinctiveDescriptors() {
 // include/orbframe.hpp
 // 97:    cv::Mat GetDescriptors() { return m_descriptors; }
 cv::Mat OrbMapPoint::GetDescriptor() {
-    return cv::Mat();
+    // use mutex
+    return m_descriptor.clone();
 }
 // src/orboptimizer.cpp
 // 234:            pMP->UpdateMeanAndDepthValues();
 // 788:        pMP->UpdateMeanAndDepthValues();
 void OrbMapPoint::UpdateMeanAndDepthValues() {
+    if (this->m_corrupt) return;
 
+    std::map<std::shared_ptr<OrbFrame>,size_t> observations;
+    std::shared_ptr<OrbFrame> referenceKeyFrame;
+    cv::Mat position;
+    // aquire locks 
+    unique_lock<mutex> lock1(mMutexFeatures);
+    unique_lock<mutex> lock2(mMutexPos);
+    observations=this->m_observingKeyframes;
+    pRefKF=mpRefKF;
+    Pos = mWorldPos.clone();
+    
+    // release locks
+    if(observations.empty())
+        return;
+
+    cv::Mat normal = cv::Mat::zeros(3,1,CV_32F);
+    int n=0;
+    for(map<KeyFrame*,size_t>::iterator mit=observations.begin(), mend=observations.end(); mit!=mend; mit++)
+    {
+        KeyFrame* pKF = mit->first;
+        cv::Mat Owi = pKF->GetCameraCenter();
+        cv::Mat normali = mWorldPos - Owi;
+        normal = normal + normali/cv::norm(normali);
+        n++;
+    }
+
+    cv::Mat PC = Pos - pRefKF->GetCameraCenter();
+    const float dist = cv::norm(PC);
+    const int level = pRefKF->mvKeysUn[observations[pRefKF]].octave;
+    const float levelScaleFactor =  pRefKF->mvScaleFactors[level];
+    const int nLevels = pRefKF->mnScaleLevels;
+
+    {
+        unique_lock<mutex> lock3(mMutexPos);
+        mfMaxDistance = dist*levelScaleFactor;
+        mfMinDistance = mfMaxDistance/pRefKF->mvScaleFactors[nLevels-1];
+        mNormalVector = normal/n;
+    }
 }
 
 float OrbMapPoint::GetMinDistanceInvariance() {
