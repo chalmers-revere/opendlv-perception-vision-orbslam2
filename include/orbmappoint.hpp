@@ -168,8 +168,8 @@ private:
      std::shared_ptr<OrbMap> m_map = {};
 
     std::mutex m_constructorMutex = {};
-    std::mutex mMutexPos = {};
-    std::mutex mMutexFeatures = {};
+    std::mutex m_positionMutex = {};
+    std::mutex m_featureMutex = {};
 };
 
 #endif // ORBMAPPOINT_HPP

@@ -200,18 +200,15 @@ cv::Mat OrbMapPoint::GetDescriptor() {
 // 234:            pMP->UpdateMeanAndDepthValues();
 // 788:        pMP->UpdateMeanAndDepthValues();
 void OrbMapPoint::UpdateMeanAndDepthValues() {
-    if (this->m_corrupt) return;
-
-    std::map<std::shared_ptr<OrbFrame>,size_t> observingKeyFrames;
-    std::shared_ptr<OrbFrame> referenceKeyFrame;
-    cv::Mat position;
     // aquire locks 
-    std::unique_lock<std::mutex> lock1(mMutexFeatures);
-    std::unique_lock<std::mutex> lock2(mMutexPos);
-    observingKeyFrames=this->m_observingKeyframes;
-    referenceKeyFrame = this->m_refenceKeyFrame;
-    position = this->m_worldPosition.clone();
-    
+    std::unique_lock<std::mutex> featureMutex(this->m_featureMutex);
+    std::unique_lock<std::mutex> positionMutex(this->m_positionMutex);
+    if (this->m_corrupt) return;
+    std::map<std::shared_ptr<OrbFrame>,size_t> observingKeyFrames = this->m_observingKeyframes;
+    std::shared_ptr<OrbFrame> referenceKeyFrame = this->m_refenceKeyFrame;
+    cv::Mat position = this->m_worldPosition.clone();
+    featureMutex.unlock();
+    positionMutex.unlock();
     // release locks
     if(observingKeyFrames.empty())
         return;
@@ -233,12 +230,10 @@ void OrbMapPoint::UpdateMeanAndDepthValues() {
     const float levelScaleFactor =  referenceKeyFrame->GetScaleFactors()[level];
     const int nLevels = referenceKeyFrame->GetScaleLevels();
 
-    {
-        std::unique_lock<std::mutex> lock3(mMutexPos);
-        this->m_maxDistance = dist*levelScaleFactor;
-        this->m_minDistance = m_maxDistance/referenceKeyFrame->GetScaleFactors()[nLevels-1];
-        this->m_meanViewingDirection = normal/n;
-    }
+    positionMutex.lock();
+    this->m_maxDistance = dist*levelScaleFactor;
+    this->m_minDistance = m_maxDistance/referenceKeyFrame->GetScaleFactors()[nLevels-1];
+    this->m_meanViewingDirection = normal/n;
 }
 
 float OrbMapPoint::GetMinDistanceInvariance() {
