@@ -39,7 +39,7 @@ OrbInitializer::OrbInitializer(OrbFrame &referenceFrame, float sigma, int iterat
 {
     //m_calibration = referenceFrame.m_calibration.clone(); We have to come up with something uniform
 
-    m_referenceKeys = referenceFrame.GetUndistortedKeyPoints();
+    m_referenceKeys = referenceFrame.mvKeysUn;
 
     m_sigma = sigma;
     m_sigma2 = sigma * sigma;
@@ -51,7 +51,7 @@ bool OrbInitializer::Initialize(OrbFrame &currentFrame, const std::vector<int> &
 {
     // Fill structures with current keypoints and matches with reference frame
     // Reference Frame: 1, Current Frame: 2
-    m_currentKeys = currentFrame.GetUndistortedKeyPoints();
+    m_currentKeys = currentFrame.mvKeysUn;
 
     m_matches.clear();
     m_matches.reserve(m_currentKeys.size());

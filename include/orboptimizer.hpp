@@ -36,11 +36,11 @@ class OrbOptimizer {
 
     void static GlobalBundleAdjustemnt(std::shared_ptr<OrbMap> pMap, int nIterations=5, bool *pbStopFlag=NULL,
                                        const unsigned long nLoopKF=0, const bool bRobust = true);
-    void static BundleAdjustment(const std::vector<std::shared_ptr<OrbFrame>> &vpKF, const std::vector<std::shared_ptr<OrbMapPoint>> &vpMP,
+    void static BundleAdjustment(const std::vector<std::shared_ptr<OrbKeyFrame>> &vpKF, const std::vector<std::shared_ptr<OrbMapPoint>> &vpMP,
                                  int nIterations = 5, bool *pbStopFlag=NULL, const unsigned long nLoopKF=0,
                                  const bool bRobust = true);
     int static PoseOptimization(std::shared_ptr<OrbFrame> pFrame);
-    void static LocalBundleAdjustment(std::shared_ptr<OrbFrame> keyframe, bool *pbStopFlag, std::shared_ptr<OrbMap> pMap);
+    void static LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> keyframe, bool *pbStopFlag, std::shared_ptr<OrbMap> pMap);
 
     // if bFixScale is true, 6DoF optimization (stereo,rgbd), 7DoF otherwise (mono)
     /*void static OptimizeEssentialGraph(Map* pMap, KeyFrame* pLoopKF, KeyFrame* pCurKF,
@@ -50,7 +50,7 @@ class OrbOptimizer {
                                        const bool &bFixScale);*/
 
     // if bFixScale is true, optimize SE3 (stereo,rgbd), Sim3 otherwise (mono)
-    static int OptimizeSim3(std::shared_ptr<OrbFrame> keyFrame1, std::shared_ptr<OrbFrame> keyFrame2, std::vector<std::shared_ptr<OrbMapPoint>> &vpMatches1, g2o::Sim3 &g2oS12, const float th2, const bool bFixScale);
+    static int OptimizeSim3(std::shared_ptr<OrbKeyFrame> keyFrame1, std::shared_ptr<OrbKeyFrame> keyFrame2, std::vector<std::shared_ptr<OrbMapPoint>> &vpMatches1, g2o::Sim3 &g2oS12, const float th2, const bool bFixScale);
 	
 };
 

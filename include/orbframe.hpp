@@ -38,20 +38,19 @@
 #include <orbkeypoint.hpp>
 #include <orbmappoint.hpp>
 #include <orbextractor.hpp>
+#include <orbkeyframe.hpp>
 
 class OrbMapPoint;
 
 #define FRAME_GRID_ROWS 48
 #define FRAME_GRID_COLS 64
 
-class MapPoint;
-class KeyFrame;
+class OrbMapPoint;
+class OrbKeyFrame;
 
 class OrbFrame
 {
 public:
-    OrbFrame();
-
     // Constructor for stereo cameras.
     OrbFrame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeStamp, std::shared_ptr<OrbExtractor> extractorLeft,
              std::shared_ptr<OrbExtractor> extractorRight, std::shared_ptr<OrbVocabulary> voc, cv::Mat &K, cv::Mat &distCoef,
@@ -89,7 +88,7 @@ public:
 
     // Check if a MapPoint is in the frustum of the camera
     // and fill variables of the MapPoint to be used by the tracking
-    bool isInFrustum(OrbMapPoint* pMP, float viewingCosLimit);
+    bool isInFrustum(std::shared_ptr<OrbMapPoint> pMP, float viewingCosLimit);
 
     // Compute the cell of a keypoint (return false if outside the grid)
     bool PosInGrid(const cv::KeyPoint &kp, int &posX, int &posY);
@@ -130,38 +129,38 @@ public:
     float mbf;
 
     // Stereo baseline in meters.
-    float mb;
+    float mb = {};
 
     // Threshold close/far points. Close points are inserted from 1 view.
     // Far points are inserted as in the monocular case from 2 views.
     float mThDepth;
 
     // Number of KeyPoints.
-    int N;
+    int N = {};
 
     // Vector of keypoints (original for visualization) and undistorted (actually used by the system).
     // In the stereo case, mvKeysUn is redundant as images must be rectified.
     // In the RGB-D case, RGB images can be distorted.
-    std::vector<cv::KeyPoint> mvKeys, mvKeysRight;
-    std::vector<cv::KeyPoint> mvKeysUn;
+    std::vector<cv::KeyPoint> mvKeys = {}, mvKeysRight = {};
+    std::vector<cv::KeyPoint> mvKeysUn = {};
 
     // Corresponding stereo coordinate and depth for each keypoint.
     // "Monocular" keypoints have a negative value.
-    std::vector<float> mvuRight;
-    std::vector<float> mvDepth;
+    std::vector<float> mvuRight = {};
+    std::vector<float> mvDepth = {};
 
     // Bag of Words Vector structures.
-    OrbBowVector mBowVec;
-    DBoW2::FeatureVector mFeatVec;
+    OrbBowVector mBowVec = {};
+    OrbFeatureVector mFeatVec = {};
 
     // ORB descriptor, each row associated to a keypoint.
-    cv::Mat mDescriptors, mDescriptorsRight;
+    cv::Mat mDescriptors = {}, mDescriptorsRight = {};
 
     // MapPoints associated to keypoints, NULL pointer if no association.
-    std::vector<MapPoint*> mvpMapPoints;
+    std::vector<std::shared_ptr<OrbMapPoint>> mvpMapPoints = {};
 
     // Flag to identify outlier associations.
-    std::vector<bool> mvbOutlier;
+    std::vector<bool> mvbOutlier = {};
 
     // Keypoints are assigned to cells in a grid to reduce matching complexity when projecting MapPoints.
     static float mfGridElementWidthInv;
@@ -169,23 +168,23 @@ public:
     std::vector<std::size_t> mGrid[FRAME_GRID_COLS][FRAME_GRID_ROWS];
 
     // Camera pose.
-    cv::Mat mTcw;
+    cv::Mat mTcw = {};
 
     // Current and Next Frame id.
     static long unsigned int nNextId;
-    long unsigned int mnId;
+    long unsigned int mnId = {};
 
     // Reference Keyframe.
-    KeyFrame* mpReferenceKF;
+    std::shared_ptr<OrbKeyFrame> mpReferenceKF = {};
 
     // Scale pyramid info.
-    int mnScaleLevels;
-    float mfScaleFactor;
-    float mfLogScaleFactor;
-    std::vector<float> mvScaleFactors;
-    std::vector<float> mvInvScaleFactors;
-    std::vector<float> mvLevelSigma2;
-    std::vector<float> mvInvLevelSigma2;
+    int mnScaleLevels = {};
+    float mfScaleFactor = {};
+    float mfLogScaleFactor = {};
+    std::vector<float> mvScaleFactors = {};
+    std::vector<float> mvInvScaleFactors = {};
+    std::vector<float> mvLevelSigma2 = {};
+    std::vector<float> mvInvLevelSigma2 = {};
 
     // Undistorted Image Bounds (computed once).
     static float mnMinX;
@@ -210,10 +209,10 @@ private:
     void AssignFeaturesToGrid();
 
     // Rotation, translation and camera center
-    cv::Mat mRcw;
-    cv::Mat mtcw;
-    cv::Mat mRwc;
-    cv::Mat mOw; //==mtwc
+    cv::Mat mRcw = {};
+    cv::Mat mtcw = {};
+    cv::Mat mRwc = {};
+    cv::Mat mOw = {}; //==mtwc
 };
 
 #endif

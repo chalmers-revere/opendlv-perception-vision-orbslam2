@@ -26,32 +26,35 @@
 #include <vector>
 #include <orbframe.hpp>
 #include <orbmap.hpp>
+#include <orbconverter.hpp>
+#include "orbkeyframe.hpp"
 
+class OrbKeyFrame;
 class OrbFrame;
 class OrbMap;
 
 class OrbMapPoint
 {
 public:
-    OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map);
-    OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map, const int &keyPointIndex);
+    OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map);
+    OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map, const int &keyPointIndex);
     ~OrbMapPoint();
 
-    std::map<std::shared_ptr<OrbFrame>,size_t> GetObservingKeyframes();
+    std::map<std::shared_ptr<OrbKeyFrame>, size_t> GetObservingKeyframes();
 
     void SetWorldPosition(const cv::Mat &position);
     cv::Mat GetWorldPosition();
 
     cv::Mat GetMeanViewingDirection();
-    std::shared_ptr<OrbFrame> GetReferenceKeyFrame();
+    std::shared_ptr<OrbKeyFrame> GetReferenceKeyFrame();
 
     int GetObservingKeyFrameCount();
     int GetSequenceId();
-    void AddObservingKeyframe(std::shared_ptr<OrbFrame> keyFrame,size_t idx);
-    void EraseObservingKeyframe(std::shared_ptr<OrbFrame> keyFrame);
+    void AddObservingKeyframe(std::shared_ptr<OrbKeyFrame> keyFrame,size_t idx);
+    void EraseObservingKeyframe(std::shared_ptr<OrbKeyFrame> keyFrame);
 
-    int GetObeservationIndexOfKeyFrame(std::shared_ptr<OrbFrame> keyFrame);
-    bool KeyFrameInObservingKeyFrames(std::shared_ptr<OrbFrame> keyFrame);
+    int GetObeservationIndexOfKeyFrame(std::shared_ptr<OrbKeyFrame> keyFrame);
+    bool KeyFrameInObservingKeyFrames(std::shared_ptr<OrbKeyFrame> keyFrame);
 
     void SetCorruptFlag();
     bool IsCorrupt();
@@ -75,7 +78,8 @@ public:
 
     float GetMinDistanceInvariance();
     float GetMaxDistanceInvariance();
-    int PredictScale(const float &currentDist, std::shared_ptr<OrbFrame> keyFrame);
+    int PredictScale(const float &currentDist, std::shared_ptr<OrbKeyFrame> keyFrame);
+    int PredictScale(const float &currentDist, std::shared_ptr<OrbFrame> frame);
 
     long unsigned int Id;
     long unsigned int m_nextId;
@@ -105,9 +109,16 @@ public:
     void SetCorrectedReference(long unsigned int CorrectedReference);
     void SetPosGBA(long unsigned int PosGBA);
     void SetBAGlobalForKF(long unsigned int BAGlobalForKF);
+    void SetTrackProjX(const float d);
+    void SetTrackProjXR(float d);
+    void SetTrackProjY(const float d);
+    void SetnTrackScaleLevel(const int i);
+    void SetTrackViewCos(const float d);
+
     static std::mutex mGlobalMutex;
     cv::Mat mPosGBA = {};
     long unsigned int mnBAGlobalForKF = {};
+
 
 private:
     long unsigned int m_sequenceId = 0;
@@ -142,7 +153,7 @@ private:
      cv::Mat m_worldPosition = {};
 
      // Keyframes observing the point and associated index in keyframe
-     std::map<std::shared_ptr<OrbFrame>,size_t> m_observingKeyframes = {};
+     std::map<std::shared_ptr<OrbKeyFrame>,size_t> m_observingKeyframes = {};
 
      // Mean viewing direction
      cv::Mat m_meanViewingDirection = {};
@@ -151,7 +162,7 @@ private:
      cv::Mat m_descriptor = {};
 
      // Reference KeyFrame
-     std::shared_ptr<OrbFrame> m_refenceKeyFrame = {};
+     std::shared_ptr<OrbKeyFrame> m_refenceKeyFrame = {};
 
      // Tracking counters
      int m_visibleCounter = {};

@@ -18,10 +18,9 @@
  */
 
 #include <orbmappoint.hpp>
-#include <mutex>
 
-OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map)
-: Id(), m_nextId(), m_firstKeyframeId(refenceKeyFrame->Id), m_FirstKeyFrame(refenceKeyFrame->Id), m_refenceKeyFrame(refenceKeyFrame), m_map(map)
+OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map)
+: Id(), m_nextId(), m_firstKeyframeId(refenceKeyFrame->mnId), m_FirstKeyFrame(refenceKeyFrame->mnFrameId), m_refenceKeyFrame(refenceKeyFrame), m_map(map)
 {
     position.copyTo(m_worldPosition);
     m_meanViewingDirection = cv::Mat::zeros(3,1,CV_32F);
@@ -31,7 +30,7 @@ OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> refe
     m_sequenceId=m_nextId++;
 }
 
-OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> frame, std::shared_ptr<OrbMap> map, const int &keyPointIndex)
+OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> frame, std::shared_ptr<OrbMap> map, const int &keyPointIndex)
 : Id(), m_nextId(), m_map(map)
 {
     position.copyTo(m_worldPosition);
@@ -41,14 +40,14 @@ OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> fram
 
     cv::Mat offset = position - cameraCenter;
     const float distance = (float)cv::norm(offset);
-    const int level = frame->GetUndistortedKeyPoints()[keyPointIndex].octave;
-    const float levelScaleFactor = frame->GetScaleFactors()[level];
-    const int levels = frame->GetScaleLevels();
+    const int level = frame->mvKeysUn[keyPointIndex].octave;
+    const float levelScaleFactor = frame->mvScaleFactors[level];
+    const int levels = frame->mnScaleLevels;
 
     m_maxDistance = distance*levelScaleFactor;
-    m_minDistance = m_maxDistance/frame->GetScaleFactors()[levels-1];
+    m_minDistance = m_maxDistance/frame->mvScaleFactors[levels-1];
 
-    frame->GetDescriptors().row(keyPointIndex).copyTo(m_descriptor);
+    frame->mDescriptors.row(keyPointIndex).copyTo(m_descriptor);
 
     // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
     std::unique_lock<std::mutex> lock(m_constructorMutex);
@@ -60,7 +59,7 @@ OrbMapPoint::~OrbMapPoint()
 
 }
 
-std::map<std::shared_ptr<OrbFrame>,size_t> OrbMapPoint::GetObservingKeyframes()
+std::map<std::shared_ptr<OrbKeyFrame>,size_t> OrbMapPoint::GetObservingKeyframes()
 {
     // use proper mutex
     return m_observingKeyframes;
@@ -98,8 +97,8 @@ cv::Mat OrbMapPoint::GetMeanViewingDirection() {
     return cv::Mat();
 }
 
-std::shared_ptr<OrbFrame> OrbMapPoint::GetReferenceKeyFrame() {
-    return std::shared_ptr<OrbFrame>();
+std::shared_ptr<OrbKeyFrame> OrbMapPoint::GetReferenceKeyFrame() {
+    return std::shared_ptr<OrbKeyFrame>();
 }
 // src/orbframe.cpp
 // 416:                    if(m_mapPoints[i]->GetObservingKeyFrameCount()>=minimumObservations)
@@ -112,12 +111,12 @@ int OrbMapPoint::GetSequenceId() {
     return 0;
 }
 
-void OrbMapPoint::AddObservingKeyframe(std::shared_ptr<OrbFrame> keyFrame, size_t idx) {
+void OrbMapPoint::AddObservingKeyframe(std::shared_ptr<OrbKeyFrame> keyFrame, size_t idx) {
     if(keyFrame.get() && idx) {}
 }
 // src/orboptimizer.cpp
 // 767:            pMPi->EraseObservingKeyframe(pKFi);
-void OrbMapPoint::EraseObservingKeyframe(std::shared_ptr<OrbFrame> keyFrame) {
+void OrbMapPoint::EraseObservingKeyframe(std::shared_ptr<OrbKeyFrame> keyFrame) {
     // aquire proper mutex
 
     // check if OrbKeyFrame in m_observingKeyframes
@@ -125,7 +124,7 @@ void OrbMapPoint::EraseObservingKeyframe(std::shared_ptr<OrbFrame> keyFrame) {
     {
         int keyFrameId = this->m_observingKeyframes[keyFrame];
         // determine if monocular or stereo keyframe
-        if(keyFrame->GetRight()[keyFrameId]>=0)
+        if(keyFrame->mvuRight[keyFrameId]>=0)
             this->m_observingKeyFramesCount -= 2;
         else
             this->m_observingKeyFramesCount -= 1;
@@ -150,7 +149,7 @@ void OrbMapPoint::EraseObservingKeyframe(std::shared_ptr<OrbFrame> keyFrame) {
 
 // src/orboptimizer.cpp
 // 854:        const int i2 = pMP2->GetObeservationIndexOfKeyFrame(pKF2);
-int OrbMapPoint::GetObeservationIndexOfKeyFrame(std::shared_ptr<OrbFrame> keyFrame) {
+int OrbMapPoint::GetObeservationIndexOfKeyFrame(std::shared_ptr<OrbKeyFrame> keyFrame) {
     // use proper mutex
     if(this->m_observingKeyframes.count(keyFrame))
         return this->m_observingKeyframes[keyFrame];
@@ -158,7 +157,7 @@ int OrbMapPoint::GetObeservationIndexOfKeyFrame(std::shared_ptr<OrbFrame> keyFra
         return -1;
 }
 
-bool OrbMapPoint::KeyFrameInObservingKeyFrames(std::shared_ptr<OrbFrame> keyFrame) {
+bool OrbMapPoint::KeyFrameInObservingKeyFrames(std::shared_ptr<OrbKeyFrame> keyFrame) {
     if(keyFrame.get()) {}
     return false;
 }
@@ -202,8 +201,8 @@ cv::Mat OrbMapPoint::GetDescriptor() {
 void OrbMapPoint::UpdateMeanAndDepthValues() {
     if (this->m_corrupt) return;
 
-    std::map<std::shared_ptr<OrbFrame>,size_t> observingKeyFrames;
-    std::shared_ptr<OrbFrame> referenceKeyFrame;
+    std::map<std::shared_ptr<OrbKeyFrame>, size_t> observingKeyFrames;
+    std::shared_ptr<OrbKeyFrame> referenceKeyFrame;
     cv::Mat position;
     // aquire locks 
     std::unique_lock<std::mutex> lock1(mMutexFeatures);
@@ -218,9 +217,9 @@ void OrbMapPoint::UpdateMeanAndDepthValues() {
 
     cv::Mat normal = cv::Mat::zeros(3,1,CV_32F);
     int n=0;
-    for(std::map<std::shared_ptr<OrbFrame>,size_t>::iterator iteratorBegin=observingKeyFrames.begin(), iteratorEnd=observingKeyFrames.end(); iteratorBegin!=iteratorEnd; iteratorBegin++)
+    for(std::map<std::shared_ptr<OrbKeyFrame>, size_t>::iterator iteratorBegin=observingKeyFrames.begin(), iteratorEnd=observingKeyFrames.end(); iteratorBegin!=iteratorEnd; iteratorBegin++)
     {
-        std::shared_ptr<OrbFrame> keyFrame = iteratorBegin->first;
+        std::shared_ptr<OrbKeyFrame> keyFrame = iteratorBegin->first;
         cv::Mat frameCameraCenter = keyFrame->GetCameraCenter();
         cv::Mat normali = this->m_worldPosition - frameCameraCenter;
         normal = normal + normali/cv::norm(normali);
@@ -229,14 +228,14 @@ void OrbMapPoint::UpdateMeanAndDepthValues() {
 
     cv::Mat PC = position - referenceKeyFrame->GetCameraCenter();
     const float dist = static_cast<float>(cv::norm(PC));
-    const int level = referenceKeyFrame->GetUndistortedKeyPoints()[observingKeyFrames[referenceKeyFrame]].octave;
-    const float levelScaleFactor =  referenceKeyFrame->GetScaleFactors()[level];
-    const int nLevels = referenceKeyFrame->GetScaleLevels();
+    const int level = referenceKeyFrame->mvKeysUn[observingKeyFrames[referenceKeyFrame]].octave;
+    const float levelScaleFactor =  referenceKeyFrame->mvScaleFactors[level];
+    const int nLevels = referenceKeyFrame->mnScaleLevels;
 
     {
         std::unique_lock<std::mutex> lock3(mMutexPos);
         this->m_maxDistance = dist*levelScaleFactor;
-        this->m_minDistance = m_maxDistance/referenceKeyFrame->GetScaleFactors()[nLevels-1];
+        this->m_minDistance = m_maxDistance/referenceKeyFrame->mvScaleFactors[nLevels-1];
         this->m_meanViewingDirection = normal/n;
     }
 }
@@ -249,10 +248,37 @@ float OrbMapPoint::GetMaxDistanceInvariance() {
     return 0;
 }
 
-int OrbMapPoint::PredictScale(const float &currentDist, std::shared_ptr<OrbFrame> keyFrame) {
-    if(sizeof(currentDist) == sizeof(float)){}
-    keyFrame.get();
-    return 0;
+int OrbMapPoint::PredictScale(const float &currentDist, std::shared_ptr<OrbKeyFrame> keyFrame) {
+    float ratio;
+    {
+        std::unique_lock<std::mutex> lock(mMutexPos);
+        ratio = m_maxDistance/currentDist;
+    }
+
+    int nScale = static_cast<int>(ceil(log(ratio) / keyFrame->mfLogScaleFactor));
+    if(nScale<0)
+        nScale = 0;
+    else if(nScale>=keyFrame->mnScaleLevels)
+        nScale = keyFrame->mnScaleLevels-1;
+
+    return nScale;
+}
+
+int OrbMapPoint::PredictScale(const float &currentDist, std::shared_ptr<OrbFrame> pF)
+{
+    float ratio;
+    {
+        std::unique_lock<std::mutex> lock(mMutexPos);
+        ratio = m_maxDistance/currentDist;
+    }
+
+    int nScale = static_cast<int>(ceil(log(ratio) / pF->mfLogScaleFactor));
+    if(nScale<0)
+        nScale = 0;
+    else if(nScale>=pF->mnScaleLevels)
+        nScale = pF->mnScaleLevels-1;
+
+    return nScale;
 }
 
 int OrbMapPoint::GetTrackScaleLevel() {
@@ -328,6 +354,32 @@ void OrbMapPoint::SetLastFrameSeen(long unsigned int LastFrameSeen) {
 if (LastFrameSeen != 0){};
 }
 // include/orbframe.hpp
+
+void OrbMapPoint::SetTrackProjX(const float d)
+{
+    mTrackProjX = d;
+}
+
+void OrbMapPoint::SetTrackProjXR(float d)
+{
+    mTrackProjXR = d;
+}
+
+void OrbMapPoint::SetTrackProjY(const float d)
+{
+    mTrackProjY = d;
+}
+
+void OrbMapPoint::SetnTrackScaleLevel(const int i)
+{
+    mnTrackScaleLevel = i;
+}
+
+void OrbMapPoint::SetTrackViewCos(const float d)
+{
+    mTrackViewCos = d;
+}
+
 // 125:    void SetBALocalForKF(long unsigned int inBALocal){ mnBALocalForKF = inBALocal; }
 
 // src/orboptimizer.cpp

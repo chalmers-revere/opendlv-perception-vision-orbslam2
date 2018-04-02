@@ -27,11 +27,11 @@ OrbMap::~OrbMap()
 {
     this->Reset();
 }
-void OrbMap::PushOrbKeyFrame(std::shared_ptr<OrbFrame> orbKeyFrame) {
+void OrbMap::PushOrbKeyFrame(std::shared_ptr<OrbKeyFrame> orbKeyFrame) {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     this->m_keyFrames.push_back(orbKeyFrame);
-    if (orbKeyFrame->Id > this->m_maxOrbKeyFrameId) {
-        this->m_maxOrbKeyFrameId = orbKeyFrame->Id;
+    if (orbKeyFrame->mnId > this->m_maxOrbKeyFrameId) {
+        this->m_maxOrbKeyFrameId = orbKeyFrame->mnId;
     }
 }
 void OrbMap::PushOrbMapPoint(std::shared_ptr<OrbMapPoint> orbMapPoint) {
@@ -43,7 +43,7 @@ void OrbMap::DeleteOrbMapPoint(std::shared_ptr<OrbMapPoint> orbMapPoint) {
     this->m_mapPoints.erase(std::remove(this->m_mapPoints.begin(), this->m_mapPoints.end(), orbMapPoint),
                this->m_mapPoints.end());
 }
-void OrbMap::DeleteOrbKeyFrame(std::shared_ptr<OrbFrame> orbKeyFrame) {
+void OrbMap::DeleteOrbKeyFrame(std::shared_ptr<OrbKeyFrame> orbKeyFrame) {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     this->m_keyFrames.erase(std::remove(this->m_keyFrames.begin(), this->m_keyFrames.end(), orbKeyFrame),
                this->m_keyFrames.end());
@@ -52,7 +52,7 @@ void OrbMap::SetReferenceMapPoints(std::vector<std::shared_ptr<OrbMapPoint>> ref
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     this->m_referenceMapPoints = referenceMapPoints;
 }
-std::vector<std::shared_ptr<OrbFrame>> OrbMap::GetAllKeyFrames() {
+std::vector<std::shared_ptr<OrbKeyFrame>> OrbMap::GetAllKeyFrames() {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     return this->m_keyFrames;
 }
