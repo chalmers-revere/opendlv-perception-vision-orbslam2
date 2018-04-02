@@ -22,6 +22,7 @@
 
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
+#include "orbvocabulary.hpp"
 #include <memory>
 #include <cmath>
 #include <iostream>
@@ -30,11 +31,6 @@
 #include <vector>
 #include <list>
 #include <utility>
-
-// #include <opendavinci/odcore/data/TimeStamp.h>
-// #include <opendavinci/odcore/strings/StringToolbox.h>
-// #include <opendavinci/odcore/wrapper/Eigen.h>
-
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -45,155 +41,179 @@
 
 class OrbMapPoint;
 
-class OrbFrame 
+#define FRAME_GRID_ROWS 48
+#define FRAME_GRID_COLS 64
+
+class MapPoint;
+class KeyFrame;
+
+class OrbFrame
 {
 public:
-    // Copy constructor.
-    OrbFrame(cv::Mat leftGreyImage, cv::Mat rightGreyImage, std::vector<OrbKeyPoint>, cv::Mat tcw);
-    ~OrbFrame();
+    OrbFrame();
 
-    void SetPose(const cv::Mat &Tcw);
-    cv::Mat GetPose();
-    cv::Mat GetPoseInverse();
-    cv::Mat GetCameraCenter();
-    cv::Mat GetStereoCenter();
-    cv::Mat GetRotation();
-    cv::Mat GetTranslation();
+    // Constructor for stereo cameras.
+    OrbFrame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeStamp, std::shared_ptr<OrbExtractor> extractorLeft,
+             std::shared_ptr<OrbExtractor> extractorRight, std::shared_ptr<OrbVocabulary> voc, cv::Mat &K, cv::Mat &distCoef,
+             const float &bf, const float &thDepth);
 
+    // Constructor for RGB-D cameras.
+    OrbFrame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeStamp, std::shared_ptr<OrbExtractor> extractor,
+             std::shared_ptr<OrbVocabulary> voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
+
+    // Constructor for Monocular cameras.
+    OrbFrame(const cv::Mat &imGray, const double &timeStamp, std::shared_ptr<OrbExtractor> extractor,std::shared_ptr<OrbVocabulary> voc,
+             cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
+
+    // Extract ORB on the image. 0 for left image and 1 for right image.
+    void ExtractORB(int flag, const cv::Mat &im);
+
+    // Compute Bag of Words representation.
     void ComputeBoW();
 
-    void AddConnection(std::shared_ptr<OrbFrame> frame, const int &weight);
-    void EraseConnection(std::shared_ptr<OrbFrame> frame);
-    void UpdateConnections();
-    void UpdateBestCovisibles();
+    // Set the camera pose.
+    void SetPose(cv::Mat Tcw);
 
-    std::set<std::shared_ptr<OrbFrame>> GetConnectedKeyFrames();
-    std::vector<std::shared_ptr<OrbFrame>> GetVectorCovisibleKeyFrames();
-    std::vector<std::shared_ptr<OrbFrame>> GetBestCovisibilityKeyFrames(const int &N);
-    std::vector<std::shared_ptr<OrbFrame>> GetCovisiblesByWeight(const int &weight);
-    int GetWeight(std::shared_ptr<OrbFrame> frame);
+    // Computes rotation, translation and camera center matrices from the camera pose.
+    void UpdatePoseMatrices();
 
-    void AddChild(std::shared_ptr<OrbFrame> frame);
-    void EraseChild(std::shared_ptr<OrbFrame> frame);
-    void ChangeParent(std::shared_ptr<OrbFrame> frame);
-    std::set<std::shared_ptr<OrbFrame>> GetChilds();
-    std::shared_ptr<OrbFrame> GetParent();
-    bool HasChild(std::shared_ptr<OrbFrame> frame);
-
-    void AddLoopEdge(std::shared_ptr<OrbFrame> pKF);
-    std::set<std::shared_ptr<OrbFrame>> GetLoopEdges();
-
-    void AddMapPoint(std::shared_ptr<OrbMapPoint> pMP, const size_t &idx);
-    void EraseMapPointMatch(const size_t &idx);
-    void EraseMapPointMatch(std::shared_ptr<OrbMapPoint> pMP);
-    void ReplaceMapPointMatch(const size_t &idx, std::shared_ptr<OrbMapPoint> pMP);
-    std::set<std::shared_ptr<OrbMapPoint>> GetMapPoints();
-    std::vector<std::shared_ptr<OrbMapPoint>> GetMapPointMatches();
-    int TrackedMapPoints(const int &minObs);
-    std::shared_ptr<OrbMapPoint> GetMapPoint(const size_t &idx);
-
-    std::vector<cv::KeyPoint> GetUndistortedKeyPoints() { return m_undistortedKeyPoints; }
-
-    cv::Mat GetDescriptors() { return m_descriptors; }
-    void SetDescriptors(cv::Mat descriptors) { m_descriptors = descriptors; }
-
-    int GetScaleLevels() { return m_scaleLevels; }
-    void SetScaleLevels(int scaleLevels) { m_scaleLevels = scaleLevels; }
-
-    float GetScaleFactor() { return m_scaleFactor; }
-    void SetScaleFactor(float scaleFactor) { m_scaleFactor = scaleFactor; }
-
-    float GetLogScaleFactor() { return m_logScaleFactor; }
-    void SetLogScaleFactor(float logScaleFactor) { m_logScaleFactor = logScaleFactor; }
-
-    std::vector<float> GetScaleFactors() { return m_scaleFactors; }
-    void SetScaleFactors(std::vector<float> scaleFactors) { m_scaleFactors = scaleFactors; }
-
-    std::vector<float> GetLevelSigma2() { return m_levelSigma2; }
-    void SetLevelSigma2(std::vector<float> levelSigma2) { m_levelSigma2 = levelSigma2; }
-
-    std::vector<float> GetInverseLevelSigma2() { return m_inverseLevelSigma2; }
-    void SetInverseLevelSigma2(std::vector<float> inverseLevelSigma2) { m_inverseLevelSigma2 = inverseLevelSigma2; }
-
-    cv::Mat GetCalibrationMatrix(){ return m_calibrationK; } //RETURN FROM ORBExTRACTOR?
-    int GetNumberOfKeyPoints(){return m_numberOfKeypoints; } //ADDED
-    std::vector<float> GetRight(){return m_right; }
-    std::vector<bool> GetBoolOutliers(){return m_outlier; } //FIX LOGIC
-    void SetBoolOutliers(bool inBool, int index){m_outlier[index] = inBool;}
-
-    long unsigned int GetBALocalForKF(){return mnBALocalForKF; }
-    void SetBALocalForKF(long unsigned int inBALocal){ mnBALocalForKF = inBALocal; }
-
-    long unsigned int GetBAFixedForKF(){return mnBAFixedForKF; }
-    void SetBAFixedForKF(long unsigned int inBAFixed){ mnBAFixedForKF = inBAFixed; }
-
-    std::vector<cv::KeyPoint> GetCvKeyPoints(){return m_keyPoints;}
-
-    bool IsCorrupt(){ return true; } //FIX LOGIC
-
-    static bool WeightComp( int a, int b)
-    {
-        return a>b;
+    // Returns the camera center.
+    inline cv::Mat GetCameraCenter(){
+        return mOw.clone();
     }
 
-    long unsigned int Id;
-    static long unsigned int NextId;
+    // Returns inverse of rotation
+    inline cv::Mat GetRotationInverse(){
+        return mRwc.clone();
+    }
 
-    // Calibration parameters
-    const float fx, fy, cx, cy, invfx, invfy, mbf, mb, mThDepth;
-    //Variables used for loop closing
-    cv::Mat mTcwGBA;
-    cv::Mat mTcwBefGBA;
-    long unsigned int mnBAGlobalForKF;
+    // Check if a MapPoint is in the frustum of the camera
+    // and fill variables of the MapPoint to be used by the tracking
+    bool isInFrustum(OrbMapPoint* pMP, float viewingCosLimit);
+
+    // Compute the cell of a keypoint (return false if outside the grid)
+    bool PosInGrid(const cv::KeyPoint &kp, int &posX, int &posY);
+
+    std::vector<size_t> GetFeaturesInArea(const float &x, const float  &y, const float  &r, const int minLevel=-1, const int maxLevel=-1) const;
+
+    // Search a match for each keypoint in the left image to a keypoint in the right image.
+    // If there is a match, depth is computed and the right coordinate associated to the left keypoint is stored.
+    void ComputeStereoMatches();
+
+    // Associate a "right" coordinate to a keypoint if there is valid depth in the depthmap.
+    void ComputeStereoFromRGBD(const cv::Mat &imDepth);
+
+    // Backprojects a keypoint (if stereo/depth info available) into 3D world coordinates.
+    cv::Mat UnprojectStereo(const int &i);
+
+public:
+    // Vocabulary used for relocalization.
+    std::shared_ptr<OrbVocabulary> mpORBvocabulary;
+
+    // Feature extractor. The right is used only in the stereo case.
+    std::shared_ptr<OrbExtractor> mpORBextractorLeft, mpORBextractorRight;
+
+    // Frame timestamp.
+    double mTimeStamp;
+
+    // Calibration matrix and OpenCV distortion parameters.
+    cv::Mat mK;
+    static float fx;
+    static float fy;
+    static float cx;
+    static float cy;
+    static float invfx;
+    static float invfy;
+    cv::Mat mDistCoef;
+
+    // Stereo baseline multiplied by fx.
+    float mbf;
+
+    // Stereo baseline in meters.
+    float mb;
+
+    // Threshold close/far points. Close points are inserted from 1 view.
+    // Far points are inserted as in the monocular case from 2 views.
+    float mThDepth;
+
+    // Number of KeyPoints.
+    int N;
+
+    // Vector of keypoints (original for visualization) and undistorted (actually used by the system).
+    // In the stereo case, mvKeysUn is redundant as images must be rectified.
+    // In the RGB-D case, RGB images can be distorted.
+    std::vector<cv::KeyPoint> mvKeys, mvKeysRight;
+    std::vector<cv::KeyPoint> mvKeysUn;
+
+    // Corresponding stereo coordinate and depth for each keypoint.
+    // "Monocular" keypoints have a negative value.
+    std::vector<float> mvuRight;
+    std::vector<float> mvDepth;
+
+    // Bag of Words Vector structures.
+    OrbBowVector mBowVec;
+    DBoW2::FeatureVector mFeatVec;
+
+    // ORB descriptor, each row associated to a keypoint.
+    cv::Mat mDescriptors, mDescriptorsRight;
+
+    // MapPoints associated to keypoints, NULL pointer if no association.
+    std::vector<MapPoint*> mvpMapPoints;
+
+    // Flag to identify outlier associations.
+    std::vector<bool> mvbOutlier;
+
+    // Keypoints are assigned to cells in a grid to reduce matching complexity when projecting MapPoints.
+    static float mfGridElementWidthInv;
+    static float mfGridElementHeightInv;
+    std::vector<std::size_t> mGrid[FRAME_GRID_COLS][FRAME_GRID_ROWS];
+
+    // Camera pose.
+    cv::Mat mTcw;
+
+    // Current and Next Frame id.
+    static long unsigned int nNextId;
+    long unsigned int mnId;
+
+    // Reference Keyframe.
+    KeyFrame* mpReferenceKF;
+
+    // Scale pyramid info.
+    int mnScaleLevels;
+    float mfScaleFactor;
+    float mfLogScaleFactor;
+    std::vector<float> mvScaleFactors;
+    std::vector<float> mvInvScaleFactors;
+    std::vector<float> mvLevelSigma2;
+    std::vector<float> mvInvLevelSigma2;
+
+    // Undistorted Image Bounds (computed once).
+    static float mnMinX;
+    static float mnMaxX;
+    static float mnMinY;
+    static float mnMaxY;
+
+    static bool mbInitialComputations;
+
 
 private:
 
-       // Variables used by the local mapping
-    long unsigned int mnBALocalForKF = {};
-    long unsigned int mnBAFixedForKF = {};
-    int m_numberOfKeypoints = 0;
-    std::vector<bool> m_outlier = {};
-    std::vector<cv::KeyPoint> m_keyPoints = {}, m_keyPointsRight = {};
-    std::vector<cv::KeyPoint> m_undistortedKeyPoints = {};
-    std::vector<float> m_right = {}; // negative value for monocular points
-    std::vector<float> m_depth = {}; // negative value for monocular points
-    cv::Mat m_descriptors = {};
-    cv::Mat m_calibrationK = {};
+    // Undistort keypoints given OpenCV distortion parameters.
+    // Only for the RGB-D case. Stereo must be already rectified!
+    // (called in the constructor).
+    void UndistortKeyPoints();
 
-    std::vector<OrbKeyPoint> m_keypoints = {};
-    cv::Mat m_leftGreyImage, m_rightGreyImage;
+    // Computes image bounds for the undistorted image (called in the constructor).
+    void ComputeImageBounds(const cv::Mat &imLeft);
 
-    int m_scaleLevels = {};
-    float m_scaleFactor = {};
-    float m_logScaleFactor = {};
-    std::vector<float> m_scaleFactors = {};
-    std::vector<float> m_levelSigma2 = {};
-    std::vector<float> m_inverseLevelSigma2 = {};
+    // Assign keypoints to the grid for speed up feature matching (called in the constructor).
+    void AssignFeaturesToGrid();
 
-    cv::Mat m_tcw = {};
-    cv::Mat m_twc = {};
-    cv::Mat m_ow = {};
-
-    cv::Mat m_cw = {};
-
-    std::vector<std::shared_ptr<OrbMapPoint> > m_mapPoints = {};
-
-    std::map<std::shared_ptr<OrbFrame>,int> m_connectedKeyFrameWeights = {};
-    std::vector<std::shared_ptr<OrbFrame>> m_orderedConnectedKeyFrames = {};
-    std::vector<int> m_orderedWeights = {};
-
-    bool m_firstConnection = true;
-    std::shared_ptr<OrbFrame> m_parent = {};
-    std::set<std::shared_ptr<OrbFrame> > m_spanningChildren = {};
-    std::set<std::shared_ptr<OrbFrame> > m_loopEdges = {};
-
-    bool m_dontErase = false;
-
-    float m_halfBaseline = 0.0f;
-
-    std::mutex m_mutexPose = {};
-    std::mutex m_mutexConnections = {};
-    std::mutex m_mutexFeatures = {};
+    // Rotation, translation and camera center
+    cv::Mat mRcw;
+    cv::Mat mtcw;
+    cv::Mat mRwc;
+    cv::Mat mOw; //==mtwc
 };
 
 #endif
