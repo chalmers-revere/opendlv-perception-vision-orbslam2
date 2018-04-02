@@ -39,7 +39,7 @@ public:
 
     std::map<std::shared_ptr<OrbFrame>,size_t> GetObservingKeyframes();
 
-    void SetWorldPosition(const cv::Mat &Position);
+    void SetWorldPosition(const cv::Mat &position);
     cv::Mat GetWorldPosition();
 
     cv::Mat GetMeanViewingDirection();
