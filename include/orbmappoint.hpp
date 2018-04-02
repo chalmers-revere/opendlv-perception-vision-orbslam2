@@ -27,7 +27,8 @@
 #include <orbframe.hpp>
 #include <orbmap.hpp>
 #include <orbconverter.hpp>
-#include "orbkeyframe.hpp"
+#include <orbkeyframe.hpp>
+#include <array>
 
 class OrbKeyFrame;
 class OrbFrame;
@@ -59,11 +60,11 @@ public:
     void SetCorruptFlag();
     bool IsCorrupt();
 
-    void Replace(std::shared_ptr<OrbMapPoint> orbMapPoint);    
+    void Replace(std::shared_ptr<OrbMapPoint> orbMapPoint);
     std::shared_ptr<OrbMapPoint> GetReplaced();
 
-    void IncreaseVisible(int n=1);
-    void IncreaseFound(int n=1);
+    void IncreaseVisible(int n = 1);
+    void IncreaseFound(int n = 1);
     float GetFoundRatio();
     inline int GetFound() { return m_foundCounter; }
     float getTrackProjX() { return mTrackProjX; }
@@ -119,7 +120,6 @@ public:
     cv::Mat mPosGBA = {};
     long unsigned int mnBAGlobalForKF = {};
 
-
 private:
     long unsigned int m_sequenceId = 0;
     long int m_firstKeyframeId = {};
@@ -145,42 +145,40 @@ private:
     long unsigned int mnCorrectedByKF = {};
     long unsigned int mnCorrectedReference = {};
 
-
-
     // mutexed below
 
-     // Position in absolute coordinates
-     cv::Mat m_worldPosition = {};
+    // Position in absolute coordinates
+    cv::Mat m_worldPosition = {};
 
      // Keyframes observing the point and associated index in keyframe
      std::map<std::shared_ptr<OrbKeyFrame>,size_t> m_observingKeyframes = {};
 
-     // Mean viewing direction
-     cv::Mat m_meanViewingDirection = {};
+    // Mean viewing direction
+    cv::Mat m_meanViewingDirection = {};
 
-     // Best descriptor to fast matching
-     cv::Mat m_descriptor = {};
+    // Best descriptor to fast matching
+    cv::Mat m_descriptor = {};
 
      // Reference KeyFrame
      std::shared_ptr<OrbKeyFrame> m_refenceKeyFrame = {};
 
-     // Tracking counters
-     int m_visibleCounter = {};
-     int m_foundCounter = {};
+    // Tracking counters
+    int m_visibleCounter = {};
+    int m_foundCounter = {};
 
-     // Bad flag (we do not currently erase MapPoint from memory)
-     bool m_corrupt = {};
+    // Bad flag (we do not currently erase MapPoint from memory)
+    bool m_corrupt = {};
     std::shared_ptr<OrbMapPoint> m_replaced = {};
 
-     // Scale invariance distances
-     float m_minDistance = {};
-     float m_maxDistance = {};
+    // Scale invariance distances
+    float m_minDistance = {};
+    float m_maxDistance = {};
 
-     std::shared_ptr<OrbMap> m_map = {};
+    std::shared_ptr<OrbMap> m_map = {};
 
     std::mutex m_constructorMutex = {};
-    std::mutex mMutexPos = {};
-    std::mutex mMutexFeatures = {};
+    std::mutex m_positionMutex = {};
+    std::mutex m_featureMutex = {};
 };
 
 #endif // ORBMAPPOINT_HPP

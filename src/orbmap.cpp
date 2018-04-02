@@ -20,13 +20,14 @@
 #include "orbframe.hpp"
 #include <orbmappoint.hpp>
 
-OrbMap::OrbMap():m_OrbKeyFrameOrigins(), m_keyFrames(), m_mapPoints(), m_referenceMapPoints(), m_maxOrbKeyFrameId(0), m_majorChangeIndex(0)
+OrbMap::OrbMap() : m_OrbKeyFrameOrigins(), m_keyFrames(), m_mapPoints(), m_referenceMapPoints(), m_maxOrbKeyFrameId(0), m_majorChangeIndex(0)
 {
 }
 OrbMap::~OrbMap()
 {
     this->Reset();
 }
+
 void OrbMap::PushOrbKeyFrame(std::shared_ptr<OrbKeyFrame> orbKeyFrame) {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     this->m_keyFrames.push_back(orbKeyFrame);
@@ -34,57 +35,84 @@ void OrbMap::PushOrbKeyFrame(std::shared_ptr<OrbKeyFrame> orbKeyFrame) {
         this->m_maxOrbKeyFrameId = orbKeyFrame->mnId;
     }
 }
-void OrbMap::PushOrbMapPoint(std::shared_ptr<OrbMapPoint> orbMapPoint) {
+
+void OrbMap::PushOrbMapPoint(std::shared_ptr<OrbMapPoint> orbMapPoint)
+{
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     this->m_mapPoints.push_back(orbMapPoint);
 }
-void OrbMap::DeleteOrbMapPoint(std::shared_ptr<OrbMapPoint> orbMapPoint) {
+
+void OrbMap::DeleteOrbMapPoint(std::shared_ptr<OrbMapPoint> orbMapPoint)
+{
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     this->m_mapPoints.erase(std::remove(this->m_mapPoints.begin(), this->m_mapPoints.end(), orbMapPoint),
-               this->m_mapPoints.end());
+                            this->m_mapPoints.end());
+
 }
-void OrbMap::DeleteOrbKeyFrame(std::shared_ptr<OrbKeyFrame> orbKeyFrame) {
+
+void OrbMap::DeleteOrbKeyFrame(std::shared_ptr<OrbKeyFrame> orbKeyFrame)
+{
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     this->m_keyFrames.erase(std::remove(this->m_keyFrames.begin(), this->m_keyFrames.end(), orbKeyFrame),
-               this->m_keyFrames.end());
+                            this->m_keyFrames.end());
 }
-void OrbMap::SetReferenceMapPoints(std::vector<std::shared_ptr<OrbMapPoint>> referenceMapPoints) {
+
+void OrbMap::SetReferenceMapPoints(std::vector<std::shared_ptr<OrbMapPoint>> referenceMapPoints)
+{
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     this->m_referenceMapPoints = referenceMapPoints;
 }
-std::vector<std::shared_ptr<OrbKeyFrame>> OrbMap::GetAllKeyFrames() {
+
+std::vector<std::shared_ptr<OrbKeyFrame>> OrbMap::GetAllKeyFrames()
+{
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     return this->m_keyFrames;
 }
-std::vector<std::shared_ptr<OrbMapPoint>> OrbMap::GetAllMapPoints() {
+
+std::vector<std::shared_ptr<OrbMapPoint>> OrbMap::GetAllMapPoints()
+{
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     return this->m_mapPoints;
 }
-std::vector<std::shared_ptr<OrbMapPoint>> OrbMap::GetReferenceMapPoints() {
+
+std::vector<std::shared_ptr<OrbMapPoint>> OrbMap::GetReferenceMapPoints()
+{
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     return this->m_referenceMapPoints;
 }
-void OrbMap::IncrementMajorChangeIndex(){
+
+void OrbMap::IncrementMajorChangeIndex()
+{
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
-    this->m_majorChangeIndex+=1;;
+    this->m_majorChangeIndex += 1;
 }
-int  OrbMap::LastMajorChangeIndex() {
+
+int OrbMap::LastMajorChangeIndex()
+{
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     return this->m_majorChangeIndex;
 }
-long unsigned int OrbMap::OrbMapPointsCount() {
+
+long unsigned int OrbMap::OrbMapPointsCount()
+{
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     return this->m_mapPoints.size();
 }
-long unsigned  OrbMap::OrbKeyFramesCount() {
+
+long unsigned OrbMap::OrbKeyFramesCount()
+{
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     return this->m_keyFrames.size();
 }
-long unsigned int OrbMap::MaxKeyFrameId() {
+
+long unsigned int OrbMap::MaxKeyFrameId()
+{
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     return this->m_maxOrbKeyFrameId;
 }
-void OrbMap::Reset(){
+
+void OrbMap::Reset()
+{
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     this->m_keyFrames.erase(m_keyFrames.begin(), m_keyFrames.end());
     this->m_mapPoints.erase(m_mapPoints.begin(), m_mapPoints.end());
@@ -96,5 +124,4 @@ void OrbMap::Reset(){
     this->m_OrbKeyFrameOrigins.clear();
     this->m_majorChangeIndex = 0;
     this->m_maxOrbKeyFrameId = 0;
-
 }
