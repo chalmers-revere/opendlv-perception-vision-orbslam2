@@ -66,7 +66,9 @@ std::map<std::shared_ptr<OrbFrame>, size_t> OrbMapPoint::GetObservingKeyframes()
 
 bool OrbMapPoint::IsCorrupt()
 {
-    return false;
+    std::unique_lock<std::mutex> featureMutex(this->m_featureMutex);
+    std::unique_lock<std::mutex> positionMutex(this->m_positionMutex);
+    return this->m_corrupt;
 }
 
 // src/orboptimizer.cpp
@@ -455,6 +457,7 @@ void OrbMapPoint::SetLastFrameSeen(long unsigned int LastFrameSeen)
 // 494:                        pMP->SetBALocalForKF(pKF->Id);
 void OrbMapPoint::SetBALocalForKF(long unsigned int BALocalForKF)
 {
+    // use mutex
     this->mnBAGlobalForKF = BALocalForKF;
 }
 
