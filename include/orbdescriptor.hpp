@@ -9,10 +9,10 @@
 
 #ifndef ORBDESCRIPTOR_HPP
 #define ORBDESCRIPTOR_HPP
-
+/*Not needed
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
-
+*/
 #include <opencv2/core/core.hpp>
 #include <vector>
 #include <string>

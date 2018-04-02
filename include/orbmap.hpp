@@ -31,8 +31,9 @@
 #include <vector>
 #include <list>
 #include <utility>
+#include <orbkeyframe.hpp>
 
-class OrbFrame;
+class OrbKeyFrame;
 class OrbMapPoint;
 
 class OrbMap {
@@ -45,7 +46,7 @@ class OrbMap {
     /**
      * PushOrbKeyFrame - Push Keyframe to Map.
      */
-    void PushOrbKeyFrame(std::shared_ptr<OrbFrame> keyFrame);
+    void PushOrbKeyFrame(std::shared_ptr<OrbKeyFrame> keyFrame);
     /**
      * PushOrbMapPoint - Push OrbMapPoint to Map.
      */
@@ -57,7 +58,7 @@ class OrbMap {
     /**
      * DeleteOrbKeyFrame - Deletes OrbKeyFrame from if it exists in Map.
      */
-    void DeleteOrbKeyFrame(std::shared_ptr<OrbFrame> orbKeyFrame);
+    void DeleteOrbKeyFrame(std::shared_ptr<OrbKeyFrame> orbKeyFrame);
     /**
      * SetReferenceMapPoints - Set reference Map Points in Map.
      */
@@ -65,7 +66,7 @@ class OrbMap {
     /**
      * GetAllKeyFrames - Returns all OrbKeyFrames
      */
-    std::vector<std::shared_ptr<OrbFrame>> GetAllKeyFrames();
+    std::vector<std::shared_ptr<OrbKeyFrame>> GetAllKeyFrames();
     /**
      * GetAllMapPoints - Returns all OrbMapPoints
      */
@@ -96,8 +97,8 @@ class OrbMap {
     std::mutex m_MapUpdateMutex = {};
 
  private:
-    std::vector<std::shared_ptr<OrbFrame>> m_OrbKeyFrameOrigins;
-    std::vector<std::shared_ptr<OrbFrame>> m_keyFrames;
+    std::vector<std::shared_ptr<OrbKeyFrame>> m_OrbKeyFrameOrigins;
+    std::vector<std::shared_ptr<OrbKeyFrame>> m_keyFrames;
     std::vector<std::shared_ptr<OrbMapPoint>> m_mapPoints;
     std::vector<std::shared_ptr<OrbMapPoint>> m_referenceMapPoints;
     long unsigned int m_maxOrbKeyFrameId;

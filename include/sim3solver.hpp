@@ -32,7 +32,7 @@ class Sim3Solver {
   Sim3Solver();
   ~Sim3Solver();
 
-  Sim3Solver(std::shared_ptr<OrbFrame> localKeyFrame1, std::shared_ptr<OrbFrame> localKeyFrame2, const std::vector<std::shared_ptr<OrbMapPoint>> &matchedMapPoints, const bool bFixScale = true);
+  Sim3Solver(std::shared_ptr<OrbKeyFrame> localKeyFrame1, std::shared_ptr<OrbKeyFrame> localKeyFrame2, const std::vector<std::shared_ptr<OrbMapPoint>> &matchedMapPoints, const bool bFixScale = true);
 
   void SetRansacParameters(double probability = 0.99, int minInliers = 6 , int maxIterations = 300);
 
@@ -64,8 +64,8 @@ class Sim3Solver {
  protected:
 
     // KeyFrames and matches
-    std::shared_ptr<OrbFrame> m_keyFrame1 = {};
-    std::shared_ptr<OrbFrame> m_keyFrame2= {};
+    std::shared_ptr<OrbKeyFrame> m_keyFrame1 = {};
+    std::shared_ptr<OrbKeyFrame> m_keyFrame2= {};
 
     std::vector<cv::Mat> mvX3Dc1 = {};
     std::vector<cv::Mat> mvX3Dc2 = {};

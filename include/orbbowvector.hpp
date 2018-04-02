@@ -16,10 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-
+/*
 #include "cluon-complete.hpp"
-#include "opendlv-standard-message-set.hpp"
-
+#include "opendlv-standard-message-set.hpp" //this is probably not needed here
+*/
 #include <iostream>
 #include <map>
 #include <vector>

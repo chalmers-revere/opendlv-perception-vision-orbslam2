@@ -26,7 +26,7 @@
 //#include "ORBmatcher.h"
 
 
-Sim3Solver::Sim3Solver(std::shared_ptr<OrbFrame> localKeyFrame1, std::shared_ptr<OrbFrame> localKeyFrame2, const std::vector<std::shared_ptr<OrbMapPoint>> &matchedMapPoints, const bool bFixScale):
+Sim3Solver::Sim3Solver(std::shared_ptr<OrbKeyFrame> localKeyFrame1, std::shared_ptr<OrbKeyFrame> localKeyFrame2, const std::vector<std::shared_ptr<OrbMapPoint>> &matchedMapPoints, const bool bFixScale):
   mnIterations(0)
 , mnBestInliers(0)
 , mbFixScale(bFixScale)
@@ -72,9 +72,8 @@ Sim3Solver::Sim3Solver(std::shared_ptr<OrbFrame> localKeyFrame1, std::shared_ptr
             if(indexKF1<0 || indexKF2<0)
                 continue;
 
-            std::vector<cv::KeyPoint> keyPointVector1 = localKeyFrame1->GetUndistortedKeyPoints();
-
-            std::vector<cv::KeyPoint> keyPointVector2 = localKeyFrame2->GetUndistortedKeyPoints();
+            std::vector<cv::KeyPoint> keyPointVector1 = localKeyFrame1->mvKeysUn;
+            std::vector<cv::KeyPoint> keyPointVector2 = localKeyFrame2->mvKeysUn;
 
             const cv::KeyPoint &kp1 = keyPointVector1[indexKF1]; //localKeyFrame1->mvKeysUn[indexKF1];
             const cv::KeyPoint &kp2 = keyPointVector2[indexKF2]; //localKeyFrame2->mvKeysUn[indexKF2];
@@ -82,8 +81,8 @@ Sim3Solver::Sim3Solver(std::shared_ptr<OrbFrame> localKeyFrame1, std::shared_ptr
             std::vector<float> sigma2Vector1;
             std::vector<float> sigma2Vector2;
 
-            sigma2Vector1 = localKeyFrame1->GetLevelSigma2();
-            sigma2Vector2 = localKeyFrame2->GetLevelSigma2();
+            sigma2Vector1 = localKeyFrame1->mvLevelSigma2;
+            sigma2Vector2 = localKeyFrame2->mvLevelSigma2;
 
             const float sigmaSquare1 = sigma2Vector1[kp1.octave]; // localKeyFrame1->GetLevelSigma2[kp1.octave];
             const float sigmaSquare2 = sigma2Vector2[kp2.octave];// localKeyFrame2->GetLevelSigma2[kp2.octave];
@@ -106,8 +105,8 @@ Sim3Solver::Sim3Solver(std::shared_ptr<OrbFrame> localKeyFrame1, std::shared_ptr
         }
     }
 
-    m_calibrationK1 = localKeyFrame1->GetCalibrationMatrix();
-    m_calibrationK2 = localKeyFrame2->GetCalibrationMatrix();
+    m_calibrationK1 = localKeyFrame1->mK;
+    m_calibrationK2 = localKeyFrame2->mK;
 
     FromCameraToImage(mvX3Dc1,mvP1im1,m_calibrationK1);
     FromCameraToImage(mvX3Dc2,mvP2im2,m_calibrationK2);
