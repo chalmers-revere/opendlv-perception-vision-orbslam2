@@ -239,10 +239,11 @@ void OrbMapPoint::ComputeDistinctiveDescriptors()
         return;
     }
     const size_t N = descriptors.size();
-    float** distances = new float*[N]; 
+    float **distances = new float *[N];
 
-    for(size_t i = 0; i < N; ++i){
-        distances[i] = new float[N]; 
+    for (size_t i = 0; i < N; ++i)
+    {
+        distances[i] = new float[N];
     }
     for (size_t i = 0; i < N; i++)
     {
@@ -270,7 +271,8 @@ void OrbMapPoint::ComputeDistinctiveDescriptors()
             BestIdx = i;
         }
     }
-    for(size_t i = 0; i < N; ++i){
+    for (size_t i = 0; i < N; ++i)
+    {
         delete distances[i];
     }
     delete distances;

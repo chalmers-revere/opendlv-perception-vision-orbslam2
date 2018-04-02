@@ -33,12 +33,12 @@ class OrbMap;
 
 class OrbMapPoint
 {
-public:
+  public:
     OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map);
     OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map, const int &keyPointIndex);
     ~OrbMapPoint();
 
-    std::map<std::shared_ptr<OrbFrame>,size_t> GetObservingKeyframes();
+    std::map<std::shared_ptr<OrbFrame>, size_t> GetObservingKeyframes();
 
     void SetWorldPosition(const cv::Mat &position);
     cv::Mat GetWorldPosition();
@@ -48,7 +48,7 @@ public:
 
     int GetObservingKeyFrameCount();
     int GetSequenceId();
-    void AddObservingKeyframe(std::shared_ptr<OrbFrame> keyFrame,size_t idx);
+    void AddObservingKeyframe(std::shared_ptr<OrbFrame> keyFrame, size_t idx);
     void EraseObservingKeyframe(std::shared_ptr<OrbFrame> keyFrame);
 
     int GetObeservationIndexOfKeyFrame(std::shared_ptr<OrbFrame> keyFrame);
@@ -57,11 +57,11 @@ public:
     void SetCorruptFlag();
     bool IsCorrupt();
 
-    void Replace(std::shared_ptr<OrbMapPoint> orbMapPoint);    
+    void Replace(std::shared_ptr<OrbMapPoint> orbMapPoint);
     std::shared_ptr<OrbMapPoint> GetReplaced();
 
-    void IncreaseVisible(int n=1);
-    void IncreaseFound(int n=1);
+    void IncreaseVisible(int n = 1);
+    void IncreaseFound(int n = 1);
     float GetFoundRatio();
     inline int GetFound() { return m_foundCounter; }
     float getTrackProjX() { return mTrackProjX; }
@@ -110,7 +110,7 @@ public:
     cv::Mat mPosGBA = {};
     long unsigned int mnBAGlobalForKF = {};
 
-private:
+  private:
     long unsigned int m_sequenceId = 0;
     long int m_firstKeyframeId = {};
     long int m_FirstKeyFrame = {};
@@ -135,38 +135,36 @@ private:
     long unsigned int mnCorrectedByKF = {};
     long unsigned int mnCorrectedReference = {};
 
-
-
     // mutexed below
 
-     // Position in absolute coordinates
-     cv::Mat m_worldPosition = {};
+    // Position in absolute coordinates
+    cv::Mat m_worldPosition = {};
 
-     // Keyframes observing the point and associated index in keyframe
-     std::map<std::shared_ptr<OrbFrame>,size_t> m_observingKeyframes = {};
+    // Keyframes observing the point and associated index in keyframe
+    std::map<std::shared_ptr<OrbFrame>, size_t> m_observingKeyframes = {};
 
-     // Mean viewing direction
-     cv::Mat m_meanViewingDirection = {};
+    // Mean viewing direction
+    cv::Mat m_meanViewingDirection = {};
 
-     // Best descriptor to fast matching
-     cv::Mat m_descriptor = {};
+    // Best descriptor to fast matching
+    cv::Mat m_descriptor = {};
 
-     // Reference KeyFrame
-     std::shared_ptr<OrbFrame> m_refenceKeyFrame = {};
+    // Reference KeyFrame
+    std::shared_ptr<OrbFrame> m_refenceKeyFrame = {};
 
-     // Tracking counters
-     int m_visibleCounter = {};
-     int m_foundCounter = {};
+    // Tracking counters
+    int m_visibleCounter = {};
+    int m_foundCounter = {};
 
-     // Bad flag (we do not currently erase MapPoint from memory)
-     bool m_corrupt = {};
+    // Bad flag (we do not currently erase MapPoint from memory)
+    bool m_corrupt = {};
     std::shared_ptr<OrbMapPoint> m_replaced = {};
 
-     // Scale invariance distances
-     float m_minDistance = {};
-     float m_maxDistance = {};
+    // Scale invariance distances
+    float m_minDistance = {};
+    float m_maxDistance = {};
 
-     std::shared_ptr<OrbMap> m_map = {};
+    std::shared_ptr<OrbMap> m_map = {};
 
     std::mutex m_constructorMutex = {};
     std::mutex m_positionMutex = {};
