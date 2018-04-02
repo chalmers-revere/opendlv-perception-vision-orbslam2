@@ -26,6 +26,7 @@
 #include <vector>
 #include <orbframe.hpp>
 #include <orbmap.hpp>
+#include <array>
 
 class OrbFrame;
 class OrbMap;
