@@ -7,6 +7,8 @@
 
 class LoopClosing
 {
+public:
+    void RequestReset();
 
 };
 

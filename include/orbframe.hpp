@@ -51,6 +51,8 @@ class OrbKeyFrame;
 class OrbFrame
 {
 public:
+    OrbFrame(){};
+
     // Constructor for stereo cameras.
     OrbFrame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeStamp, std::shared_ptr<OrbExtractor> extractorLeft,
              std::shared_ptr<OrbExtractor> extractorRight, std::shared_ptr<OrbVocabulary> voc, cv::Mat &K, cv::Mat &distCoef,

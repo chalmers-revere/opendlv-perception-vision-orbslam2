@@ -9,6 +9,13 @@ class LocalMapping
 {
 public:
     void InsertKeyFrame(std::shared_ptr<OrbKeyFrame> pKF);
+    bool isStopped();
+    bool stopRequested();
+    bool AcceptKeyFrames();
+    void InterruptBA();
+    int KeyframesInQueue();
+    bool SetNotStop(bool flag);
+    void RequestReset();
 
 };
 
