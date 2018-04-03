@@ -69,28 +69,28 @@ public:
     };
 
     eTrackingState mState;
-    eTrackingState mLastProcessedState;
+    eTrackingState mLastProcessedState = {};
 
     // Input sensor
     int mSensor;
 
     // Current Frame
-    std::shared_ptr<OrbFrame> mCurrentFrame;
-    cv::Mat mImGray;
+    std::shared_ptr<OrbFrame> mCurrentFrame = {};
+    cv::Mat mImGray = {};
 
     // Initialization Variables (Monocular)
-    std::vector<int> mvIniLastMatches;
-    std::vector<int> mvIniMatches;
-    std::vector<cv::Point2f> mvbPrevMatched;
-    std::vector<cv::Point3f> mvIniP3D;
-    std::shared_ptr<OrbFrame> mInitialFrame;
+    std::vector<int> mvIniLastMatches = {};
+    std::vector<int> mvIniMatches = {};
+    std::vector<cv::Point2f> mvbPrevMatched = {};
+    std::vector<cv::Point3f> mvIniP3D = {};
+    std::shared_ptr<OrbFrame> mInitialFrame = {};
 
     // Lists used to recover the full camera trajectory at the end of the execution.
     // Basically we store the reference keyframe for each frame and its relative transformation
-    std::list<cv::Mat> mlRelativeFramePoses;
-    std::list<std::shared_ptr<OrbKeyFrame>> mlpReferences;
-    std::list<double> mlFrameTimes;
-    std::list<bool> mlbLost;
+    std::list<cv::Mat> mlRelativeFramePoses = {};
+    std::list<std::shared_ptr<OrbKeyFrame>> mlpReferences = {};
+    std::list<double> mlFrameTimes = {};
+    std::list<bool> mlbLost = {};
 
     // True if local mapping is deactivated and we are performing only localization
     bool mbOnlyTracking;
@@ -133,12 +133,12 @@ protected:
     bool mbVO;
 
     //Other Thread Pointers
-    std::shared_ptr<LocalMapping> mpLocalMapper;
-    std::shared_ptr<LoopClosing> mpLoopClosing;
+    std::shared_ptr<LocalMapping> mpLocalMapper = {};
+    std::shared_ptr<LoopClosing> mpLoopClosing = {};
 
     //ORB
-    std::shared_ptr<OrbExtractor> mpORBextractorLeft, mpORBextractorRight;
-    std::shared_ptr<OrbExtractor> mpIniORBextractor;
+    std::shared_ptr<OrbExtractor> mpORBextractorLeft = {}, mpORBextractorRight = {};
+    std::shared_ptr<OrbExtractor> mpIniORBextractor = {};
 
     //BoW
     std::shared_ptr<OrbVocabulary> mpORBVocabulary;
@@ -148,9 +148,9 @@ protected:
     std::shared_ptr<OrbInitializer> mpInitializer;
 
     //Local Map
-    std::shared_ptr<OrbKeyFrame> mpReferenceKF;
-    std::vector<std::shared_ptr<OrbKeyFrame>> mvpLocalKeyFrames;
-    std::vector<std::shared_ptr<OrbMapPoint>> mvpLocalMapPoints;
+    std::shared_ptr<OrbKeyFrame> mpReferenceKF = {};
+    std::vector<std::shared_ptr<OrbKeyFrame>> mvpLocalKeyFrames = {};
+    std::vector<std::shared_ptr<OrbMapPoint>> mvpLocalMapPoints = {};
 
     // System
     std::shared_ptr<Selflocalization> mpSystem;
@@ -159,38 +159,38 @@ protected:
     std::shared_ptr<OrbMap> mpMap;
 
     //Calibration matrix
-    cv::Mat mK;
-    cv::Mat mDistCoef;
-    float mbf;
+    cv::Mat mK = {};
+    cv::Mat mDistCoef = {};
+    float mbf = {};
 
     //New KeyFrame rules (according to fps)
-    int mMinFrames;
-    int mMaxFrames;
+    int mMinFrames = {};
+    int mMaxFrames = {};
 
     // Threshold close/far points
     // Points seen as close by the stereo/RGBD sensor are considered reliable
     // and inserted from just one frame. Far points requiere a match in two keyframes.
-    float mThDepth;
+    float mThDepth = {};
 
     // For RGB-D inputs only. For some datasets (e.g. TUM) the depthmap values are scaled.
-    float mDepthMapFactor;
+    float mDepthMapFactor = {};
 
     //Current matches in frame
-    int mnMatchesInliers;
+    int mnMatchesInliers = {};
 
     //Last Frame, KeyFrame and Relocalisation Info
-    std::shared_ptr<OrbKeyFrame> mpLastKeyFrame;
-    std::shared_ptr<OrbFrame> mLastFrame;
-    unsigned int mnLastKeyFrameId;
+    std::shared_ptr<OrbKeyFrame> mpLastKeyFrame = {};
+    std::shared_ptr<OrbFrame> mLastFrame = {};
+    unsigned int mnLastKeyFrameId = {};
     unsigned int mnLastRelocFrameId;
 
     //Motion Model
-    cv::Mat mVelocity;
+    cv::Mat mVelocity = {};
 
     //Color order (true RGB, false BGR, ignored if grayscale)
-    bool mbRGB;
+    bool mbRGB = {};
 
-    std::list<std::shared_ptr<OrbMapPoint>> mlpTemporalPoints;
+    std::list<std::shared_ptr<OrbMapPoint>> mlpTemporalPoints = {};
 };
 
 

@@ -1526,7 +1526,7 @@ int ORBmatcher::SearchByProjection(std::shared_ptr<OrbFrame> &CurrentFrame, std:
                 if (dist3D < minDistance || dist3D > maxDistance)
                     continue;
 
-                int nPredictedLevel = pMP->PredictScale(dist3D, std::shared_ptr<OrbFrame>(&CurrentFrame));
+                int nPredictedLevel = pMP->PredictScale(dist3D, CurrentFrame);
 
                 // Search in a window
                 const float radius = th * CurrentFrame->mvScaleFactors[nPredictedLevel];

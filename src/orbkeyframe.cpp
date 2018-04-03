@@ -21,21 +21,21 @@
 
 long unsigned int OrbKeyFrame::nNextId=0;
 
-OrbKeyFrame::OrbKeyFrame(OrbFrame &F, std::shared_ptr<OrbMap> pMap, std::shared_ptr<OrbKeyFrameDatabase> pKFDB):
-        mnFrameId(F.mnId), mTimeStamp(F.mTimeStamp), mnGridCols(FRAME_GRID_COLS), mnGridRows(FRAME_GRID_ROWS),
-        mfGridElementWidthInv(F.mfGridElementWidthInv), mfGridElementHeightInv(F.mfGridElementHeightInv),
+OrbKeyFrame::OrbKeyFrame(std::shared_ptr<OrbFrame> F, std::shared_ptr<OrbMap> pMap, std::shared_ptr<OrbKeyFrameDatabase> pKFDB):
+        mnFrameId(F->mnId), mTimeStamp(F->mTimeStamp), mnGridCols(FRAME_GRID_COLS), mnGridRows(FRAME_GRID_ROWS),
+        mfGridElementWidthInv(F->mfGridElementWidthInv), mfGridElementHeightInv(F->mfGridElementHeightInv),
         mnTrackReferenceForFrame(0), mnFuseTargetForKF(0), mnBALocalForKF(0), mnBAFixedForKF(0),
         mnLoopQuery(0), mnLoopWords(0), mnRelocQuery(0), mnRelocWords(0), mnBAGlobalForKF(0),
-        fx(F.fx), fy(F.fy), cx(F.cx), cy(F.cy), invfx(F.invfx), invfy(F.invfy),
-        mbf(F.mbf), mb(F.mb), mThDepth(F.mThDepth), N(F.N), mvKeys(F.mvKeys), mvKeysUn(F.mvKeysUn),
-        mvuRight(F.mvuRight), mvDepth(F.mvDepth), mDescriptors(F.mDescriptors.clone()),
-        mBowVec(F.mBowVec), mFeatVec(F.mFeatVec), mnScaleLevels(F.mnScaleLevels), mfScaleFactor(F.mfScaleFactor),
-        mfLogScaleFactor(F.mfLogScaleFactor), mvScaleFactors(F.mvScaleFactors), mvLevelSigma2(F.mvLevelSigma2),
-        mvInvLevelSigma2(F.mvInvLevelSigma2), mnMinX(static_cast<const int>(F.mnMinX)), mnMinY(
-        static_cast<const int>(F.mnMinY)), mnMaxX(static_cast<const int>(F.mnMaxX)),
-        mnMaxY(static_cast<const int>(F.mnMaxY)), mK(F.mK), mvpMapPoints(F.mvpMapPoints), mpKeyFrameDB(pKFDB),
-        mpORBvocabulary(F.mpORBvocabulary), mbFirstConnection(true), mpParent(NULL), mbNotErase(false),
-        mbToBeErased(false), mbBad(false), mHalfBaseline(F.mb/2), mpMap(pMap)
+        fx(F->fx), fy(F->fy), cx(F->cx), cy(F->cy), invfx(F->invfx), invfy(F->invfy),
+        mbf(F->mbf), mb(F->mb), mThDepth(F->mThDepth), N(F->N), mvKeys(F->mvKeys), mvKeysUn(F->mvKeysUn),
+        mvuRight(F->mvuRight), mvDepth(F->mvDepth), mDescriptors(F->mDescriptors.clone()),
+        mBowVec(F->mBowVec), mFeatVec(F->mFeatVec), mnScaleLevels(F->mnScaleLevels), mfScaleFactor(F->mfScaleFactor),
+        mfLogScaleFactor(F->mfLogScaleFactor), mvScaleFactors(F->mvScaleFactors), mvLevelSigma2(F->mvLevelSigma2),
+        mvInvLevelSigma2(F->mvInvLevelSigma2), mnMinX(static_cast<const int>(F->mnMinX)), mnMinY(
+        static_cast<const int>(F->mnMinY)), mnMaxX(static_cast<const int>(F->mnMaxX)),
+        mnMaxY(static_cast<const int>(F->mnMaxY)), mK(F->mK), mvpMapPoints(F->mvpMapPoints), mpKeyFrameDB(pKFDB),
+        mpORBvocabulary(F->mpORBvocabulary), mbFirstConnection(true), mpParent(NULL), mbNotErase(false),
+        mbToBeErased(false), mbBad(false), mHalfBaseline(F->mb/2), mpMap(pMap)
 {
     mnId=nNextId++;
 
@@ -44,10 +44,10 @@ OrbKeyFrame::OrbKeyFrame(OrbFrame &F, std::shared_ptr<OrbMap> pMap, std::shared_
     {
         mGrid[i].resize((unsigned long) mnGridRows);
         for(int j=0; j<mnGridRows; j++)
-            mGrid[i][j] = F.mGrid[i][j];
+            mGrid[i][j] = F->mGrid[i][j];
     }
 
-    SetPose(F.mTcw);
+    SetPose(F->mTcw);
 }
 
 void OrbKeyFrame::ComputeBoW()

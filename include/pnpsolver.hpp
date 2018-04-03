@@ -39,7 +39,7 @@
 
 class PnPsolver {
  public:
-  PnPsolver(OrbFrame &F, const std::vector<std::shared_ptr<OrbMapPoint>> &m_matchingMapPoints);
+  PnPsolver(std::shared_ptr<OrbFrame> F, const std::vector<std::shared_ptr<OrbMapPoint>> &m_matchingMapPoints);
   PnPsolver(PnPsolver const &) = delete;
   PnPsolver &operator=(PnPsolver const &) = delete;
   ~PnPsolver();

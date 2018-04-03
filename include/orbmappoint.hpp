@@ -39,6 +39,7 @@ class OrbMapPoint
 public:
     OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map);
     OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map, const int &keyPointIndex);
+    OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map, const int &keyPointIndex);
     ~OrbMapPoint();
 
     std::map<std::shared_ptr<OrbKeyFrame>, size_t> GetObservingKeyframes();

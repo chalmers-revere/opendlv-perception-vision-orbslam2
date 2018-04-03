@@ -165,9 +165,9 @@ void Selflocalization::setUp()
 	m_pVocabulary = std::shared_ptr<OrbVocabulary>(new OrbVocabulary(vocFilePath));
 	int size = m_pVocabulary->getSize();
 	std::cout << "Size of Vocabulary: " << size << std::endl;
-	int colorChannel = 1;
+	//int colorChannel = 1;
 
-	m_pTracker = std::shared_ptr<Tracking>(new Tracking(std::shared_ptr<Selflocalization>(this), colorChannel /*,m_pVocavulary,m_pKeyFrameDatabase,m_pMap*/));
+	//m_pTracker = std::shared_ptr<Tracking>(new Tracking(std::shared_ptr<Selflocalization>(this), colorChannel /*,m_pVocavulary,m_pKeyFrameDatabase,m_pMap*/));
 	m_pMapper = std::shared_ptr<Mapping>(new Mapping(m_cameraType));
     //m_pImageGrab = std::shared_ptr<ImageExtractor>(new ImageExtractor(colorChannel));
     int nFeatures = 1000;

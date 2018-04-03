@@ -33,11 +33,11 @@ class OrbInitializer
 public:
 
     // Fix the reference frame
-    OrbInitializer(OrbFrame &referenceFrame, float sigma = 1.0, int iterations = 200);
+    OrbInitializer(std::shared_ptr<OrbFrame> referenceFrame, float sigma = 1.0, int iterations = 200);
 
     // Computes in parallel a fundamental matrix and a homography
     // Selects a model and tries to recover the motion and the structure from motion
-    bool Initialize(OrbFrame &currentFrame, const std::vector<int> &vMatches12,
+    bool Initialize(std::shared_ptr<OrbFrame> currentFrame, const std::vector<int> &vMatches12,
                     cv::Mat &R21, cv::Mat &t21, std::vector<cv::Point3f> &points3d, std::vector<bool> &triangulated);
 
 
