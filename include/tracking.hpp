@@ -75,7 +75,7 @@ public:
     int mSensor;
 
     // Current Frame
-    OrbFrame mCurrentFrame;
+    std::shared_ptr<OrbFrame> mCurrentFrame;
     cv::Mat mImGray;
 
     // Initialization Variables (Monocular)
@@ -83,7 +83,7 @@ public:
     std::vector<int> mvIniMatches;
     std::vector<cv::Point2f> mvbPrevMatched;
     std::vector<cv::Point3f> mvIniP3D;
-    OrbFrame mInitialFrame;
+    std::shared_ptr<OrbFrame> mInitialFrame;
 
     // Lists used to recover the full camera trajectory at the end of the execution.
     // Basically we store the reference keyframe for each frame and its relative transformation
@@ -180,7 +180,7 @@ protected:
 
     //Last Frame, KeyFrame and Relocalisation Info
     std::shared_ptr<OrbKeyFrame> mpLastKeyFrame;
-    OrbFrame mLastFrame;
+    std::shared_ptr<OrbFrame> mLastFrame;
     unsigned int mnLastKeyFrameId;
     unsigned int mnLastRelocFrameId;
 

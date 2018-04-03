@@ -28,11 +28,12 @@
 
 class OrbMap;
 class OrbMapPoint;
+class OrbKeyFrameDatabase;
 
 class OrbKeyFrame
 {
 public:
-    OrbKeyFrame(OrbFrame &F, std::shared_ptr<OrbMap> pMap, std::shared_ptr<OrbKeyFrameDatabase> pKFDB);
+    OrbKeyFrame(std::shared_ptr<OrbFrame>&F, std::shared_ptr<OrbMap> pMap, std::shared_ptr<OrbKeyFrameDatabase> pKFDB);
 
     // Pose functions
     void SetPose(const cv::Mat &Tcw);
