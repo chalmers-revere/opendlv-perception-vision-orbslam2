@@ -129,11 +129,11 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src/orbmatcher.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbmap.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbvocabulary.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/tracking.cpp
-${CMAKE_CURRENT_SOURCE_DIR}/src/orbkeyframe.cpp)
+${CMAKE_CURRENT_SOURCE_DIR}/src/orbkeyframe.cpp src/tracking.cpp)
 
 ################################################################################
 # Create executable.
-add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}.cpp) #Creates exe of the main .cpp (more like bin)
+add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}.cpp include/loopclosing.hpp) #Creates exe of the main .cpp (more like bin)
 target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}-core ${LIBRARIES}) #Links the exe with Libraries like the objects added above and g2o
 
 ################################################################################

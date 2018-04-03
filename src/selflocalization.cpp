@@ -107,58 +107,51 @@ Selflocalization::~Selflocalization()
 void Selflocalization::nextContainer(cluon::data::Envelope &a_container) 
 {
 	//cv::Mat img;
-	
+
 	//if (a_container.dataType() == opendlv::proxy::ImageReadingShared::ID()){
 
 	cluon::data::TimeStamp currTime = a_container.sampleTimeStamp();
 	double currentTime = currTime.microseconds();
-  std::cout << "CurrentTime: " << currentTime << std::endl;
+	std::cout << "CurrentTime: " << currentTime << std::endl;
 
 
-  /*  	opendlv::proxy::ImageReadingShared sharedImg = cluon::extractMessage<opendlv::proxy::ImageReadingShared>(std::move(a_container));
+	/*  	opendlv::proxy::ImageReadingShared sharedImg = cluon::extractMessage<opendlv::proxy::ImageReadingShared>(std::move(a_container));
 
 
-    	img = m_pImageGrab->ExtractSharedImage(&sharedImg);
+		img = m_pImageGrab->ExtractSharedImage(&sharedImg);
 
-  if(m_cameraType){
- 		int width = img.cols;
+	if(m_cameraType){
+		int width = img.cols;
 		int height = img.rows;
- 		cv::Mat imgL(img, cv::Rect(0, 0, width/2, height));
+		cv::Mat imgL(img, cv::Rect(0, 0, width/2, height));
 		cv::Mat imgR(img, cv::Rect(width/2, 0, width/2, height));
 		//GO TO TRACKING
 
 	cv::Mat Tcw = m_pImageGrab->ImageToGreyscaleStereo(imgL,imgR,currentTime);
 
-*/
+	*/
 	//}else{
 	  //GO TO TRACKING
 	  //cv::Mat Tcw = m_pImageGrab->ImageToGreyscaleMono(img,currentTime);
-    /*ORB testcode*/
-	  std::vector<cv::KeyPoint> TestMat;
-		cv::Mat testArr;
-    cv::Mat Tcw = cv::imread("/media/test2.jpg",CV_LOAD_IMAGE_COLOR);
-    cv::cvtColor(Tcw,Tcw,cv::COLOR_RGB2GRAY);
-    cv::Mat Tcw_keypoints;
-		m_pExtractOrb->ExtractFeatures(Tcw, TestMat, testArr);
-    cv::drawKeypoints( Tcw, TestMat, Tcw_keypoints, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
-		cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
-    cv::imshow( "Display window", Tcw_keypoints );                   // Show our image inside it.
-		cv::waitKey(0);
+	/*ORB testcode*/
+	std::vector<cv::KeyPoint> TestMat;
+	cv::Mat testArr;
+	cv::Mat Tcw = cv::imread("/media/test2.jpg",CV_LOAD_IMAGE_COLOR);
+	cv::cvtColor(Tcw,Tcw,cv::COLOR_RGB2GRAY);
+	cv::Mat Tcw_keypoints;
+	m_pExtractOrb->ExtractFeatures(Tcw, TestMat, testArr);
+	cv::drawKeypoints( Tcw, TestMat, Tcw_keypoints, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+	cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
+	cv::imshow( "Display window", Tcw_keypoints );                   // Show our image inside it.
+	cv::waitKey(0);
 
 	//}
 
-   			//std::cout << "[" << getName() << "] " << "[Unable to extract shared image." << std::endl;
-   	//}
+			//std::cout << "[" << getName() << "] " << "[Unable to extract shared image." << std::endl;
+	//}
 
-//if stereo
-
-
+	//if stereo
 }
-
-
-
-
-
 
 void Selflocalization::setUp()
 {
