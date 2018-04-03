@@ -129,7 +129,8 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src/orbmatcher.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbmap.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbvocabulary.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/tracking.cpp
-${CMAKE_CURRENT_SOURCE_DIR}/src/orbkeyframe.cpp src/tracking.cpp)
+${CMAKE_CURRENT_SOURCE_DIR}/src/orbkeyframe.cpp
+${CMAKE_BINARY_DIR}/opendlv-standard-message-set.cpp)
 
 ################################################################################
 # Create executable.
