@@ -1556,3 +1556,29 @@ void Tracking::InformOnlyTracking(const bool &flag)
 {
     mbOnlyTracking = flag;
 }
+
+bool Tracking::InitalizeTracking() {
+    if(mState==NO_IMAGES_YET)
+    {
+        mState = NOT_INITIALIZED;
+    }
+
+    mLastProcessedState=mState;
+
+    // Get Map Mutex -> Map cannot be changed
+    std::unique_lock<std::mutex> lock(mpMap->m_MapUpdateMutex);
+
+    if(mState==NOT_INITIALIZED)
+    {
+        if(mSensor==Selflocalization::STEREO || mSensor==Selflocalization::RGBD)
+            StereoInitialization();
+        else
+            MonocularInitialization();
+
+        //mpFrameDrawer->Update(this);
+
+        if(mState!=OK)
+            return false;
+    }
+    return true;
+}

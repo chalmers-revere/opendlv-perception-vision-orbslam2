@@ -57,8 +57,6 @@ public:
     // Use this function if you have deactivated local mapping and you only want to localize the camera.
     void InformOnlyTracking(const bool &flag);
 
-public:
-
     // Tracking states
     enum eTrackingState{
         SYSTEM_NOT_READY=-1,
@@ -97,11 +95,12 @@ public:
 
     void Reset();
 
-protected:
+private:
 
     // Main tracking function. It is independent of the input sensor.
     void Track();
-
+    bool InitalizeTracking();
+    void Calibrate(cv::FileStorage & cameraSettings);
     // Map initialization for stereo and RGB-D
     void StereoInitialization();
 
