@@ -2234,7 +2234,7 @@ private:
     };
 
     void make_grammar() {
-        // Setup PEG syntax parser
+        // CommonSetup PEG syntax parser
         g["Grammar"]    <= seq(g["Spacing"], oom(g["Definition"]), g["EndOfFile"]);
         g["Definition"] <= seq(opt(g["IGNORE"]), g["Identifier"], g["LEFTARROW"], g["Expression"]);
 

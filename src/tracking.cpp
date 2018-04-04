@@ -1497,8 +1497,8 @@ void Tracking::Reset()
     mlFrameTimes.clear();
     mlbLost.clear();
 
-//    if(mpViewer)
-//        mpViewer->Release();
+//   if(mpViewer)
+//   mpViewer->Release();
 }
 
 void Tracking::ChangeCalibration(const std::string &strSettingPath)
