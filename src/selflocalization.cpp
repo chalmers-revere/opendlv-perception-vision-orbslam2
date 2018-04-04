@@ -127,12 +127,12 @@ void Selflocalization::nextContainer(cluon::data::Envelope &a_container)
 		cv::Mat imgR(img, cv::Rect(width/2, 0, width/2, height));
 		//GO TO TRACKING
 
-	cv::Mat Tcw = m_pImageGrab->ImageToGreyscaleStereo(imgL,imgR,currentTime);
+	cv::Mat m_cameraPose = m_pImageGrab->ImageToGreyscaleStereo(imgL,imgR,currentTime);
 
 	*/
 	//}else{
 	  //GO TO TRACKING
-	  //cv::Mat Tcw = m_pImageGrab->ImageToGreyscaleMono(img,currentTime);
+	  //cv::Mat m_cameraPose = m_pImageGrab->ImageToGreyscaleMono(img,currentTime);
 	/*ORB testcode*/
 	std::vector<cv::KeyPoint> TestMat;
 	cv::Mat testArr;

@@ -180,47 +180,47 @@ public:
 
 
     // The following variables need to be accessed trough a mutex to be thread safe.
-protected:
+private:
 
     // SE3 Pose and camera center
-    cv::Mat Tcw = {};
-    cv::Mat Twc = {};
-    cv::Mat Ow = {};
+    cv::Mat m_cameraPose = {}; // Tcw, Pose
+    cv::Mat m_reverseCameraPose = {}; // Twc, Inverse pose
+    cv::Mat m_cameraCenter = {}; // Ow, Camera Center
 
-    cv::Mat Cw = {}; // Stereo middel point. Only for visualization
+    cv::Mat Cw = {}; // Stereo middle point. Only for visualization
 
     // MapPoints associated to keypoints
-    std::vector<std::shared_ptr<OrbMapPoint>> mvpMapPoints;
+    std::vector<std::shared_ptr<OrbMapPoint>> m_mapPoints;
 
     // BoW
-    std::shared_ptr<OrbKeyFrameDatabase> mpKeyFrameDB;
-    std::shared_ptr<OrbVocabulary> mpORBvocabulary;
+    std::shared_ptr<OrbKeyFrameDatabase> m_keyFrameDatabase;
+    std::shared_ptr<OrbVocabulary> m_orbVocabulary;
 
     // Grid over the image to speed up feature matching
-    std::vector< std::vector <std::vector<size_t> > > mGrid = {};
+    std::vector<std::vector<std::vector<size_t>>> m_grid = {};
 
-    std::map<std::shared_ptr<OrbKeyFrame>,int> mConnectedKeyFrameWeights = {};
-    std::vector<std::shared_ptr<OrbKeyFrame>> mvpOrderedConnectedKeyFrames = {};
-    std::vector<int> mvOrderedWeights = {};
+    std::map<std::shared_ptr<OrbKeyFrame>,int> m_connectedKeyFrameWeights = {};
+    std::vector<std::shared_ptr<OrbKeyFrame>> m_orderedConnectedKeyFrames = {};
+    std::vector<int> m_orderedWeights = {};
 
     // Spanning Tree and Loop Edges
-    bool mbFirstConnection;
-    std::shared_ptr<OrbKeyFrame> mpParent;
-    std::set<std::shared_ptr<OrbKeyFrame>> mspChildrens = {};
-    std::set<std::shared_ptr<OrbKeyFrame>> mspLoopEdges = {};
+    bool m_isFirstConnection;
+    std::shared_ptr<OrbKeyFrame> m_parent;
+    std::set<std::shared_ptr<OrbKeyFrame>> m_children = {};
+    std::set<std::shared_ptr<OrbKeyFrame>> m_loopEdges = {};
 
     // Bad flags
-    bool mbNotErase;
-    bool mbToBeErased;
-    bool mbBad;
+    bool m_shoulNotBeErased;
+    bool m_shouldBeErased;
+    bool m_isBad;
 
     float mHalfBaseline; // Only for visualization
 
-    std::shared_ptr<OrbMap> mpMap;
+    std::shared_ptr<OrbMap> m_map;
 
-    std::mutex mMutexPose = {};
-    std::mutex mMutexConnections = {};
-    std::mutex mMutexFeatures = {};
+    std::mutex m_poseMutex = {};
+    std::mutex m_connectionsMutex = {};
+    std::mutex m_featuresMutex = {};
 };
 
 
