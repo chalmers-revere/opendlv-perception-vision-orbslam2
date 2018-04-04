@@ -424,12 +424,14 @@ long unsigned int OrbMapPoint::GetLastFrameSeen()
 {
     return 0;
 }
+
 // include/orbframe.hpp
 // 124:    long unsigned int GetBALocalForKF(){return mnBALocalForKF; }
 
 // src/orboptimizer.cpp
 // 491:                    if(pMP->GetBALocalForKF()!=pKF->Id)
 // 508:            if(pKFi->GetBALocalForKF()!=pKF->Id && pKFi->GetBAFixedForKF()!=pKF->Id)
+
 long unsigned int OrbMapPoint::GetBALocalForKF()
 {
     return this->mnBAGlobalForKF;

@@ -33,7 +33,7 @@ class OrbKeyFrameDatabase;
 class OrbKeyFrame
 {
 public:
-    OrbKeyFrame(std::shared_ptr<OrbFrame> F, std::shared_ptr<OrbMap> pMap, std::shared_ptr<OrbKeyFrameDatabase> pKFDB);
+    OrbKeyFrame(std::shared_ptr<OrbFrame> frame, std::shared_ptr<OrbMap> pMap, std::shared_ptr<OrbKeyFrameDatabase> pKFDB);
 
     // Pose functions
     void SetPose(const cv::Mat &Tcw);

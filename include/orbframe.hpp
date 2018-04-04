@@ -54,46 +54,53 @@ public:
     OrbFrame(const std::shared_ptr<OrbFrame>&frame);
 
     // Constructor for stereo cameras.
-    OrbFrame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeStamp, std::shared_ptr<OrbExtractor> extractorLeft,
-             std::shared_ptr<OrbExtractor> extractorRight, std::shared_ptr<OrbVocabulary> voc, cv::Mat &K, cv::Mat &distCoef,
-             const float &bf, const float &thDepth);
+    OrbFrame(const cv::Mat &leftImage, const cv::Mat &rightImage, const double &timeStamp,
+             std::shared_ptr<OrbExtractor> leftExtractor, std::shared_ptr<OrbExtractor> rightExtractor,
+             std::shared_ptr<OrbVocabulary> orbVocabulary, cv::Mat &calibrationMatrix, cv::Mat &distanceCoefficient,
+             const float &stereoBaseline, const float &depthThreshold);
 
     // Constructor for RGB-D cameras.
-    OrbFrame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeStamp, std::shared_ptr<OrbExtractor> extractor,
-             std::shared_ptr<OrbVocabulary> voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
+    OrbFrame(const cv::Mat &greyImage, const cv::Mat &imageDepth, const double &timeStamp,
+             std::shared_ptr<OrbExtractor> extractor, std::shared_ptr<OrbVocabulary> orbVocabulary,
+             cv::Mat &calibrationMatrix, cv::Mat &distanceCoefficient, const float &stereoBaseline,
+             const float &depthThreshold);
 
     // Constructor for Monocular cameras.
-    OrbFrame(const cv::Mat &imGray, const double &timeStamp, std::shared_ptr<OrbExtractor> extractor,std::shared_ptr<OrbVocabulary> voc,
-             cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
+    OrbFrame(const cv::Mat &greyImage, const double &timeStamp, std::shared_ptr<OrbExtractor> extractor,
+             std::shared_ptr<OrbVocabulary> orbVocabulary, cv::Mat &calibrationMatrix, cv::Mat &distanceCoefficient,
+             const float &stereoBaseline, const float &depthThreshold);
+
 
     // Extract ORB on the image. 0 for left image and 1 for right image.
-    void ExtractORB(int flag, const cv::Mat &im);
+    void ExtractORB(int rightImage, const cv::Mat &image);
 
     // Compute Bag of Words representation.
     void ComputeBoW();
 
     // Set the camera pose.
-    void SetPose(cv::Mat Tcw);
+    void SetPose(cv::Mat cameraPose);
 
     // Computes rotation, translation and camera center matrices from the camera pose.
     void UpdatePoseMatrices();
 
     // Returns the camera center.
-    inline cv::Mat GetCameraCenter(){
-        return mOw.clone();
+    inline cv::Mat GetCameraCenter()
+    {
+        return m_cameraCenter.clone();
     }
 
     // Returns inverse of rotation
-    inline cv::Mat GetRotationInverse(){
-        return mRwc.clone();
+    inline cv::Mat GetRotationInverse()
+    {
+        return m_reverseRotation.clone();
     }
 
     // Check if a MapPoint is in the frustum of the camera
     // and fill variables of the MapPoint to be used by the tracking
-    bool isInFrustum(std::shared_ptr<OrbMapPoint> pMP, float viewingCosLimit);
+    bool isInFrustum(std::shared_ptr<OrbMapPoint> mapPoint, float viewingCosLimit);
 
     // Compute the cell of a keypoint (return false if outside the grid)
-    bool PosInGrid(const cv::KeyPoint &kp, int &posX, int &posY);
+    bool PosInGrid(const cv::KeyPoint &keyPoint, int &xPosition, int &yPosition);
 
     std::vector<size_t> GetFeaturesInArea(const float &x, const float  &y, const float  &r, const int minLevel=-1, const int maxLevel=-1) const;
 
@@ -102,7 +109,7 @@ public:
     void ComputeStereoMatches();
 
     // Associate a "right" coordinate to a keypoint if there is valid depth in the depthmap.
-    void ComputeStereoFromRGBD(const cv::Mat &imDepth);
+    void ComputeStereoFromRGBD(const cv::Mat &imageDepth);
 
     // Backprojects a keypoint (if stereo/depth info available) into 3D world coordinates.
     cv::Mat UnprojectStereo(const int &i);
@@ -198,6 +205,8 @@ public:
 
 
 private:
+    void CommonSetup();
+    void InitialComputation(cv::Mat calibrationMatrix, cv::Mat image);
 
     // Undistort keypoints given OpenCV distortion parameters.
     // Only for the RGB-D case. Stereo must be already rectified!
@@ -205,16 +214,16 @@ private:
     void UndistortKeyPoints();
 
     // Computes image bounds for the undistorted image (called in the constructor).
-    void ComputeImageBounds(const cv::Mat &imLeft);
+    void ComputeImageBounds(const cv::Mat &leftImage);
 
     // Assign keypoints to the grid for speed up feature matching (called in the constructor).
     void AssignFeaturesToGrid();
 
     // Rotation, translation and camera center
-    cv::Mat mRcw = {};
-    cv::Mat mtcw = {};
-    cv::Mat mRwc = {};
-    cv::Mat mOw = {}; //==mtwc
+    cv::Mat m_rotation = {}; //Rcw, rotation.
+    cv::Mat m_reversePose = {}; //Tcw, inverse pose.
+    cv::Mat m_reverseRotation = {}; // Rwc, reverse rotation.
+    cv::Mat m_cameraCenter = {}; //Ow camera center==mtwc
 };
 
 #endif
