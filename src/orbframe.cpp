@@ -185,15 +185,19 @@ void OrbFrame::AssignFeaturesToGrid()
 {
     int nReserve = static_cast<int>(0.5f * N / (FRAME_GRID_COLS * FRAME_GRID_ROWS));
     for(unsigned int i=0; i<FRAME_GRID_COLS;i++)
-        for (unsigned int j=0; j<FRAME_GRID_ROWS;j++)
-            mGrid[i][j].reserve(static_cast<unsigned long>(nReserve));
-
-    for(int i=0;i<N;i++)
     {
-        const cv::KeyPoint &kp = mvKeysUn[i];
+        for (unsigned int j=0; j<FRAME_GRID_ROWS;j++)
+        {
+            mGrid[i][j].reserve(static_cast<unsigned long>(nReserve));
+        }
+    }
+
+    for(int i=0; i<N; i++)
+    {
+        const cv::KeyPoint &keyPoint = mvKeysUn[i];
 
         int nGridPosX, nGridPosY;
-        if(PosInGrid(kp,nGridPosX,nGridPosY))
+        if(PosInGrid(keyPoint, nGridPosX, nGridPosY))
             mGrid[nGridPosX][nGridPosY].push_back(static_cast<unsigned long &&>(i));
     }
 }
@@ -457,7 +461,7 @@ void OrbFrame::ComputeStereoMatches()
     mvuRight = std::vector<float>(static_cast<unsigned long>(N), -1.0f);
     mvDepth = std::vector<float>(static_cast<unsigned long>(N), -1.0f);
 
-    const int thOrbDist = (ORBmatcher::TH_HIGH+ORBmatcher::TH_LOW)/2;
+    const int thOrbDist = (ORBmatcher::TH_HIGH + ORBmatcher::TH_LOW)/2;
 
     const int nRows = mpORBextractorLeft->m_vImagePyramid[0].rows;
 
@@ -465,7 +469,9 @@ void OrbFrame::ComputeStereoMatches()
     std::vector<std::vector<size_t> > vRowIndices(nRows, std::vector<size_t>());
 
     for(int i=0; i<nRows; i++)
+    {
         vRowIndices[i].reserve(200);
+    }
 
     const int Nr = static_cast<const int>(mvKeysRight.size());
 
@@ -478,7 +484,9 @@ void OrbFrame::ComputeStereoMatches()
         const int minr = static_cast<const int>(floor(kpY - r));
 
         for(int yi=minr;yi<=maxr;yi++)
+        {
             vRowIndices[yi].push_back(static_cast<unsigned long &&>(iR));
+        }
     }
 
     // Set limits for search
@@ -490,7 +498,7 @@ void OrbFrame::ComputeStereoMatches()
     std::vector<std::pair<int, int> > vDistIdx;
     vDistIdx.reserve(static_cast<unsigned long>(N));
 
-    for(int iL=0; iL<N; iL++)
+    for(int iL=0; iL < N; iL++)
     {
         const cv::KeyPoint &kpL = mvKeys[iL];
         const int &levelL = kpL.octave;
@@ -508,7 +516,9 @@ void OrbFrame::ComputeStereoMatches()
         const float maxU = uL-minD;
 
         if(maxU<0)
+        {
             continue;
+        }
 
         int bestDist = ORBmatcher::TH_HIGH;
         size_t bestIdxR = 0;
@@ -522,16 +532,18 @@ void OrbFrame::ComputeStereoMatches()
             const cv::KeyPoint &kpR = mvKeysRight[iR];
 
             if(kpR.octave<levelL-1 || kpR.octave>levelL+1)
+            {
                 continue;
+            }
 
             const float &uR = kpR.pt.x;
 
-            if(uR>=minU && uR<=maxU)
+            if(uR >= minU && uR <= maxU)
             {
                 const cv::Mat &dR = mDescriptorsRight.row((int) iR);
                 const int dist = ORBmatcher::DescriptorDistance(dL,dR);
 
-                if(dist<bestDist)
+                if(dist < bestDist)
                 {
                     bestDist = dist;
                     bestIdxR = iR;
@@ -540,7 +552,7 @@ void OrbFrame::ComputeStereoMatches()
         }
 
         // Subpixel match by correlation
-        if(bestDist<thOrbDist)
+        if(bestDist < thOrbDist)
         {
             // coordinates in image pyramid at keypoint scale
             const float uR0 = mvKeysRight[bestIdxR].pt.x;
@@ -566,7 +578,9 @@ void OrbFrame::ComputeStereoMatches()
             const float iniu = scaleduR0+L-w;
             const float endu = scaleduR0+L+w+1;
             if(iniu<0 || endu >= mpORBextractorRight->m_vImagePyramid[kpL.octave].cols)
+            {
                 continue;
+            }
 
             for(int incR=-L; incR<=+L; incR++)
             {
@@ -587,7 +601,9 @@ void OrbFrame::ComputeStereoMatches()
             }
 
             if(bestincR==-L || bestincR==L)
+            {
                 continue;
+            }
 
             // Sub-pixel match (Parabola fitting)
             const float dist1 = vDists[L+bestincR-1];
@@ -597,7 +613,9 @@ void OrbFrame::ComputeStereoMatches()
             const float deltaR = (dist1-dist3)/(2.0f*(dist1+dist3-2.0f*dist2));
 
             if(deltaR<-1 || deltaR>1)
+            {
                 continue;
+            }
 
             // Re-scaled coordinate
             float bestuR = mvScaleFactors[kpL.octave]*(scaleduR0 + (float)bestincR + deltaR);
@@ -618,7 +636,7 @@ void OrbFrame::ComputeStereoMatches()
         }
     }
 
-    sort(vDistIdx.begin(),vDistIdx.end());
+    sort(vDistIdx.begin(), vDistIdx.end());
     const float median = vDistIdx[vDistIdx.size()/2].first;
     const float thDist = 1.5f*1.4f*median;
 
