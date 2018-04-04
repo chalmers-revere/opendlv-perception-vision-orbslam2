@@ -514,7 +514,7 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
         }
     }
 
-    // CommonSetup optimizer
+    // Setup optimizer
     g2o::SparseOptimizer optimizer;
     auto linearSolver = g2o::make_unique<orbLinearSolver>();
     g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<orbBlockSolver>(std::move(linearSolver)));
