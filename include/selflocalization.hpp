@@ -104,16 +104,23 @@ private:
     //std::shared_ptr<ImageExtractor> m_pImageGrab;
     /*Variables needed to initialize threads and databases*/
     /*
-	std::shared_ptr<Map> m_pMap;
 
-	std::shared_ptr<KeyFrameDatabase> m_pKeyFrameDatabase;
-	
-	std::shared_ptr<Mapping> m_pMapper;
-	std::shared_ptr<LoopClosing> m_pLoopCloser;
+    //std::shared_ptr<ImageExtractor> m_pImageGrab;
+    std::shared_ptr<OrbExtractor> m_pExtractOrb;
+    std::shared_ptr<OrbVocabulary> m_pVocabulary;
+    /*Variables needed to initialize threads and databases*/
+    /*
 
-	std::shared_ptr<std::thread> m_pMappingThread;
-	std::shared_ptr<std::thread> m_pLoopClosingThread;
-*/
+    std::shared_ptr<Map> m_pMap;
+
+    std::shared_ptr<KeyFrameDatabase> m_pKeyFrameDatabase;
+
+    std::shared_ptr<Mapping> m_pMapper;
+    std::shared_ptr<LoopClosing> m_pLoopCloser;
+
+    std::shared_ptr<std::thread> m_pMappingThread;
+    std::shared_ptr<std::thread> m_pLoopClosingThread;
+    */
 };
 
 

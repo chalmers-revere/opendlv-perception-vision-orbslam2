@@ -169,7 +169,7 @@ void Selflocalization::setUp()
 	//int colorChannel = 1;
 
 	//m_pTracker = std::shared_ptr<Tracking>(new Tracking(std::shared_ptr<Selflocalization>(this), colorChannel /*,m_pVocavulary,m_pKeyFrameDatabase,m_pMap*/));
-	
+
 	m_map = std::shared_ptr<OrbMap>(new OrbMap());
 	m_pMapper = std::shared_ptr<Mapping>(new Mapping(m_map,m_cameraType));
     //m_pImageGrab = std::shared_ptr<ImageExtractor>(new ImageExtractor(colorChannel));

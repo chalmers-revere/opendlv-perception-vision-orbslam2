@@ -58,8 +58,6 @@ public:
 
     void InsertKeyFrame(std::shared_ptr<OrbKeyFrame> pKF);
 
-    void RequestReset();
-
     // This function will run in a separate thread
     void RunGlobalBundleAdjustment(unsigned long nLoopKF);
 
