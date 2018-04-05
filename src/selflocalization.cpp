@@ -40,12 +40,12 @@
   */
 Selflocalization::Selflocalization() :
       m_cameraType()
-    , m_pTracker()
-    , m_map()
     , m_pMapper()
-    //, m_pImageGrab() 
+    , m_pTracker()
+    //, m_pImageGrab()
     , m_pExtractOrb()
     , m_pVocabulary()
+    , m_map()
 
 {	
 	
