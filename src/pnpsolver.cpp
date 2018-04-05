@@ -40,12 +40,12 @@
 //#include "Thirdparty/DBoW2/DUtils/Random.h"
 #include <algorithm>
 
-PnPsolver::PnPsolver(OrbFrame &F, const std::vector<std::shared_ptr<OrbMapPoint>> &matchingMapPoints):
+PnPsolver::PnPsolver(std::shared_ptr<OrbFrame> F, const std::vector<std::shared_ptr<OrbMapPoint>> &matchingMapPoints):
     pws(0), us(0), alphas(0), pcs(0), m_maximumNumberOfCorrespondences(0), number_of_correspondences(0), m_matchingMapPoints(),
     m_nIterations(0), m_nbestInliers(0), m_numberOfCorrespondences(0)
 {
     //Constructor depends on Frame 
-    std::vector<float> sigmaSqLevels = F.mvInvLevelSigma2;
+    std::vector<float> sigmaSqLevels = F->mvInvLevelSigma2;
     m_matchingMapPoints = matchingMapPoints;
     m_points2D.reserve(sigmaSqLevels.size());
     m_sigma2D.reserve(sigmaSqLevels.size());
@@ -54,7 +54,7 @@ PnPsolver::PnPsolver(OrbFrame &F, const std::vector<std::shared_ptr<OrbMapPoint>
     m_allIndices.reserve(sigmaSqLevels.size());
 
     int idx=0;
-    std::vector<cv::KeyPoint> undistortedKeyPoints = F.mvKeysUn;
+    std::vector<cv::KeyPoint> undistortedKeyPoints = F->mvKeysUn;
     for(size_t i=0, iend=matchingMapPoints.size(); i<iend; i++)
     {
         std::shared_ptr<OrbMapPoint> mapPointPtr = matchingMapPoints[i];

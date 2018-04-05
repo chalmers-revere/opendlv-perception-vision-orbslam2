@@ -56,8 +56,33 @@ OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> f
     m_sequenceId = m_nextId++;
 }
 
+OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> frame, std::shared_ptr<OrbMap> map, const int &keyPointIndex)
+        : Id(), m_nextId(), m_map(map)
+{
+    position.copyTo(m_worldPosition);
+    cv::Mat cameraCenter = frame->GetCameraCenter();
+    m_meanViewingDirection = m_worldPosition - cameraCenter;
+    m_meanViewingDirection = m_meanViewingDirection / cv::norm(m_meanViewingDirection);
+
+    cv::Mat offset = position - cameraCenter;
+    const float distance = (float)cv::norm(offset);
+    const int level = frame->mvKeysUn[keyPointIndex].octave;
+    const float levelScaleFactor = frame->mvScaleFactors[level];
+    const int levels = frame->mnScaleLevels;
+
+    m_maxDistance = distance*levelScaleFactor;
+    m_minDistance = m_maxDistance/frame->mvScaleFactors[levels-1];
+
+    frame->mDescriptors.row(keyPointIndex).copyTo(m_descriptor);
+
+    // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
+    std::unique_lock<std::mutex> lock(m_constructorMutex);
+    m_sequenceId = m_nextId++;
+}
+
 OrbMapPoint::~OrbMapPoint()
 {
+
 }
 
 std::map<std::shared_ptr<OrbKeyFrame>,size_t> OrbMapPoint::GetObservingKeyframes()
@@ -399,12 +424,14 @@ long unsigned int OrbMapPoint::GetLastFrameSeen()
 {
     return 0;
 }
+
 // include/orbframe.hpp
 // 124:    long unsigned int GetBALocalForKF(){return mnBALocalForKF; }
 
 // src/orboptimizer.cpp
 // 491:                    if(pMP->GetBALocalForKF()!=pKF->Id)
 // 508:            if(pKFi->GetBALocalForKF()!=pKF->Id && pKFi->GetBAFixedForKF()!=pKF->Id)
+
 long unsigned int OrbMapPoint::GetBALocalForKF()
 {
     return this->mnBAGlobalForKF;

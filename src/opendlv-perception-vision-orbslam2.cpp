@@ -16,50 +16,54 @@
  */
 
 #include "cluon-complete.hpp"
-#include "opendlv-standard-message-set.hpp"
-//#include <Eigen/Dense>
-
-#include <cstdint>
-//#include <tuple>
-#include <utility>
-#include <iostream>
-#include <string>
-#include <thread>
-
 #include "selflocalization.hpp"
 
 
-int32_t main(int32_t argc, char **argv) {
-  int32_t retCode{0};
-  auto commandlineArguments = cluon::getCommandlineArguments(argc, argv);
-  if (0 == commandlineArguments.count("cid")) {
-    std::cerr << argv[0] << " is a slam implementation for the Chalmers Revere lab." << std::endl;
-    std::cerr << "Usage:   " << argv[0] << " --cid=<OpenDaVINCI session> [--id=<Identifier in case of simulated units>] [--verbose]" << std::endl;
-    std::cerr << "Example: " << argv[0] << " --cid=111" << std::endl;
-    retCode = 1;
-  } else {
-    uint32_t const ID{(commandlineArguments["id"].size() != 0) ? static_cast<uint32_t>(std::stoi(commandlineArguments["id"])) : 0};
-    bool const VERBOSE{commandlineArguments.count("verbose") != 0};
-    (void)VERBOSE;
-    // Interface to a running OpenDaVINCI session (ignoring any incoming Envelopes).
-    cluon::data::Envelope data;
-    Selflocalization selflocalization;
-    //std::shared_ptr<Slam> slammer = std::shared_ptr<Slam>(new Slam(10));
-    cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArguments["cid"])),
-      [&data, &orbObject = selflocalization ,&od4session = od4, senderStamp = ID](cluon::data::Envelope &&envelope){
-        orbObject.nextContainer(envelope);
-      }
-    };
-
-    // Just sleep as this microservice is data driven.
-    using namespace std::literals::chrono_literals;
-    while (od4.isRunning()) {
-      std::this_thread::sleep_for(1s);
-      selflocalization.nextContainer(data);
-      std::chrono::system_clock::time_point tp;
+int32_t main(int32_t argc, char **argv)
+{
+    int32_t retCode{0};
+    auto commandlineArguments = cluon::getCommandlineArguments(argc, argv);
+    if (0 == commandlineArguments.count("cid"))
+    {
+        std::cerr << argv[0] << " is a slam implementation for the Chalmers Revere lab." << std::endl;
+        std::cerr << "Usage:   " << argv[0] << " --cid=<OpenDaVINCI session> [--id=<Identifier in case of simulated units>] [--verbose]" << std::endl;
+        std::cerr << "Example: " << argv[0] << " --cid=111" << std::endl;
+        retCode = 1;
     }
-  }
-  return retCode;
+    else
+    {
+        uint32_t const ID
+        {
+            (commandlineArguments["id"].size() != 0) ? static_cast<uint32_t>(std::stoi(commandlineArguments["id"])) : 0
+        };
+        bool const VERBOSE
+        {
+            commandlineArguments.count("verbose") != 0
+        };
+        (void)VERBOSE;
+
+        // Interface to a running OpenDaVINCI session (ignoring any incoming Envelopes).
+        cluon::data::Envelope data;
+        Selflocalization selflocalization;
+        //std::shared_ptr<Slam> slammer = std::shared_ptr<Slam>(new Slam(10));
+        cluon::OD4Session od4
+        {
+            static_cast<uint16_t>(std::stoi(commandlineArguments["cid"])),
+            [&data, &orbObject = selflocalization ,&od4session = od4, senderStamp = ID](cluon::data::Envelope &&envelope){
+                orbObject.nextContainer(envelope);
+            }
+        };
+
+        // Just sleep as this microservice is data driven.
+        using namespace std::literals::chrono_literals;
+        while (od4.isRunning())
+        {
+            std::this_thread::sleep_for(1s);
+            selflocalization.nextContainer(data);
+            std::chrono::system_clock::time_point tp;
+        }
+    }
+    return retCode;
 }
 
 

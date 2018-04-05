@@ -27,7 +27,7 @@
 
 #include <thread>
 
-OrbInitializer::OrbInitializer(OrbFrame &referenceFrame, float sigma, int iterations) : m_referenceKeys(),
+OrbInitializer::OrbInitializer(std::shared_ptr<OrbFrame> referenceFrame, float sigma, int iterations) : m_referenceKeys(),
                                                                                         m_currentKeys(),
                                                                                         m_matches(),
                                                                                         m_currentMatches(),
@@ -39,19 +39,19 @@ OrbInitializer::OrbInitializer(OrbFrame &referenceFrame, float sigma, int iterat
 {
     //m_calibration = referenceFrame.m_calibration.clone(); We have to come up with something uniform
 
-    m_referenceKeys = referenceFrame.mvKeysUn;
+    m_referenceKeys = referenceFrame->mvKeysUn;
 
     m_sigma = sigma;
     m_sigma2 = sigma * sigma;
     m_maxIterations = iterations;
 }
 
-bool OrbInitializer::Initialize(OrbFrame &currentFrame, const std::vector<int> &matches, cv::Mat &R21, cv::Mat &t21,
+bool OrbInitializer::Initialize(std::shared_ptr<OrbFrame> currentFrame, const std::vector<int> &matches, cv::Mat &R21, cv::Mat &t21,
                                 std::vector<cv::Point3f> &points3d, std::vector<bool> &triangulated)
 {
     // Fill structures with current keypoints and matches with reference frame
     // Reference Frame: 1, Current Frame: 2
-    m_currentKeys = currentFrame.mvKeysUn;
+    m_currentKeys = currentFrame->mvKeysUn;
 
     m_matches.clear();
     m_matches.reserve(m_currentKeys.size());

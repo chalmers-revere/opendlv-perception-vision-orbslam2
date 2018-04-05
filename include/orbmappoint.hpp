@@ -39,6 +39,7 @@ class OrbMapPoint
 public:
     OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map);
     OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map, const int &keyPointIndex);
+    OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map, const int &keyPointIndex);
     ~OrbMapPoint();
 
     std::map<std::shared_ptr<OrbKeyFrame>, size_t> GetObservingKeyframes();
@@ -97,6 +98,7 @@ public:
     long unsigned int GetCorrectedReference();
     cv::Mat GetPosGBA();
     long unsigned int GetBAGlobalForKF();
+    long int GetFirstKeyFrameId(){ return m_firstKeyframeId;};
 
     void SetTrackScaleLevel(long unsigned int TrackScaleLevel);
     void SetTrackInView(long unsigned int TrackInView);

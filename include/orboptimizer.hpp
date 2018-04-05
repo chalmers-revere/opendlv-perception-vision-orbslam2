@@ -20,15 +20,18 @@
 #ifndef ORBOPTIMIZER_HPP
 #define ORBOPTIMIZER_HPP
 
+
+
 #include "orbmap.hpp"
 #include "orbmappoint.hpp"
-//#include "orbkeyframe.hpp" hu blir denna?
+#include "orbkeyframe.hpp" 
 //DENNA SKA MÄÄ #include "orbloopclosing.hpp"
+#include "loopclosing.hpp"
 #include "orbframe.hpp"
 
 #include "g2o/types/sim3/types_seven_dof_expmap.h"
 
-//class orbloopclosing;
+class LoopClosing;
 class OrbOptimizer {
  public:
   OrbOptimizer();
@@ -43,11 +46,11 @@ class OrbOptimizer {
     void static LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> keyframe, bool *pbStopFlag, std::shared_ptr<OrbMap> pMap);
 
     // if bFixScale is true, 6DoF optimization (stereo,rgbd), 7DoF otherwise (mono)
-    /*void static OptimizeEssentialGraph(Map* pMap, KeyFrame* pLoopKF, KeyFrame* pCurKF,
+    void static OptimizeEssentialGraph(std::shared_ptr<OrbMap> pMap, std::shared_ptr<OrbKeyFrame> pLoopKF, std::shared_ptr<OrbKeyFrame> pCurKF,
                                        const LoopClosing::KeyFrameAndPose &NonCorrectedSim3,
                                        const LoopClosing::KeyFrameAndPose &CorrectedSim3,
-                                       const map<KeyFrame *, set<KeyFrame *> > &LoopConnections,
-                                       const bool &bFixScale);*/
+                                       const std::map<std::shared_ptr<OrbKeyFrame>, std::set<std::shared_ptr<OrbKeyFrame>> > &LoopConnections,
+                                       const bool &bFixScale);
 
     // if bFixScale is true, optimize SE3 (stereo,rgbd), Sim3 otherwise (mono)
     static int OptimizeSim3(std::shared_ptr<OrbKeyFrame> keyFrame1, std::shared_ptr<OrbKeyFrame> keyFrame2, std::vector<std::shared_ptr<OrbMapPoint>> &vpMatches1, g2o::Sim3 &g2oS12, const float th2, const bool bFixScale);

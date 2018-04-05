@@ -28,8 +28,11 @@
 
 #include "orbmappoint.hpp"
 #include "orbframe.hpp"
+#include "orbkeyframe.hpp"
 
-
+class OrbMapPoint;
+class OrbFrame;
+class OrbKeyFrame;
 
 class ORBmatcher
 {    
@@ -42,15 +45,15 @@ public:
 
     // Search matches between Frame keypoints and projected MapPoints. Returns number of matches
     // Used to track the local map (Tracking)
-    int SearchByProjection(OrbFrame &F, const std::vector<std::shared_ptr<OrbMapPoint>> &mapPoints, const float th=3);
+    int SearchByProjection(std::shared_ptr<OrbFrame> &F, const std::vector<std::shared_ptr<OrbMapPoint>> &mapPoints, const float th=3);
 
     // Project MapPoints tracked in last frame into the current frame and search matches.
     // Used to track from previous frame (Tracking)
-    int SearchByProjection(OrbFrame &CurrentFrame, const OrbFrame &LastFrame, const float th, const bool isMono);
+    int SearchByProjection(std::shared_ptr<OrbFrame> &CurrentFrame, const std::shared_ptr<OrbFrame> &LastFrame, const float th, const bool isMono);
 
     // Project MapPoints seen in KeyFrame into the Frame and search matches.
     // Used in relocalisation (Tracking)
-    int SearchByProjection(OrbFrame &currentFrame, std::shared_ptr<OrbKeyFrame> keyFrame, const std::set<std::shared_ptr<OrbMapPoint>> &sAlreadyFound, const float th, const int ORBdist);
+    int SearchByProjection(std::shared_ptr<OrbFrame> &currentFrame, std::shared_ptr<OrbKeyFrame> keyFrame, const std::set<std::shared_ptr<OrbMapPoint>> &sAlreadyFound, const float th, const int ORBdist);
 
     // Project MapPoints using a Similarity Transformation and search matches.
     // Used in loop detection (Loop Closing)
@@ -59,11 +62,11 @@ public:
     // Search matches between MapPoints in a KeyFrame and ORB in a Frame.
     // Brute force constrained to ORB that belong to the same vocabulary node (at a certain level)
     // Used in Relocalisation and Loop Detection
-    int SearchByBoW(std::shared_ptr<OrbKeyFrame> keyFrame, OrbFrame &F, std::vector<std::shared_ptr<OrbMapPoint>> &mapPointMatches);
+    int SearchByBoW(std::shared_ptr<OrbKeyFrame> keyFrame, std::shared_ptr<OrbFrame> &F, std::vector<std::shared_ptr<OrbMapPoint>> &mapPointMatches);
     int SearchByBoW(std::shared_ptr<OrbKeyFrame> keyFrame1, std::shared_ptr<OrbKeyFrame> keyFrame2, std::vector<std::shared_ptr<OrbMapPoint>> &matches);
 
     // Matching for the Map Initialization (only used in the monocular case)
-    int SearchForInitialization(OrbFrame &frame1, OrbFrame &frame2, std::vector<cv::Point2f> &vbPrevMatched, std::vector<int> &nMatches, int windowSize=10);
+    int SearchForInitialization(std::shared_ptr<OrbFrame> &frame1, std::shared_ptr<OrbFrame> &frame2, std::vector<cv::Point2f> &vbPrevMatched, std::vector<int> &nMatches, int windowSize=10);
 
     // Matching to triangulate new MapPoints. Check Epipolar Constraint.
     int SearchForTriangulation(std::shared_ptr<OrbKeyFrame> keyFrame1, std::shared_ptr<OrbKeyFrame> pKF2, cv::Mat F12,

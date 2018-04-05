@@ -41,6 +41,7 @@
 Selflocalization::Selflocalization() :
       m_cameraType()
     , m_pTracker()
+    , m_map()
     , m_pMapper()
     //, m_pImageGrab() 
     , m_pExtractOrb()
@@ -107,58 +108,51 @@ Selflocalization::~Selflocalization()
 void Selflocalization::nextContainer(cluon::data::Envelope &a_container) 
 {
 	//cv::Mat img;
-	
+
 	//if (a_container.dataType() == opendlv::proxy::ImageReadingShared::ID()){
 
 	cluon::data::TimeStamp currTime = a_container.sampleTimeStamp();
 	double currentTime = currTime.microseconds();
-  std::cout << "CurrentTime: " << currentTime << std::endl;
+	std::cout << "CurrentTime: " << currentTime << std::endl;
 
 
-  /*  	opendlv::proxy::ImageReadingShared sharedImg = cluon::extractMessage<opendlv::proxy::ImageReadingShared>(std::move(a_container));
+	/*  	opendlv::proxy::ImageReadingShared sharedImg = cluon::extractMessage<opendlv::proxy::ImageReadingShared>(std::move(a_container));
 
 
-    	img = m_pImageGrab->ExtractSharedImage(&sharedImg);
+		img = m_pImageGrab->ExtractSharedImage(&sharedImg);
 
-  if(m_cameraType){
- 		int width = img.cols;
+	if(m_cameraType){
+		int width = img.cols;
 		int height = img.rows;
- 		cv::Mat imgL(img, cv::Rect(0, 0, width/2, height));
+		cv::Mat imgL(img, cv::Rect(0, 0, width/2, height));
 		cv::Mat imgR(img, cv::Rect(width/2, 0, width/2, height));
 		//GO TO TRACKING
 
-	cv::Mat Tcw = m_pImageGrab->ImageToGreyscaleStereo(imgL,imgR,currentTime);
+	cv::Mat m_cameraPose = m_pImageGrab->ImageToGreyscaleStereo(imgL,imgR,currentTime);
 
-*/
+	*/
 	//}else{
 	  //GO TO TRACKING
-	  //cv::Mat Tcw = m_pImageGrab->ImageToGreyscaleMono(img,currentTime);
-    /*ORB testcode*/
-	  std::vector<cv::KeyPoint> TestMat;
-		cv::Mat testArr;
-    cv::Mat Tcw = cv::imread("/media/test2.jpg",CV_LOAD_IMAGE_COLOR);
-    cv::cvtColor(Tcw,Tcw,cv::COLOR_RGB2GRAY);
-    cv::Mat Tcw_keypoints;
-		m_pExtractOrb->ExtractFeatures(Tcw, TestMat, testArr);
-    cv::drawKeypoints( Tcw, TestMat, Tcw_keypoints, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
-		cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
-    cv::imshow( "Display window", Tcw_keypoints );                   // Show our image inside it.
-		cv::waitKey(0);
+	  //cv::Mat m_cameraPose = m_pImageGrab->ImageToGreyscaleMono(img,currentTime);
+	/*ORB testcode*/
+	std::vector<cv::KeyPoint> TestMat;
+	cv::Mat testArr;
+	cv::Mat Tcw = cv::imread("/media/test2.jpg",CV_LOAD_IMAGE_COLOR);
+	cv::cvtColor(Tcw,Tcw,cv::COLOR_RGB2GRAY);
+	cv::Mat Tcw_keypoints;
+	m_pExtractOrb->ExtractFeatures(Tcw, TestMat, testArr);
+	cv::drawKeypoints( Tcw, TestMat, Tcw_keypoints, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+	cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
+	cv::imshow( "Display window", Tcw_keypoints );                   // Show our image inside it.
+	cv::waitKey(0);
 
 	//}
 
-   			//std::cout << "[" << getName() << "] " << "[Unable to extract shared image." << std::endl;
-   	//}
+			//std::cout << "[" << getName() << "] " << "[Unable to extract shared image." << std::endl;
+	//}
 
-//if stereo
-
-
+	//if stereo
 }
-
-
-
-
-
 
 void Selflocalization::setUp()
 {
@@ -172,10 +166,12 @@ void Selflocalization::setUp()
 	m_pVocabulary = std::shared_ptr<OrbVocabulary>(new OrbVocabulary(vocFilePath));
 	int size = m_pVocabulary->getSize();
 	std::cout << "Size of Vocabulary: " << size << std::endl;
-	int colorChannel = 1;
+	//int colorChannel = 1;
 
-	m_pTracker = std::shared_ptr<Tracking>(new Tracking(std::shared_ptr<Selflocalization>(this), colorChannel /*,m_pVocavulary,m_pKeyFrameDatabase,m_pMap*/));
-	m_pMapper = std::shared_ptr<Mapping>(new Mapping(m_cameraType));
+	//m_pTracker = std::shared_ptr<Tracking>(new Tracking(std::shared_ptr<Selflocalization>(this), colorChannel /*,m_pVocavulary,m_pKeyFrameDatabase,m_pMap*/));
+
+	m_map = std::shared_ptr<OrbMap>(new OrbMap());
+	m_pMapper = std::shared_ptr<Mapping>(new Mapping(m_map,m_cameraType));
     //m_pImageGrab = std::shared_ptr<ImageExtractor>(new ImageExtractor(colorChannel));
     int nFeatures = 1000;
     float scaleFactor = 1.2f;
@@ -184,17 +180,11 @@ void Selflocalization::setUp()
     int minFastTh = 7;
     std::cout << "Hello" << std::endl;
     m_pExtractOrb = std::shared_ptr<OrbExtractor>(new OrbExtractor(nFeatures, scaleFactor, nLevels, initialFastTh, minFastTh));
-    
-  
-
+	
 	/*
 	m_pKeyFrameDatabase = new KeyFrameDatabase(m_pVocabulary);
-
 	m_pMap = new Map();
-
-	m_pMappingThread = new Thread(Mapping::Run(),m_pMapper);	
-
-	
+	m_pMappingThread = new Thread(Mapping::Run(),m_pMapper);
 	m_pLoopCloser = new LoopClosing(m_pVocabulary,m_pMap,m_pKeyFrameDatabase);
 	m_pLoopClosingThread = new Thread(LoopClosing::Run(),m_pLoopCloser);
 

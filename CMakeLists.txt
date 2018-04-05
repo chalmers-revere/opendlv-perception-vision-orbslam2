@@ -109,6 +109,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_library(${PROJECT_NAME}-core STATIC 
 ${CMAKE_CURRENT_SOURCE_DIR}/src/selflocalization.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/loopclosing.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbconverter.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orboptimizer.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/sim3solver.cpp
@@ -134,7 +135,7 @@ ${CMAKE_BINARY_DIR}/opendlv-standard-message-set.cpp)
 
 ################################################################################
 # Create executable.
-add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}.cpp) #Creates exe of the main .cpp (more like bin)
+add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}.cpp include/loopclosing.hpp) #Creates exe of the main .cpp (more like bin)
 target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}-core ${LIBRARIES}) #Links the exe with Libraries like the objects added above and g2o
 
 ################################################################################

@@ -25,17 +25,21 @@
 #include <orbkeyframedatabase.hpp>
 #include <orbmap.hpp>
 #include <orbmappoint.hpp>
+#include <orbbowvector.hpp>
+#include <orbfeaturevector.hpp>
 
 class OrbMap;
 class OrbMapPoint;
+class OrbKeyFrameDatabase;
 
 class OrbKeyFrame
 {
 public:
-    OrbKeyFrame(OrbFrame &F, std::shared_ptr<OrbMap> pMap, std::shared_ptr<OrbKeyFrameDatabase> pKFDB);
+    OrbKeyFrame(std::shared_ptr<OrbFrame> frame, std::shared_ptr<OrbMap> map,
+                std::shared_ptr<OrbKeyFrameDatabase> keyFrameDatabase);
 
     // Pose functions
-    void SetPose(const cv::Mat &Tcw);
+    void SetPose(const cv::Mat &cameraPose);
     cv::Mat GetPose();
     cv::Mat GetPoseInverse();
     cv::Mat GetCameraCenter();
@@ -47,33 +51,33 @@ public:
     void ComputeBoW();
 
     // Covisibility graph functions
-    void AddConnection(std::shared_ptr<OrbKeyFrame> pKF, const int &weight);
-    void EraseConnection(std::shared_ptr<OrbKeyFrame> pKF);
+    void AddConnection(std::shared_ptr<OrbKeyFrame> keyFrame, const int &weight);
+    void EraseConnection(std::shared_ptr<OrbKeyFrame> keyFrame);
     void UpdateConnections();
     void UpdateBestCovisibles();
     std::set<std::shared_ptr<OrbKeyFrame>> GetConnectedKeyFrames();
     std::vector<std::shared_ptr<OrbKeyFrame>> GetVectorCovisibleKeyFrames();
     std::vector<std::shared_ptr<OrbKeyFrame>> GetBestCovisibilityKeyFrames(const int &N);
-    std::vector<std::shared_ptr<OrbKeyFrame>> GetCovisiblesByWeight(const int &w);
-    int GetWeight(std::shared_ptr<OrbKeyFrame> pKF);
+    std::vector<std::shared_ptr<OrbKeyFrame>> GetCovisiblesByWeight(const int &weight);
+    int GetWeight(std::shared_ptr<OrbKeyFrame> keyFrame);
 
     // Spanning tree functions
-    void AddChild(std::shared_ptr<OrbKeyFrame> pKF);
-    void EraseChild(std::shared_ptr<OrbKeyFrame> pKF);
-    void ChangeParent(std::shared_ptr<OrbKeyFrame> pKF);
+    void AddChild(std::shared_ptr<OrbKeyFrame> keyFrame);
+    void EraseChild(std::shared_ptr<OrbKeyFrame> keyFrame);
+    void ChangeParent(std::shared_ptr<OrbKeyFrame> keyFrame);
     std::set<std::shared_ptr<OrbKeyFrame>> GetChilds();
     std::shared_ptr<OrbKeyFrame> GetParent();
-    bool hasChild(std::shared_ptr<OrbKeyFrame> pKF);
+    bool hasChild(std::shared_ptr<OrbKeyFrame> keyFrame);
 
     // Loop Edges
-    void AddLoopEdge(std::shared_ptr<OrbKeyFrame> pKF);
+    void AddLoopEdge(std::shared_ptr<OrbKeyFrame> keyFrame);
     std::set<std::shared_ptr<OrbKeyFrame>> GetLoopEdges();
 
     // MapPoint observation functions
-    void AddMapPoint(std::shared_ptr<OrbMapPoint> pMP, const size_t &idx);
+    void AddMapPoint(std::shared_ptr<OrbMapPoint> mapPoint, const size_t &idx);
     void EraseMapPointMatch(const size_t &idx);
-    void EraseMapPointMatch(std::shared_ptr<OrbMapPoint> pMP);
-    void ReplaceMapPointMatch(const size_t &idx, std::shared_ptr<OrbMapPoint> pMP);
+    void EraseMapPointMatch(std::shared_ptr<OrbMapPoint> mapPoint);
+    void ReplaceMapPointMatch(const size_t &idx, std::shared_ptr<OrbMapPoint> mapPoint);
     std::set<std::shared_ptr<OrbMapPoint>> GetMapPoints();
     std::vector<std::shared_ptr<OrbMapPoint>> GetMapPointMatches();
     int TrackedMapPoints(const int &minObs);
@@ -97,18 +101,18 @@ public:
     // Compute Scene Depth (q=2 median). Used in monocular.
     float ComputeSceneMedianDepth(const int q);
 
-    static bool weightComp( int a, int b){
+    static bool weightComp( int a, int b)
+    {
         return a>b;
     }
 
-    static bool lId(std::shared_ptr<OrbKeyFrame> pKF1, std::shared_ptr<OrbKeyFrame> pKF2){
-        return pKF1->mnId<pKF2->mnId;
+    static bool lId(std::shared_ptr<OrbKeyFrame> keyFrame1, std::shared_ptr<OrbKeyFrame> keyFrame2)
+    {
+        return keyFrame1->mnId < keyFrame2->mnId;
     }
-
 
     // The following variables are accesed from only 1 thread or never change (no mutex needed).
 public:
-
     static long unsigned int nNextId;
     long unsigned int mnId = {};
     const long unsigned int mnFrameId;
@@ -177,49 +181,48 @@ public:
     const int mnMaxY;
     const cv::Mat mK;
 
-
     // The following variables need to be accessed trough a mutex to be thread safe.
-protected:
+private:
 
     // SE3 Pose and camera center
-    cv::Mat Tcw = {};
-    cv::Mat Twc = {};
-    cv::Mat Ow = {};
+    cv::Mat m_cameraPose = {}; // Tcw, Pose
+    cv::Mat m_reverseCameraPose = {}; // Twc, Inverse pose
+    cv::Mat m_cameraCenter = {}; // Ow, Camera Center
 
-    cv::Mat Cw = {}; // Stereo middel point. Only for visualization
+    cv::Mat Cw = {}; // Stereo middle point. Only for visualization
 
     // MapPoints associated to keypoints
-    std::vector<std::shared_ptr<OrbMapPoint>> mvpMapPoints;
+    std::vector<std::shared_ptr<OrbMapPoint>> m_mapPoints;
 
     // BoW
-    std::shared_ptr<OrbKeyFrameDatabase> mpKeyFrameDB;
-    std::shared_ptr<OrbVocabulary> mpORBvocabulary;
+    std::shared_ptr<OrbKeyFrameDatabase> m_keyFrameDatabase;
+    std::shared_ptr<OrbVocabulary> m_orbVocabulary;
 
     // Grid over the image to speed up feature matching
-    std::vector< std::vector <std::vector<size_t> > > mGrid = {};
+    std::vector<std::vector<std::vector<size_t>>> m_grid = {};
 
-    std::map<std::shared_ptr<OrbKeyFrame>,int> mConnectedKeyFrameWeights = {};
-    std::vector<std::shared_ptr<OrbKeyFrame>> mvpOrderedConnectedKeyFrames = {};
-    std::vector<int> mvOrderedWeights = {};
+    std::map<std::shared_ptr<OrbKeyFrame>,int> m_connectedKeyFrameWeights = {};
+    std::vector<std::shared_ptr<OrbKeyFrame>> m_orderedConnectedKeyFrames = {};
+    std::vector<int> m_orderedWeights = {};
 
     // Spanning Tree and Loop Edges
-    bool mbFirstConnection;
-    std::shared_ptr<OrbKeyFrame> mpParent;
-    std::set<std::shared_ptr<OrbKeyFrame>> mspChildrens = {};
-    std::set<std::shared_ptr<OrbKeyFrame>> mspLoopEdges = {};
+    bool m_isFirstConnection;
+    std::shared_ptr<OrbKeyFrame> m_parent;
+    std::set<std::shared_ptr<OrbKeyFrame>> m_children = {};
+    std::set<std::shared_ptr<OrbKeyFrame>> m_loopEdges = {};
 
     // Bad flags
-    bool mbNotErase;
-    bool mbToBeErased;
-    bool mbBad;
+    bool m_shoulNotBeErased;
+    bool m_shouldBeErased;
+    bool m_isBad;
 
     float mHalfBaseline; // Only for visualization
 
-    std::shared_ptr<OrbMap> mpMap;
+    std::shared_ptr<OrbMap> m_map;
 
-    std::mutex mMutexPose = {};
-    std::mutex mMutexConnections = {};
-    std::mutex mMutexFeatures = {};
+    std::mutex m_poseMutex = {};
+    std::mutex m_connectionsMutex = {};
+    std::mutex m_featuresMutex = {};
 };
 
 
