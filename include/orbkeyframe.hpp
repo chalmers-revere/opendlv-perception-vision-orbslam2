@@ -25,6 +25,8 @@
 #include <orbkeyframedatabase.hpp>
 #include <orbmap.hpp>
 #include <orbmappoint.hpp>
+#include <orbbowvector.hpp>
+#include <orbfeaturevector.hpp>
 
 class OrbMap;
 class OrbMapPoint;

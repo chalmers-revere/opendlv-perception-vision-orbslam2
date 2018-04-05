@@ -39,6 +39,8 @@
 #include <orbmappoint.hpp>
 #include <orbextractor.hpp>
 #include <orbkeyframe.hpp>
+#include <orbbowvector.hpp>
+#include <orbfeaturevector.hpp>
 
 class OrbMapPoint;
 

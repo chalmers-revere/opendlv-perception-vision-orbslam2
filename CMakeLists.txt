@@ -109,6 +109,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_library(${PROJECT_NAME}-core STATIC 
 ${CMAKE_CURRENT_SOURCE_DIR}/src/selflocalization.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/loopclosing.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbconverter.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orboptimizer.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/sim3solver.cpp

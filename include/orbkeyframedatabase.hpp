@@ -22,9 +22,13 @@
 
 #include "orbkeyframe.hpp"
 #include "orbframe.hpp"
+#include "orbvocabulary.hpp"
+#include <vector>
+#include <list>
 
 class OrbKeyFrame;
 class OrbFrame;
+class OrbVocabulary;
 
 class OrbKeyFrameDatabase
 {
@@ -50,7 +54,7 @@ protected:
     const std::shared_ptr<OrbVocabulary> mpVoc;
 
     // Inverted file
-    std::vector<std::list<std::shared_ptr<OrbKeyFrame>> > mvInvertedFile;
+    std::vector<std::list<std::shared_ptr<OrbKeyFrame>>> mvInvertedFile;
 
     // Mutex
     std::mutex mMutex;

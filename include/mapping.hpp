@@ -20,8 +20,8 @@
 #ifndef MAPPING_HPP
 #define MAPPING_HPP
 
-#include "cluon-complete.hpp"
-#include "opendlv-standard-message-set.hpp"
+//#include "cluon-complete.hpp"
+//#include "opendlv-standard-message-set.hpp"
 
 #include <memory>
 
@@ -29,42 +29,88 @@
 #include <memory>
 #include <vector>
 #include <cmath>
-//#include "opendavinci/odcore/base/Mutex.h"
-//#include <opendavinci/odcore/data/TimeStamp.h>
-//#include <opendavinci/odcore/strings/StringToolbox.h>
-//#include <opendavinci/odcore/wrapper/Eigen.h>
-//#include "opendavinci/GeneratedHeaders_OpenDaVINCI.h"
-//#include "opendavinci/odcore/wrapper/SharedMemoryFactory.h"
-//#include "opendavinci/odcore/wrapper/SharedMemory.h"
-//#include "opendavinci/generated/odcore/data/CompactPointCloud.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
-/*
-#include "keyframe.hpp"
-#include "map.hpp"
+
+#include "orbkeyframe.hpp"
+#include "orbmap.hpp"
 #include "loopclosing.hpp"
-#include "tracking.hpp"
-#include "keyframedatabase.hpp"
-*/
+//include tracking
+#include "orbkeyframedatabase.hpp"
+
+class LoopClosing;
+class OrbMap;
 
 class Mapping {
  public:
-  Mapping(/*std::shared_ptr<Map> pMap,*/bool stereo);
+  Mapping(std::shared_ptr<OrbMap> pMap, const bool bMonocular);
 	//void setTracker(std::shared_ptr<Tracking> pTracker);
-	//void setLoopCloser(std::shared_ptr<LoopClosing> pLoopCloser);
+	void SetLoopCloser(std::shared_ptr<LoopClosing> pLoopCloser);
 	void Run();
-/*Maybe not necessary*/	
-  //Selflocalization(Selflocalization const &) = delete;
-  //Selflocalization &operator=(Selflocalization const &) = delete;
-  //virtual ~Selflocalization();
-	
 
+
+	void InsertKeyFrame(std::shared_ptr<OrbKeyFrame> pKF);
+	
+  	void RequestStop();
+  	void RequestReset();
+  	bool Stop();
+  	void Release();
+  	bool isStopped();
+  	bool stopRequested();
+  	bool AcceptKeyFrames();
+  	void SetAcceptKeyFrames(bool flag);
+  	bool SetNotStop(bool flag);
+  	void InterruptBA();
+  	void RequestFinish();
+  	bool isFinished();
+
+  	int KeyframesInQueue(){
+     std::unique_lock<std::mutex> lock(mMutexNewKFs);
+     return mlNewKeyFrames.size();
+  }
  private:
 
-  bool m_bStereo;
+  bool CheckNewKeyFrames();
+
+  void ProcessNewKeyFrame();
+  void CreateNewMapPoints();
+  void MapPointCulling();
+  void SearchInNeighbors();
+  void KeyFrameCulling();
+
+
+	cv::Mat ComputeF12(std::shared_ptr<OrbKeyFrame> &pKF1, std::shared_ptr<OrbKeyFrame> &pKF2);
+	cv::Mat SkewSymmetricMatrix(const cv::Mat &v);
+
+  void ResetIfRequested();
+  bool CheckFinish();
+  void SetFinish();
+
+  std::mutex mMutexNewKFs = {};
+  std::mutex mMutexStop = {};
+  std::mutex mMutexFinish = {};
+  std::mutex mMutexAccept = {};
+  std::mutex mMutexReset = {};
+  bool mbMonocular;
+  bool mbResetRequested;
+  bool mbFinishRequested;
+  bool mbFinished;
+
+   std::shared_ptr<OrbMap> mpMap;
+   std::shared_ptr<LoopClosing> mpLoopCloser = {};
+
+  bool mbAbortBA;
+  bool mbStopped;
+  bool mbStopRequested;
+  bool mbNotStop;
+  bool mbAcceptKeyFrames;
+
+  std::list<std::shared_ptr<OrbKeyFrame>> mlNewKeyFrames = {};
+  std::shared_ptr<OrbKeyFrame> mpCurrentKeyFrame = {};
+  std::list<std::shared_ptr<OrbMapPoint>> mlpRecentAddedMapPoints = {};
 	//std::shared_ptr<Map> m_pMap;
 	//std::shared_ptr<Tracking> m_pTracker;
 	//std::shared_ptr<LoopClosing> m_pLoopCloser;

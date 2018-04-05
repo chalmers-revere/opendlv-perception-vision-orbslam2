@@ -39,6 +39,7 @@
 #include "orbfeaturevector.hpp"
 #include "orbbowvector.hpp"
 #include "orbdescriptor.hpp"
+#include "orbmatcher.hpp"
 
 
 class OrbVocabulary

@@ -35,7 +35,8 @@ TEST_CASE("testAddOrbKeyFrame")
     right = cv::Mat::zeros(1000, 1000, CV_32F);
     tcw = cv::Mat::zeros(1000, 1000, CV_32F);
     std::vector<OrbKeyPoint> keyPoints{};
-    OrbFrame *frame = new OrbKeyFrame(left, right, keyPoints, tcw);
+
+    std::shared_ptr<OrbFrame> frame = std::shared_ptr<OrbFrame>(new OrbFrame(left, right, keyPoints, tcw));
     frame->mnId = 10;
     std::shared_ptr<OrbFrame> keyFrame(frame);
     REQUIRE_NOTHROW(orbMap.PushOrbKeyFrame(keyFrame));
@@ -48,7 +49,7 @@ TEST_CASE("testMaxKeyFrameId")
     right = cv::Mat::zeros(1000, 1000, CV_32F);
     tcw = cv::Mat::zeros(1000, 1000, CV_32F);
     std::vector<OrbKeyPoint> keyPoints{};
-    OrbFrame *frame = new OrbKeyFrame(left, right, keyPoints, tcw);
+    std::shared_ptr<OrbFrame> frame = std::shared_ptr<OrbFrame>(new OrbFrame(left, right, keyPoints, tcw));
     frame->mnId = 10;
     std::shared_ptr<OrbFrame> keyFrame(frame);
     REQUIRE_NOTHROW(orbMap.PushOrbKeyFrame(keyFrame));
@@ -87,7 +88,7 @@ TEST_CASE("testOrbKeyFramesCount")
     right = cv::Mat::zeros(1000, 1000, CV_32F);
     tcw = cv::Mat::zeros(1000, 1000, CV_32F);
     std::vector<OrbKeyPoint> keyPoints{};
-    OrbFrame *frame = new OrbKeyFrame(left, right, keyPoints, tcw);
+    std::shared_ptr<OrbFrame> frame = std::shared_ptr<OrbFrame>(new OrbFrame(left, right, keyPoints, tcw));
     frame->mnId = 10;
     std::shared_ptr<OrbFrame> keyFrame(frame);
     REQUIRE_NOTHROW(orbMap.PushOrbKeyFrame(keyFrame));
@@ -108,7 +109,7 @@ TEST_CASE("testDeleteOrbKeyFrame")
     right = cv::Mat::zeros(1000, 1000, CV_32F);
     tcw = cv::Mat::zeros(1000, 1000, CV_32F);
     std::vector<OrbKeyPoint> keyPoints{};
-    OrbFrame *frame = new OrbKeyFrame(left, right, keyPoints, tcw);
+    std::shared_ptr<OrbFrame> frame = std::shared_ptr<OrbFrame>(new OrbFrame(left, right, keyPoints, tcw));
     frame->mnId = 10;
     std::shared_ptr<OrbFrame> keyFrame(frame);
     REQUIRE_NOTHROW(orbMap.PushOrbKeyFrame(keyFrame));
@@ -137,7 +138,7 @@ TEST_CASE("testReset")
     right = cv::Mat::zeros(1000, 1000, CV_32F);
     tcw = cv::Mat::zeros(1000, 1000, CV_32F);
     std::vector<OrbKeyPoint> keyPoints{};
-    OrbFrame *frame = new OrbKeyFrame(left, right, keyPoints, tcw);
+    std::shared_ptr<OrbFrame> frame = std::shared_ptr<OrbFrame>(new OrbFrame(left, right, keyPoints, tcw));
     frame->mnId = 10;
     std::shared_ptr<OrbFrame> keyFrame(frame);
     REQUIRE_NOTHROW(orbMap.PushOrbKeyFrame(keyFrame));

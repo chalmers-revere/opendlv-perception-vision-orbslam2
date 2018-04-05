@@ -28,8 +28,11 @@
 
 #include "orbmappoint.hpp"
 #include "orbframe.hpp"
+#include "orbkeyframe.hpp"
 
-
+class OrbMapPoint;
+class OrbFrame;
+class OrbKeyFrame;
 
 class ORBmatcher
 {    

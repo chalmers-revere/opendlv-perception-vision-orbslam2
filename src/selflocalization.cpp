@@ -41,6 +41,7 @@
 Selflocalization::Selflocalization() :
       m_cameraType()
     , m_pTracker()
+    , m_map()
     , m_pMapper()
     //, m_pImageGrab() 
     , m_pExtractOrb()
@@ -168,7 +169,9 @@ void Selflocalization::setUp()
 	//int colorChannel = 1;
 
 	//m_pTracker = std::shared_ptr<Tracking>(new Tracking(std::shared_ptr<Selflocalization>(this), colorChannel /*,m_pVocavulary,m_pKeyFrameDatabase,m_pMap*/));
-	m_pMapper = std::shared_ptr<Mapping>(new Mapping(m_cameraType));
+	
+	m_map = std::shared_ptr<OrbMap>(new OrbMap());
+	m_pMapper = std::shared_ptr<Mapping>(new Mapping(m_map,m_cameraType));
     //m_pImageGrab = std::shared_ptr<ImageExtractor>(new ImageExtractor(colorChannel));
     int nFeatures = 1000;
     float scaleFactor = 1.2f;
@@ -177,17 +180,11 @@ void Selflocalization::setUp()
     int minFastTh = 7;
     std::cout << "Hello" << std::endl;
     m_pExtractOrb = std::shared_ptr<OrbExtractor>(new OrbExtractor(nFeatures, scaleFactor, nLevels, initialFastTh, minFastTh));
-    
-  
-
+	
 	/*
 	m_pKeyFrameDatabase = new KeyFrameDatabase(m_pVocabulary);
-
 	m_pMap = new Map();
-
-	m_pMappingThread = new Thread(Mapping::Run(),m_pMapper);	
-
-	
+	m_pMappingThread = new Thread(Mapping::Run(),m_pMapper);
 	m_pLoopCloser = new LoopClosing(m_pVocabulary,m_pMap,m_pKeyFrameDatabase);
 	m_pLoopClosingThread = new Thread(LoopClosing::Run(),m_pLoopCloser);
 

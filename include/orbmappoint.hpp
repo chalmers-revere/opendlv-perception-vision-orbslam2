@@ -98,6 +98,7 @@ public:
     long unsigned int GetCorrectedReference();
     cv::Mat GetPosGBA();
     long unsigned int GetBAGlobalForKF();
+    long int GetFirstKeyFrameId(){ return m_firstKeyframeId;};
 
     void SetTrackScaleLevel(long unsigned int TrackScaleLevel);
     void SetTrackInView(long unsigned int TrackInView);

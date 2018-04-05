@@ -36,6 +36,7 @@
 class OrbKeyFrame;
 class OrbMapPoint;
 
+
 class OrbMap {
  public:
     /**
@@ -93,6 +94,8 @@ class OrbMap {
      * Reset - Resets the Map.
      */
     void Reset();
+
+    std::vector<std::shared_ptr<OrbKeyFrame>> GetKeyFrameOrigins(){ return m_OrbKeyFrameOrigins; };
 
     std::mutex m_MapUpdateMutex = {};
     std::vector<std::shared_ptr<OrbKeyFrame>> m_OrbKeyFrameOrigins;
