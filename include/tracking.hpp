@@ -24,7 +24,7 @@
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
 #include "orbkeyframedatabase.hpp"
-#include "localmapping.hpp"
+#include "mapping.hpp"
 #include "loopclosing.hpp"
 #include "orbinitializer.hpp"
 #include <iostream>
@@ -35,6 +35,7 @@
 
 class LoopClosing;
 class Selflocalization;
+class Mapping;
 class Tracking
 {
 
@@ -47,7 +48,7 @@ public:
     cv::Mat GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const double &timestamp);
     cv::Mat GrabImageMonocular(const cv::Mat &im, const double &timestamp);
 
-    void SetLocalMapper(std::shared_ptr<LocalMapping> pLocalMapper);
+    void SetLocalMapper(std::shared_ptr<Mapping> pLocalMapper);
     void SetLoopClosing(std::shared_ptr<LoopClosing> pLoopClosing);
 
     // Load new settings
@@ -133,7 +134,7 @@ private:
     bool mbVO;
 
     //Other Thread Pointers
-    std::shared_ptr<LocalMapping> mpLocalMapper = {};
+    std::shared_ptr<Mapping> mpLocalMapper = {};
     std::shared_ptr<LoopClosing> mpLoopClosing = {};
 
     //ORB

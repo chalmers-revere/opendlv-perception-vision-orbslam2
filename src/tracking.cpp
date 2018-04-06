@@ -132,7 +132,7 @@ void Tracking::Calibrate(cv::FileStorage &cameraSettings) {
     }
 }
 
-void Tracking::SetLocalMapper(std::shared_ptr<LocalMapping> pLocalMapper)
+void Tracking::SetLocalMapper(std::shared_ptr<Mapping> pLocalMapper)
 {
     mpLocalMapper=pLocalMapper;
 }

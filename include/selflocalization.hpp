@@ -35,6 +35,7 @@
 //#include "opendavinci/odcore/wrapper/SharedMemory.h"
 //#include "opendavinci/generated/odcore/data/CompactPointCloud.h"
 
+#include <thread>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -76,15 +77,21 @@ public:
 private:
     void setUp();
     void tearDown();
-    bool m_cameraType;
+    bool m_isMonocular;
     int m_saveCounter = 0;
     std::shared_ptr<Mapping> m_pMapper;
     std::shared_ptr<Tracking> m_pTracker;
+    std::shared_ptr<LoopClosing> m_pLoopCloser;
+    std::shared_ptr<std::thread> m_pMappingThread;
+    std::shared_ptr<std::thread> m_pLoopClosingThread;
 
     std::shared_ptr<OrbExtractor> m_pExtractOrb;
     std::shared_ptr<OrbVocabulary> m_pVocabulary;
-
+    std::shared_ptr<OrbKeyFrameDatabase> m_pKeyFrameDatabase;
     std::shared_ptr<OrbMap> m_map;
+
+    std::mutex mMutexReset = {};
+    bool m_reset = false;
 };
 
 

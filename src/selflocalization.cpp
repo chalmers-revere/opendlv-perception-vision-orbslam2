@@ -39,44 +39,21 @@
   * @param a_argv Command line arguments.
   */
 Selflocalization::Selflocalization() :
-      m_cameraType()
+      m_isMonocular()
     , m_pMapper()
     , m_pTracker()
+	, m_pLoopCloser()
+	, m_pMappingThread()
+    , m_pLoopClosingThread()
     //, m_pImageGrab()
     , m_pExtractOrb()
     , m_pVocabulary()
+	, m_pKeyFrameDatabase()
     , m_map()
 
 {	
 	
-  setUp();
-	/*
-	m_pVocabulary = new OrbVocabulary();
-	m_pVocabulary->loadFromTextFile(vocFilePath);
-
-	m_pKeyFrameDatabase = new KeyFrameDatabase(m_pVocabulary);
-
-	m_pMap = new Map();
-
-	
-	
-	m_pMapper = new Mapping(m_pMap);
-	m_pMappingThread = new Thread(Mapping::Run(),m_pMapper);	
-
-	
-	m_pLoopCloser = new LoopClosing(m_pVocabulary,m_pMap,m_pKeyFrameDatabase);
-	m_pLoopClosingThread = new Thread(LoopClosing::Run(),m_pLoopCloser);
-
-	mpTracker->SetLocalMapper(m_pMapper);
-	mpTracker->SetLoopClosing(m_pLoopCloser);
-
-	mpLocalMapper->SetTracker(m_pTracker);
-	mpLocalMapper->SetLoopCloser(m_pLoopCloser);
-
-	mpLoopCloser->SetTracker(m_pTracker);
-	mpLoopCloser->SetLocalMapper(m_pMapper);
-	*/
-	
+  setUp();	
 	//Initialization
 	
 	//Orb vocabulary - global pointer
@@ -116,7 +93,7 @@ void Selflocalization::nextContainer(cluon::data::Envelope &a_container)
 	std::cout << "CurrentTime: " << currentTime << std::endl;
 
 
-	/*  	opendlv::proxy::ImageReadingShared sharedImg = cluon::extractMessage<opendlv::proxy::ImageReadingShared>(std::move(a_container));
+	/*opendlv::proxy::ImageReadingShared sharedImg = cluon::extractMessage<opendlv::proxy::ImageReadingShared>(std::move(a_container));
 
 
 		img = m_pImageGrab->ExtractSharedImage(&sharedImg);
@@ -128,13 +105,15 @@ void Selflocalization::nextContainer(cluon::data::Envelope &a_container)
 		cv::Mat imgR(img, cv::Rect(width/2, 0, width/2, height));
 		//GO TO TRACKING
 
-	cv::Mat m_cameraPose = m_pImageGrab->ImageToGreyscaleStereo(imgL,imgR,currentTime);
+	    //cv::Mat m_cameraPose = m_pImageGrab->ImageToGreyscaleStereo(imgL,imgR,currentTime);
+		//cv::Mat m_cameraPose = m_pTracker->GrabImageStereo(imgL,imgR,timestamp);
 
 	*/
 	//}else{
 	  //GO TO TRACKING
 	  //cv::Mat m_cameraPose = m_pImageGrab->ImageToGreyscaleMono(img,currentTime);
-	/*ORB testcode*/
+	  //cv::Mat m_cameraPose = m_pTracker->GrabImageMonocular(img,currentTime);
+	/*ORB testcode
 	std::vector<cv::KeyPoint> TestMat;
 	cv::Mat testArr;
 	cv::Mat Tcw = cv::imread("/media/test2.jpg",CV_LOAD_IMAGE_COLOR);
@@ -144,7 +123,7 @@ void Selflocalization::nextContainer(cluon::data::Envelope &a_container)
 	cv::drawKeypoints( Tcw, TestMat, Tcw_keypoints, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
 	cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
 	cv::imshow( "Display window", Tcw_keypoints );                   // Show our image inside it.
-	cv::waitKey(0);
+	cv::waitKey(0);*/
 
 	//}
 
@@ -156,9 +135,7 @@ void Selflocalization::nextContainer(cluon::data::Envelope &a_container)
 
 void Selflocalization::setUp()
 {
-	//odcore::base::KeyValueConfiguration kv = getKeyValueConfiguration();
-    	//m_cameraType = (kv.getValue<int32_t>("logic-sensation-selflocalization.cameratype") == 1);
-	m_cameraType = true;
+	m_isMonocular = true;
 
 	//string vocFilePath = kv.getValue<string>("logic-sensation-selflocalization.vocabularyfilepath");
 
@@ -168,40 +145,55 @@ void Selflocalization::setUp()
 	std::cout << "Size of Vocabulary: " << size << std::endl;
 	//int colorChannel = 1;
 
-	//m_pTracker = std::shared_ptr<Tracking>(new Tracking(std::shared_ptr<Selflocalization>(this), colorChannel /*,m_pVocavulary,m_pKeyFrameDatabase,m_pMap*/));
-
 	m_map = std::shared_ptr<OrbMap>(new OrbMap());
-	m_pMapper = std::shared_ptr<Mapping>(new Mapping(m_map,m_cameraType));
+	
     //m_pImageGrab = std::shared_ptr<ImageExtractor>(new ImageExtractor(colorChannel));
-    int nFeatures = 1000;
+    /*int nFeatures = 1000;
     float scaleFactor = 1.2f;
     int nLevels = 8;
     int initialFastTh = 20;
     int minFastTh = 7;
     std::cout << "Hello" << std::endl;
     m_pExtractOrb = std::shared_ptr<OrbExtractor>(new OrbExtractor(nFeatures, scaleFactor, nLevels, initialFastTh, minFastTh));
-	
-	/*
-	m_pKeyFrameDatabase = new KeyFrameDatabase(m_pVocabulary);
-	m_pMap = new Map();
-	m_pMappingThread = new Thread(Mapping::Run(),m_pMapper);
-	m_pLoopCloser = new LoopClosing(m_pVocabulary,m_pMap,m_pKeyFrameDatabase);
-	m_pLoopClosingThread = new Thread(LoopClosing::Run(),m_pLoopCloser);
-
-	mpTracker->SetLocalMapper(m_pMapper);
-	mpTracker->SetLoopClosing(m_pLoopCloser);
-
-	mpLocalMapper->SetTracker(m_pTracker);
-	mpLocalMapper->SetLoopCloser(m_pLoopCloser);
-
-	mpLoopCloser->SetTracker(m_pTracker);
-	mpLoopCloser->SetLocalMapper(m_pMapper);
 	*/
+	const std::string strSettingsFile = "";
+	const int sensor = 1;
+
 	
+	m_pKeyFrameDatabase = std::shared_ptr<OrbKeyFrameDatabase>(new OrbKeyFrameDatabase(*m_pVocabulary.get()));
+
+	m_pTracker = std::shared_ptr<Tracking>(new Tracking(std::shared_ptr<Selflocalization>(this),m_pVocabulary,m_map,m_pKeyFrameDatabase,strSettingsFile,sensor));
+
+	m_pMapper = std::shared_ptr<Mapping>(new Mapping(m_map,m_isMonocular));
+	m_pMappingThread = std::shared_ptr<std::thread>(new std::thread(&Mapping::Run,m_pMapper));
+	
+	m_pLoopCloser = std::shared_ptr<LoopClosing>(new LoopClosing(m_map,m_pKeyFrameDatabase,m_pVocabulary,!m_isMonocular));
+	m_pLoopClosingThread = std::shared_ptr<std::thread>(new std::thread(&LoopClosing::Run,m_pLoopCloser));
+
+	m_pTracker->SetLocalMapper(m_pMapper);
+	m_pTracker->SetLoopClosing(m_pLoopCloser);
+
+	m_pMapper->SetTracker(m_pTracker);
+	m_pMapper->SetLoopCloser(m_pLoopCloser);
+
+	m_pLoopCloser->SetTracker(m_pTracker);
+	m_pLoopCloser->SetLocalMapper(m_pMapper);
 
 }
 
 void Selflocalization::tearDown()
 {
+	m_pMapper->RequestFinish();
+    m_pLoopCloser->RequestFinish();
+
+    // Wait until all thread have effectively stopped
+    while(!m_pMapper->isFinished() || !m_pLoopCloser->isFinished() || m_pLoopCloser->isRunningGBA())
+    {
+        usleep(5000);
+    }
 }
 
+void Selflocalization::Reset(){
+    std::unique_lock<std::mutex> lock(mMutexReset);
+  	m_reset = true;
+}
