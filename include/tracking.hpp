@@ -33,6 +33,7 @@
 #include <cmath>
 #include <opencv2/core/mat.hpp>
 
+class LoopClosing;
 class Selflocalization;
 class Tracking
 {

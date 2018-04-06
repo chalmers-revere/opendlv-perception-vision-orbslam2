@@ -24,7 +24,7 @@
 #include "g2o/types/sba/types_six_dof_expmap.h"
 #include "g2o/core/robust_kernel_impl.h"
 #include "g2o/solvers/dense/linear_solver_dense.h"
-#include "g2o/types/sim3/types_seven_dof_expmap.h"
+//#include "g2o/types/sim3/types_seven_dof_expmap.h"
 
 #include "orboptimizer.hpp"
 #include "orbconverter.hpp"
@@ -277,7 +277,7 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
 
 
     {
-    std::unique_lock<std::mutex> lock(OrbMapPoint::mGlobalMutex); //WHICH MUTEX??
+    //std::unique_lock<std::mutex> lock(OrbMapPoint::mGlobalMutex); //WHICH MUTEX??
 
     std::vector<float> vectorRight = pFrame->mvuRight;
     std::vector<cv::KeyPoint> vectorUndistortedKeyPoints = pFrame->mvKeysUn;

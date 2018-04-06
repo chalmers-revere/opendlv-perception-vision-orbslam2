@@ -34,7 +34,7 @@ class OrbKeyFrameDatabase
 {
 public:
 
-    OrbKeyFrameDatabase(const OrbVocabulary &voc);
+    OrbKeyFrameDatabase(OrbVocabulary &voc);
 
     void add(std::shared_ptr<OrbKeyFrame> pKF);
 
@@ -51,13 +51,13 @@ public:
 protected:
 
     // Associated vocabulary
-    const std::shared_ptr<OrbVocabulary> mpVoc;
+    std::shared_ptr<OrbVocabulary> mpVoc;
 
     // Inverted file
-    std::vector<std::list<std::shared_ptr<OrbKeyFrame>>> mvInvertedFile;
+    std::vector<std::list<std::shared_ptr<OrbKeyFrame>>> mvInvertedFile = {};
 
     // Mutex
-    std::mutex mMutex;
+    std::mutex mMutex = {};
 };
 
 #endif //OPENDLV_ORBKEYFRAMEDATABASE_HPP

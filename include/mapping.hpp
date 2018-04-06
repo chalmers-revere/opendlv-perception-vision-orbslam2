@@ -38,17 +38,18 @@
 #include "orbkeyframe.hpp"
 #include "orbmap.hpp"
 #include "loopclosing.hpp"
-//include tracking
+#include "tracking.hpp"
 #include "orbkeyframedatabase.hpp"
 
+class Tracking;
 class LoopClosing;
 class OrbMap;
 
 class Mapping {
  public:
   Mapping(std::shared_ptr<OrbMap> pMap, const bool bMonocular);
-	//void setTracker(std::shared_ptr<Tracking> pTracker);
-	void SetLoopCloser(std::shared_ptr<LoopClosing> pLoopCloser);
+  void SetLoopCloser(std::shared_ptr<LoopClosing> pLoopCloser);
+	void SetTracker(std::shared_ptr<Tracking> pTracker);
 	void Run();
 
 
@@ -101,6 +102,7 @@ class Mapping {
 
    std::shared_ptr<OrbMap> mpMap;
    std::shared_ptr<LoopClosing> mpLoopCloser = {};
+	 std::shared_ptr<Tracking> mpTracker = {};
 
   bool mbAbortBA;
   bool mbStopped;
@@ -111,8 +113,7 @@ class Mapping {
   std::list<std::shared_ptr<OrbKeyFrame>> mlNewKeyFrames = {};
   std::shared_ptr<OrbKeyFrame> mpCurrentKeyFrame = {};
   std::list<std::shared_ptr<OrbMapPoint>> mlpRecentAddedMapPoints = {};
-	//std::shared_ptr<Map> m_pMap;
-	//std::shared_ptr<Tracking> m_pTracker;
+  //std::shared_ptr<Map> m_pMap;
 	//std::shared_ptr<LoopClosing> m_pLoopCloser;
 	/*Variables needed to initialize threads and databases*/
   /*

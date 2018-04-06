@@ -47,6 +47,10 @@ void Mapping::SetLoopCloser(std::shared_ptr<LoopClosing> pLoopCloser)
     mpLoopCloser = pLoopCloser;
 }
 
+void Mapping::SetTracker(std::shared_ptr<Tracking> pTracker)
+{
+    mpTracker=pTracker;
+}
 
 void Mapping::Run()
 {

@@ -103,12 +103,13 @@ set(OpenCV_LIBS "/usr/local/opt/opencv3/lib")
 
 ################################################################################
 # Link libs
-set(LIBRARIES Threads::Threads g2o_core g2o_solver_eigen g2o_types_sim3 g2o_stuff opencv_core opencv_imgcodecs opencv_features2d opencv_imgproc opencv_highgui opencv_calib3d)
+set(LIBRARIES Threads::Threads g2o_core g2o_solver_eigen g2o_types_sim3 g2o_types_sba g2o_stuff opencv_core opencv_imgcodecs opencv_features2d opencv_imgproc opencv_highgui opencv_calib3d)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_library(${PROJECT_NAME}-core STATIC 
 ${CMAKE_CURRENT_SOURCE_DIR}/src/selflocalization.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/orbkeyframedatabase.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/loopclosing.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbconverter.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orboptimizer.cpp
@@ -135,13 +136,13 @@ ${CMAKE_BINARY_DIR}/opendlv-standard-message-set.cpp)
 
 ################################################################################
 # Create executable.
-add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}.cpp include/loopclosing.hpp) #Creates exe of the main .cpp (more like bin)
+add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}.cpp) #Creates exe of the main .cpp (more like bin)
 target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}-core ${LIBRARIES}) #Links the exe with Libraries like the objects added above and g2o
 
 ################################################################################
 # Enable unit testing.
 enable_testing()
-add_executable(${PROJECT_NAME}-runner ${CMAKE_CURRENT_SOURCE_DIR}/test/tests-opendlv-perception-vision-orbslam2.cpp ${CMAKE_CURRENT_SOURCE_DIR}/test/tests-opendlv-perception-vision-orbslam2-orbmap.cpp)
+add_executable(${PROJECT_NAME}-runner ${CMAKE_CURRENT_SOURCE_DIR}/test/tests-opendlv-perception-vision-orbslam2.cpp)
 target_link_libraries(${PROJECT_NAME}-runner ${PROJECT_NAME}-core ${LIBRARIES})
 add_test(NAME ${PROJECT_NAME}-runner COMMAND ${PROJECT_NAME}-runner)
 

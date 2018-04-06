@@ -41,10 +41,10 @@ LoopClosing::LoopClosing(std::shared_ptr<OrbMap> pMap, std::shared_ptr<OrbKeyFra
     mnCovisibilityConsistencyTh = 3;
 }
 
-/*void LoopClosing::SetTracker(Tracking *pTracker)
+void LoopClosing::SetTracker(std::shared_ptr<Tracking> pTracker)
 {
     mpTracker=pTracker;
-}*/
+}
 
 void LoopClosing::SetLocalMapper(std::shared_ptr<Mapping> pLocalMapper)
 {

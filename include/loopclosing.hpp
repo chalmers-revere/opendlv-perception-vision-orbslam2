@@ -24,7 +24,7 @@
 #include "mapping.hpp"
 #include "orbmap.hpp"
 #include "orbvocabulary.hpp"
-//#include "tracking.hpp"
+#include "tracking.hpp"
 
 #include "orbkeyframedatabase.hpp"
 
@@ -32,7 +32,7 @@
 #include <mutex>
 #include "g2o/types/sim3/types_seven_dof_expmap.h"
 
-//class Tracking;
+class Tracking;
 class Mapping;
 class KeyFrameDatabase;
 
@@ -49,7 +49,7 @@ public:
 
     LoopClosing(std::shared_ptr<OrbMap> pMap, std::shared_ptr<OrbKeyFrameDatabase> pDB, std::shared_ptr<OrbVocabulary> pVoc,const bool bFixScale);
 
-    //void SetTracker(std::shared_ptr<Tracking> pTracker);
+    void SetTracker(std::shared_ptr<Tracking> pTracker);
 
     void SetLocalMapper(std::shared_ptr<Mapping> pLocalMapper);
 
@@ -99,7 +99,7 @@ protected:
     std::mutex mMutexFinish = {};
 
     std::shared_ptr<OrbMap> mpMap;
-    //std::shared_ptr<Tracking> mpTracker;
+    std::shared_ptr<Tracking> mpTracker = {};
 
     std::shared_ptr<OrbKeyFrameDatabase> mpKeyFrameDB;
     std::shared_ptr<OrbVocabulary> mpORBVocabulary;
