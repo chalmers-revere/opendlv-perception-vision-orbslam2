@@ -38,7 +38,7 @@
   * @param a_argc Number of command line arguments.
   * @param a_argv Command line arguments.
   */
-Selflocalization::Selflocalization() :
+Selflocalization::Selflocalization(std::map<std::string, std::string> commandlineArgs) :
       m_isMonocular()
     , m_pMapper()
     , m_pTracker()
@@ -51,9 +51,8 @@ Selflocalization::Selflocalization() :
 	, m_pKeyFrameDatabase()
     , m_map()
 
-{	
-	
-  setUp();	
+{		
+  setUp(commandlineArgs);	
 	//Initialization
 	
 	//Orb vocabulary - global pointer
@@ -133,13 +132,11 @@ void Selflocalization::nextContainer(cluon::data::Envelope &a_container)
 	//if stereo
 }
 
-void Selflocalization::setUp()
+void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
 {
-	m_isMonocular = true;
-
-	//string vocFilePath = kv.getValue<string>("logic-sensation-selflocalization.vocabularyfilepath");
-
-	std::string vocFilePath = "/media/ORBvoc.txt"; //Create mount
+	std::cout << "Setting up" << std::endl;
+	m_isMonocular = std::stoi(commandlineArgs["cameraType"]) == 0;
+	std::string vocFilePath = commandlineArgs["vocFilePath"]; //Create mount
 	m_pVocabulary = std::shared_ptr<OrbVocabulary>(new OrbVocabulary(vocFilePath));
 	int size = m_pVocabulary->getSize();
 	std::cout << "Size of Vocabulary: " << size << std::endl;
@@ -156,13 +153,12 @@ void Selflocalization::setUp()
     std::cout << "Hello" << std::endl;
     m_pExtractOrb = std::shared_ptr<OrbExtractor>(new OrbExtractor(nFeatures, scaleFactor, nLevels, initialFastTh, minFastTh));
 	*/
-	const std::string strSettingsFile = "";
-	const int sensor = 1;
+	const int sensor = static_cast<int>(m_isMonocular);
 
 	
 	m_pKeyFrameDatabase = std::shared_ptr<OrbKeyFrameDatabase>(new OrbKeyFrameDatabase(*m_pVocabulary.get()));
 
-	m_pTracker = std::shared_ptr<Tracking>(new Tracking(std::shared_ptr<Selflocalization>(this),m_pVocabulary,m_map,m_pKeyFrameDatabase,strSettingsFile,sensor));
+	m_pTracker = std::shared_ptr<Tracking>(new Tracking(std::shared_ptr<Selflocalization>(this),m_pVocabulary,m_map,m_pKeyFrameDatabase,commandlineArgs,sensor));
 
 	m_pMapper = std::shared_ptr<Mapping>(new Mapping(m_map,m_isMonocular));
 	m_pMappingThread = std::shared_ptr<std::thread>(new std::thread(&Mapping::Run,m_pMapper));

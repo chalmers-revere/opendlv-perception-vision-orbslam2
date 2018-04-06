@@ -65,7 +65,7 @@ public:
         RGBD=2
     };
 
-    Selflocalization();
+    Selflocalization(std::map<std::string, std::string> commandlineArgs);
     Selflocalization(Selflocalization const &) = delete;
     Selflocalization &operator=(Selflocalization const &) = delete;
     ~Selflocalization();
@@ -75,7 +75,7 @@ public:
     void Reset();
 
 private:
-    void setUp();
+    void setUp(std::map<std::string, std::string> commandlineArgs);
     void tearDown();
     bool m_isMonocular;
     int m_saveCounter = 0;

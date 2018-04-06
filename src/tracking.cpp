@@ -26,22 +26,22 @@
 
 Tracking::Tracking(std::shared_ptr<Selflocalization> selfLocalization, std::shared_ptr<OrbVocabulary> pVoc,
                    std::shared_ptr<OrbMap> pMap, std::shared_ptr<OrbKeyFrameDatabase> pKFDB,
-                   const std::string &strSettingPath, const int sensor):
+                   std::map<std::string, std::string> commandlineArgs, const int sensor):
         mState(NO_IMAGES_YET), mSensor(sensor), mbOnlyTracking(false), mbVO(false), mpORBVocabulary(pVoc),
         mpKeyFrameDB(pKFDB), mpInitializer(static_cast<std::shared_ptr<OrbInitializer>>(NULL)), mpSystem(selfLocalization),
         mpMap(pMap), mnLastRelocFrameId(0)
 {
     // Load camera parameters from settings file
-    cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
-    this->Calibrate(fSettings);
+    //cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
+    this->Calibrate(commandlineArgs);
 
 }
 
-void Tracking::Calibrate(cv::FileStorage &cameraSettings) {
-    float fx = cameraSettings["Camera.fx"];
-    float fy = cameraSettings["Camera.fy"];
-    float cx = cameraSettings["Camera.cx"];
-    float cy = cameraSettings["Camera.cy"];
+void Tracking::Calibrate(std::map<std::string, std::string> commandlineArgs) {
+    float fx = std::stof(commandlineArgs["Camera.fx"]);
+    float fy = std::stof(commandlineArgs["Camera.fy"]);
+    float cx = std::stof(commandlineArgs["Camera.cx"]);
+    float cy = std::stof(commandlineArgs["Camera.cy"]);
 
     cv::Mat K = cv::Mat::eye(3,3,CV_32F);
     K.at<float>(0,0) = fx;
@@ -51,11 +51,11 @@ void Tracking::Calibrate(cv::FileStorage &cameraSettings) {
     K.copyTo(mK);
 
     cv::Mat DistCoef(4,1,CV_32F);
-    DistCoef.at<float>(0) = cameraSettings["Camera.k1"];
-    DistCoef.at<float>(1) = cameraSettings["Camera.k2"];
-    DistCoef.at<float>(2) = cameraSettings["Camera.p1"];
-    DistCoef.at<float>(3) = cameraSettings["Camera.p2"];
-    const float k3 = cameraSettings["Camera.k3"];
+    DistCoef.at<float>(0) = std::stof(commandlineArgs["Camera.k1"]);
+    DistCoef.at<float>(1) = std::stof(commandlineArgs["Camera.k2"]);
+    DistCoef.at<float>(2) = std::stof(commandlineArgs["Camera.p1"]);
+    DistCoef.at<float>(3) = std::stof(commandlineArgs["Camera.p2"]);
+    const float k3 = std::stof(commandlineArgs["Camera.k3"]);
     if(std::abs(k3)>0.0001f)
     {
         DistCoef.resize(5);
@@ -63,9 +63,9 @@ void Tracking::Calibrate(cv::FileStorage &cameraSettings) {
     }
     DistCoef.copyTo(mDistCoef);
 
-    mbf = cameraSettings["Camera.bf"];
+    mbf = std::stof(commandlineArgs["Camera.bf"]);
 
-    float fps = cameraSettings["Camera.fps"];
+    float fps = std::stof(commandlineArgs["Camera.fps"]);
     if(std::abs(fps-0)<0.0001f)
         fps=30;
 
@@ -85,7 +85,7 @@ void Tracking::Calibrate(cv::FileStorage &cameraSettings) {
     std::cout << "- p1: " << DistCoef.at<float>(2) << std::endl;
     std::cout << "- p2: " << DistCoef.at<float>(3) << std::endl;
     std::cout << "- fps: " << fps << std::endl;
-    int nRGB = cameraSettings["Camera.RGB"];
+    int nRGB = std::stoi(commandlineArgs["Camera.RGB"]);
     mbRGB = static_cast<bool>(nRGB);
 
     if(mbRGB)
@@ -95,11 +95,11 @@ void Tracking::Calibrate(cv::FileStorage &cameraSettings) {
 
     // Load ORB parameters
 
-    int nFeatures = cameraSettings["ORBextractor.nFeatures"];
-    float fScaleFactor = cameraSettings["ORBextractor.scaleFactor"];
-    int nLevels = cameraSettings["ORBextractor.nLevels"];
-    int fIniThFAST = cameraSettings["ORBextractor.iniThFAST"];
-    int fMinThFAST = cameraSettings["ORBextractor.minThFAST"];
+    int nFeatures = std::stoi(commandlineArgs["ORBextractor.nFeatures"]);
+    float fScaleFactor = std::stof(commandlineArgs["ORBextractor.scaleFactor"]);
+    int nLevels = std::stoi(commandlineArgs["ORBextractor.nLevels"]);
+    int fIniThFAST = std::stoi(commandlineArgs["ORBextractor.iniThFAST"]);
+    int fMinThFAST = std::stoi(commandlineArgs["ORBextractor.minThFAST"]);
 
     mpORBextractorLeft = std::shared_ptr<OrbExtractor>(new OrbExtractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST));
 
@@ -118,13 +118,13 @@ void Tracking::Calibrate(cv::FileStorage &cameraSettings) {
 
     if(this->mSensor==Selflocalization::STEREO || this->mSensor==Selflocalization::RGBD)
     {
-        mThDepth = mbf*(float)cameraSettings["ThDepth"]/fx;
+        mThDepth = mbf*std::stof(commandlineArgs["ThDepth"])/fx;
         std::cout << std::endl << "Depth Threshold (Close/Far Points): " << mThDepth << std::endl;
     }
 
     if(this->mSensor==Selflocalization::RGBD)
     {
-        mDepthMapFactor = cameraSettings["DepthMapFactor"];
+        mDepthMapFactor = std::stof(commandlineArgs["DepthMapFactor"]);
         if(std::fabs(mDepthMapFactor)<1e-5)
             mDepthMapFactor=1;
         else

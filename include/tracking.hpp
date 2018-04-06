@@ -41,7 +41,7 @@ class Tracking
 
 public:
     Tracking(std::shared_ptr<Selflocalization> selfLocalization, std::shared_ptr<OrbVocabulary> pVoc, std::shared_ptr<OrbMap> pMap,
-             std::shared_ptr<OrbKeyFrameDatabase> pKFDB, const std::string &strSettingPath, const int sensor);
+             std::shared_ptr<OrbKeyFrameDatabase> pKFDB, std::map<std::string, std::string> commandlineArgs, const int sensor);
 
     // Preprocess the input and call Track(). Extract features and performs stereo matching.
     cv::Mat GrabImageStereo(const cv::Mat &imRectLeft,const cv::Mat &imRectRight, const double &timestamp);
@@ -102,7 +102,7 @@ private:
     // Main tracking function. It is independent of the input sensor.
     void Track();
     bool InitalizeTracking();
-    void Calibrate(cv::FileStorage & cameraSettings);
+    void Calibrate(std::map<std::string, std::string> commandlineArgs);
     // Map initialization for stereo and RGB-D
     void StereoInitialization();
 
