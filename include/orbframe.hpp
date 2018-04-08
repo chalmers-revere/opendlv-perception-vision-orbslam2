@@ -35,7 +35,6 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <orbkeypoint.hpp>
 #include <orbmappoint.hpp>
 #include <orbextractor.hpp>
 #include <orbkeyframe.hpp>
