@@ -27,9 +27,9 @@
 Tracking::Tracking(std::shared_ptr<Selflocalization> selfLocalization, std::shared_ptr<OrbVocabulary> pVoc,
                    std::shared_ptr<OrbMap> pMap, std::shared_ptr<OrbKeyFrameDatabase> pKFDB,
                    std::map<std::string, std::string> commandlineArgs, const int sensor):
-        mState(NO_IMAGES_YET), mSensor(sensor), mbOnlyTracking(false), mbVO(false), mpORBVocabulary(pVoc),
-        mpKeyFrameDB(pKFDB), mpInitializer(static_cast<std::shared_ptr<OrbInitializer>>(NULL)), mpSystem(selfLocalization),
-        mpMap(pMap), mnLastRelocFrameId(0)
+            mSensor(sensor), mbVO(false), m_onlyTracking(false), m_trackingState(NO_IMAGES_YET), mpORBVocabulary(pVoc),
+            mpKeyFrameDB(pKFDB), mpInitializer(static_cast<std::shared_ptr<OrbInitializer>>(NULL)), mpSystem(selfLocalization),
+            mpMap(pMap), mnLastRelocFrameId(0)
 {
     // Load camera parameters from settings file
     //cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
@@ -232,7 +232,7 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
             cvtColor(mImGray,mImGray,CV_BGRA2GRAY);
     }
 
-    if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET)
+    if(m_trackingState==NOT_INITIALIZED || m_trackingState==NO_IMAGES_YET)
         mCurrentFrame = std::shared_ptr<OrbFrame>(new OrbFrame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth));
     else
         mCurrentFrame = std::shared_ptr<OrbFrame>(new OrbFrame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth));
@@ -253,12 +253,12 @@ void Tracking::Track()
     bool bOK;
 
     // Initial camera pose estimation using motion model or relocalization (if tracking is lost)
-    if(!mbOnlyTracking)
+    if(!m_onlyTracking)
     {
         // Local Mapping is activated. This is the normal behaviour, unless
         // you explicitly activate the "only tracking" mode.
 
-        if(mState==OK)
+        if(m_trackingState==OK)
         {
             // Local Mapping might have changed some MapPoints tracked in last frame
             CheckReplacedInLastFrame();
@@ -283,7 +283,7 @@ void Tracking::Track()
     {
         // Localization Mode: Local Mapping is deactivated
 
-        if(mState==LOST)
+        if(m_trackingState==LOST)
         {
             bOK = Relocalization();
         }
@@ -354,7 +354,7 @@ void Tracking::Track()
     mCurrentFrame->mpReferenceKF = mpReferenceKF;
 
     // If we have an initial estimation of the camera pose and matching. Track the local map.
-    if(!mbOnlyTracking)
+    if(!m_onlyTracking)
     {
         if(bOK)
             bOK = TrackLocalMap();
@@ -369,9 +369,9 @@ void Tracking::Track()
     }
 
     if(bOK)
-        mState = OK;
+        m_trackingState = OK;
     else
-        mState=LOST;
+        m_trackingState=LOST;
 
     // Update drawer
     //mpFrameDrawer->Update(this);
@@ -427,7 +427,7 @@ void Tracking::Track()
     }
 
     // Reset if the camera get lost soon after initialization
-    if(mState==LOST)
+    if(m_trackingState==LOST)
     {
         if(mpMap->OrbKeyFramesCount()<=5)
         {
@@ -450,7 +450,7 @@ void Tracking::Track()
         mlRelativeFramePoses.push_back(Tcr);
         mlpReferences.push_back(mpReferenceKF);
         mlFrameTimes.push_back(mCurrentFrame->mTimeStamp);
-        mlbLost.push_back(mState==LOST);
+        mlbLost.push_back(m_trackingState==LOST);
     }
     else
     {
@@ -458,7 +458,7 @@ void Tracking::Track()
         mlRelativeFramePoses.push_back(mlRelativeFramePoses.back());
         mlpReferences.push_back(mlpReferences.back());
         mlFrameTimes.push_back(mlFrameTimes.back());
-        mlbLost.push_back(mState==LOST);
+        mlbLost.push_back(m_trackingState==LOST);
     }
 
 }
@@ -478,7 +478,7 @@ void Tracking::StereoInitialization()
         mpMap->PushOrbKeyFrame(pKFini);
 
         // Create MapPoints and asscoiate to KeyFrame
-        for(int i=0; i<mCurrentFrame->N;i++)
+       for(int i=0; i<mCurrentFrame->N;i++)
         {
             float z = mCurrentFrame->mvDepth[i];
             if(z>0)
@@ -494,7 +494,7 @@ void Tracking::StereoInitialization()
                 mCurrentFrame->mvpMapPoints[i]=pNewMP;
             }
         }
-
+        
         std::cout << "New map created with " << mpMap->OrbMapPointsCount() << " points" << std::endl;
 
         mpLocalMapper->InsertKeyFrame(pKFini);
@@ -514,7 +514,7 @@ void Tracking::StereoInitialization()
 
         //mpMapDrawer->SetCurrentCameraPose(mCurrentFrame->mTcw);
 
-        mState=OK;
+        m_trackingState=OK;
     }
 }
 
@@ -636,7 +636,7 @@ void Tracking::CreateInitialMapMonocular()
     // Bundle Adjustment
     std::cout << "New Map created with " << mpMap->OrbMapPointsCount() << " points" << std::endl;
 
-    OrbOptimizer::GlobalBundleAdjustemnt(mpMap,20);
+    //OrbOptimizer::GlobalBundleAdjustemnt(mpMap,20);
 
     // Set median depth to 1
     float medianDepth = pKFini->ComputeSceneMedianDepth(2);
@@ -686,7 +686,7 @@ void Tracking::CreateInitialMapMonocular()
 
     mpMap->m_OrbKeyFrameOrigins.push_back(pKFini);
 
-    mState=OK;
+    m_trackingState=OK;
 }
 
 void Tracking::CheckReplacedInLastFrame()
@@ -725,7 +725,7 @@ bool Tracking::TrackReferenceKeyFrame()
     mCurrentFrame->mvpMapPoints = vpMapPointMatches;
     mCurrentFrame->SetPose(mLastFrame->mTcw);
 
-    OrbOptimizer::PoseOptimization(mCurrentFrame);
+    //OrbOptimizer::PoseOptimization(mCurrentFrame);
 
     // Discard outliers
     int nmatchesMap = 0;
@@ -759,7 +759,7 @@ void Tracking::UpdateLastFrame()
 
     mLastFrame->SetPose(Tlr*pRef->GetPose());
 
-    if(mnLastKeyFrameId==mLastFrame->mnId || mSensor==Selflocalization::MONOCULAR || !mbOnlyTracking)
+    if(mnLastKeyFrameId==mLastFrame->mnId || mSensor==Selflocalization::MONOCULAR || !m_onlyTracking)
         return;
 
     // Create "visual odometry" MapPoints
@@ -848,7 +848,7 @@ bool Tracking::TrackWithMotionModel()
         return false;
 
     // Optimize frame pose with all matches
-    OrbOptimizer::PoseOptimization(mCurrentFrame);
+    //OrbOptimizer::PoseOptimization(mCurrentFrame);
 
     // Discard outliers
     int nmatchesMap = 0;
@@ -871,7 +871,7 @@ bool Tracking::TrackWithMotionModel()
         }
     }
 
-    if(mbOnlyTracking)
+    if(m_onlyTracking)
     {
         mbVO = nmatchesMap<10;
         return nmatches>20;
@@ -890,7 +890,7 @@ bool Tracking::TrackLocalMap()
     SearchLocalPoints();
 
     // Optimize Pose
-    OrbOptimizer::PoseOptimization(mCurrentFrame);
+    //OrbOptimizer::PoseOptimization(mCurrentFrame);
     mnMatchesInliers = 0;
 
     // Update MapPoints Statistics
@@ -901,7 +901,7 @@ bool Tracking::TrackLocalMap()
             if(!mCurrentFrame->mvbOutlier[i])
             {
                 mCurrentFrame->mvpMapPoints[i]->IncreaseFound();
-                if(!mbOnlyTracking)
+                if(!m_onlyTracking)
                 {
                     if(mCurrentFrame->mvpMapPoints[i]->GetObservingKeyFrameCount()>0)
                         mnMatchesInliers++;
@@ -929,7 +929,7 @@ bool Tracking::TrackLocalMap()
 
 bool Tracking::NeedNewKeyFrame()
 {
-    if(mbOnlyTracking)
+    if(m_onlyTracking)
         return false;
 
     // If Local Mapping is freezed by a Loop Closure do not insert keyframes
@@ -1390,7 +1390,7 @@ bool Tracking::Relocalization()
                         mCurrentFrame->mvpMapPoints[j]=NULL;
                 }
 
-                int nGood = OrbOptimizer::PoseOptimization(mCurrentFrame);
+                int nGood = 1;//OrbOptimizer::PoseOptimization(mCurrentFrame);
 
                 if(nGood<10)
                     continue;
@@ -1406,7 +1406,7 @@ bool Tracking::Relocalization()
 
                     if(nadditional+nGood>=50)
                     {
-                        nGood = OrbOptimizer::PoseOptimization(mCurrentFrame);
+                        //nGood = OrbOptimizer::PoseOptimization(mCurrentFrame);
 
                         // If many inliers but still not enough, search by projection again in a narrower window
                         // the camera has been already optimized with many points
@@ -1421,7 +1421,7 @@ bool Tracking::Relocalization()
                             // Final optimization
                             if(nGood+nadditional>=50)
                             {
-                                nGood = OrbOptimizer::PoseOptimization(mCurrentFrame);
+                                //nGood = OrbOptimizer::PoseOptimization(mCurrentFrame);
 
                                 for(int io =0; io<mCurrentFrame->N; io++)
                                     if(mCurrentFrame->mvbOutlier[io])
@@ -1485,7 +1485,7 @@ void Tracking::Reset()
 
     OrbKeyFrame::nNextId = 0;
     OrbFrame::nNextId = 0;
-    mState = NO_IMAGES_YET;
+    m_trackingState = NO_IMAGES_YET;
 
     if(mpInitializer)
     {
@@ -1500,7 +1500,6 @@ void Tracking::Reset()
 //   if(mpViewer)
 //   mpViewer->Release();
 }
-
 void Tracking::ChangeCalibration(const std::string &strSettingPath)
 {
     cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
@@ -1536,21 +1535,21 @@ void Tracking::ChangeCalibration(const std::string &strSettingPath)
 
 void Tracking::InformOnlyTracking(const bool &flag)
 {
-    mbOnlyTracking = flag;
+    m_onlyTracking = flag;
 }
 
 bool Tracking::InitalizeTracking() {
-    if(mState==NO_IMAGES_YET)
+    if(m_trackingState==NO_IMAGES_YET)
     {
-        mState = NOT_INITIALIZED;
+        m_trackingState = NOT_INITIALIZED;
     }
 
-    mLastProcessedState=mState;
+    mLastProcessedState=m_trackingState;
 
     // Get Map Mutex -> Map cannot be changed
     std::unique_lock<std::mutex> lock(mpMap->m_MapUpdateMutex);
 
-    if(mState==NOT_INITIALIZED)
+    if(m_trackingState==NOT_INITIALIZED)
     {
         if(mSensor==Selflocalization::STEREO || mSensor==Selflocalization::RGBD)
             StereoInitialization();
@@ -1559,7 +1558,7 @@ bool Tracking::InitalizeTracking() {
 
         //mpFrameDrawer->Update(this);
 
-        if(mState!=OK)
+        if(m_trackingState!=OK)
             return false;
     }
     return true;

@@ -47,7 +47,8 @@ int32_t main(int32_t argc, char **argv)
         cluon::data::Envelope data;
         std::cout << "Making slammer" << std::endl;
         Selflocalization selflocalization(commandlineArguments);
-        cluon::OD4Session od4
+        std::cout << "Creating selflocalization with ID " << ID << std::endl;
+        /*cluon::OD4Session od4
         {
             static_cast<uint16_t>(std::stoi(commandlineArguments["cid"])),
             [&data, &orbObject = selflocalization ,&od4session = od4, senderStamp = ID](cluon::data::Envelope &&envelope){
@@ -62,7 +63,7 @@ int32_t main(int32_t argc, char **argv)
             std::this_thread::sleep_for(1s);
             selflocalization.nextContainer(data);
             std::chrono::system_clock::time_point tp;
-        }
+        }*/
     }
     return retCode;
 }

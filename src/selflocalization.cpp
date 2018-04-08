@@ -143,7 +143,7 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
 	//int colorChannel = 1;
 
 	m_map = std::shared_ptr<OrbMap>(new OrbMap());
-	
+	std::cout << "Created map" << std::endl;
     //m_pImageGrab = std::shared_ptr<ImageExtractor>(new ImageExtractor(colorChannel));
     /*int nFeatures = 1000;
     float scaleFactor = 1.2f;
@@ -157,15 +157,17 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
 
 	
 	m_pKeyFrameDatabase = std::shared_ptr<OrbKeyFrameDatabase>(new OrbKeyFrameDatabase(*m_pVocabulary.get()));
+    std::cout << "Created keyframedatabase" << std::endl;
 
 	m_pTracker = std::shared_ptr<Tracking>(new Tracking(std::shared_ptr<Selflocalization>(this),m_pVocabulary,m_map,m_pKeyFrameDatabase,commandlineArgs,sensor));
-
+    std::cout << "Created Tracking" << std::endl;
 	m_pMapper = std::shared_ptr<Mapping>(new Mapping(m_map,m_isMonocular));
-	m_pMappingThread = std::shared_ptr<std::thread>(new std::thread(&Mapping::Run,m_pMapper));
+	//m_pMappingThread = std::shared_ptr<std::thread>(new std::thread(&Mapping::Run,m_pMapper));
+	std::cout << "Created Mapping" << std::endl;
 	
 	m_pLoopCloser = std::shared_ptr<LoopClosing>(new LoopClosing(m_map,m_pKeyFrameDatabase,m_pVocabulary,!m_isMonocular));
-	m_pLoopClosingThread = std::shared_ptr<std::thread>(new std::thread(&LoopClosing::Run,m_pLoopCloser));
-
+	//m_pLoopClosingThread = std::shared_ptr<std::thread>(new std::thread(&LoopClosing::Run,m_pLoopCloser));
+    std::cout << "Created Loop closing" << std::endl;
 	m_pTracker->SetLocalMapper(m_pMapper);
 	m_pTracker->SetLoopClosing(m_pLoopCloser);
 

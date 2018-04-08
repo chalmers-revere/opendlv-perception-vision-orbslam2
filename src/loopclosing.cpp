@@ -321,7 +321,7 @@ bool LoopClosing::ComputeSim3()
                 matcher.SearchBySim3(mpCurrentKF,pKF,vpMapPointMatches,s,R,t,7.5);
 
                 g2o::Sim3 gScm(Orbconverter::toMatrix3d(R),Orbconverter::toVector3d(t),s);
-                nInliers = OrbOptimizer::OptimizeSim3(mpCurrentKF, pKF, vpMapPointMatches, gScm, 10, mbFixScale);
+                //nInliers = OrbOptimizer::OptimizeSim3(mpCurrentKF, pKF, vpMapPointMatches, gScm, 10, mbFixScale);
 
                 // If optimization is succesful stop ransacs and continue
                 if(nInliers>=20)
@@ -566,7 +566,7 @@ void LoopClosing::CorrectLoop()
     }
 
     // Optimize graph
-    OrbOptimizer::OptimizeEssentialGraph(mpMap, mpMatchedKF, mpCurrentKF, NonCorrectedSim3, CorrectedSim3, LoopConnections, mbFixScale);
+    //OrbOptimizer::OptimizeEssentialGraph(mpMap, mpMatchedKF, mpCurrentKF, NonCorrectedSim3, CorrectedSim3, LoopConnections, mbFixScale);
 
     mpMap->IncrementMajorChangeIndex();
 
@@ -649,7 +649,7 @@ void LoopClosing::RunGlobalBundleAdjustment(unsigned long nLoopKF)
     std::cout << "Starting Global Bundle Adjustment" << std::endl;
 
     int idx =  mnFullBAIdx;
-    OrbOptimizer::GlobalBundleAdjustemnt(mpMap,10,&mbStopGBA,nLoopKF,false);
+    //OrbOptimizer::GlobalBundleAdjustemnt(mpMap,10,&mbStopGBA,nLoopKF,false);
 
     // Update all MapPoints and KeyFrames
     // Local Mapping was active during BA, that means that there might be new keyframes

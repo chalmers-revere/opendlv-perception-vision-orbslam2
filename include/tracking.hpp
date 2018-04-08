@@ -68,9 +68,6 @@ public:
         LOST=3
     };
 
-    eTrackingState mState;
-    eTrackingState mLastProcessedState = {};
-
     // Input sensor
     int mSensor;
 
@@ -91,9 +88,6 @@ public:
     std::list<std::shared_ptr<OrbKeyFrame>> mlpReferences = {};
     std::list<double> mlFrameTimes = {};
     std::list<bool> mlbLost = {};
-
-    // True if local mapping is deactivated and we are performing only localization
-    bool mbOnlyTracking;
 
     void Reset();
 
@@ -132,6 +126,11 @@ private:
     // In that case we are doing visual odometry. The system will try to do relocalization to recover
     // "zero-drift" localization to the map.
     bool mbVO;
+
+    // True if local mapping is deactivated and we are performing only localization
+    bool m_onlyTracking;
+    eTrackingState m_trackingState;
+    eTrackingState mLastProcessedState = {};
 
     //Other Thread Pointers
     std::shared_ptr<Mapping> mpLocalMapper = {};
