@@ -31,7 +31,7 @@ RUN apk update && \
 #Install libs
 WORKDIR /tmp
 RUN hg clone https://bitbucket.org/eigen/eigen && cd eigen && mkdir build && cd build && cmake .. && make -j4 install
-RUN git clone https://github.com/RainerKuemmerle/g2o && cd g2o && mkdir build && cd build && cmake -DG2O_BUILD_APPS=OFF -DG2O_BUILD_EXAMPLES=OFF .. && make -j4 install
+RUN git clone https://github.com/marbae/g2o && cd g2o && mkdir build && cd build && cmake -DG2O_BUILD_APPS=OFF -DG2O_BUILD_EXAMPLES=OFF .. && make -j4 install
 
 #install Microservice
 ADD . /opt/sources
