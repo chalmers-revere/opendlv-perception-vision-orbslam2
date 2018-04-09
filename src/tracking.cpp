@@ -636,7 +636,7 @@ void Tracking::CreateInitialMapMonocular()
     // Bundle Adjustment
     std::cout << "New Map created with " << mpMap->OrbMapPointsCount() << " points" << std::endl;
 
-    //OrbOptimizer::GlobalBundleAdjustemnt(mpMap,20);
+    OrbOptimizer::GlobalBundleAdjustemnt(mpMap,20);
 
     // Set median depth to 1
     float medianDepth = pKFini->ComputeSceneMedianDepth(2);
@@ -725,7 +725,7 @@ bool Tracking::TrackReferenceKeyFrame()
     mCurrentFrame->mvpMapPoints = vpMapPointMatches;
     mCurrentFrame->SetPose(mLastFrame->mTcw);
 
-    //OrbOptimizer::PoseOptimization(mCurrentFrame);
+    OrbOptimizer::PoseOptimization(mCurrentFrame);
 
     // Discard outliers
     int nmatchesMap = 0;
@@ -848,7 +848,7 @@ bool Tracking::TrackWithMotionModel()
         return false;
 
     // Optimize frame pose with all matches
-    //OrbOptimizer::PoseOptimization(mCurrentFrame);
+    OrbOptimizer::PoseOptimization(mCurrentFrame);
 
     // Discard outliers
     int nmatchesMap = 0;
@@ -890,7 +890,7 @@ bool Tracking::TrackLocalMap()
     SearchLocalPoints();
 
     // Optimize Pose
-    //OrbOptimizer::PoseOptimization(mCurrentFrame);
+    OrbOptimizer::PoseOptimization(mCurrentFrame);
     mnMatchesInliers = 0;
 
     // Update MapPoints Statistics
@@ -1390,7 +1390,7 @@ bool Tracking::Relocalization()
                         mCurrentFrame->mvpMapPoints[j]=NULL;
                 }
 
-                int nGood = 1;//OrbOptimizer::PoseOptimization(mCurrentFrame);
+                int nGood = OrbOptimizer::PoseOptimization(mCurrentFrame);
 
                 if(nGood<10)
                     continue;
@@ -1406,7 +1406,7 @@ bool Tracking::Relocalization()
 
                     if(nadditional+nGood>=50)
                     {
-                        //nGood = OrbOptimizer::PoseOptimization(mCurrentFrame);
+                        nGood = OrbOptimizer::PoseOptimization(mCurrentFrame);
 
                         // If many inliers but still not enough, search by projection again in a narrower window
                         // the camera has been already optimized with many points
@@ -1421,7 +1421,7 @@ bool Tracking::Relocalization()
                             // Final optimization
                             if(nGood+nadditional>=50)
                             {
-                                //nGood = OrbOptimizer::PoseOptimization(mCurrentFrame);
+                                nGood = OrbOptimizer::PoseOptimization(mCurrentFrame);
 
                                 for(int io =0; io<mCurrentFrame->N; io++)
                                     if(mCurrentFrame->mvbOutlier[io])
