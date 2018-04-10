@@ -455,7 +455,7 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
     cv::Mat pose = Orbconverter::toCvMat(SE3quat_recov);
     pFrame->SetPose(pose);
 
-    return nInitialCorrespondences;//-nBad;
+    return nInitialCorrespondences-nBad;
 }
 
 void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool* pbStopFlag, std::shared_ptr<OrbMap> pMap)
@@ -1250,7 +1250,6 @@ int OrbOptimizer::OptimizeSim3(std::shared_ptr<OrbKeyFrame> pKF1, std::shared_pt
     // Recover optimized Sim3
     g2o::VertexSim3Expmap* vSim3_recov = static_cast<g2o::VertexSim3Expmap*>(optimizer.vertex(0));
     g2oS12= vSim3_recov->estimate();
-
     return nIn;
 }
 

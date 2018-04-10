@@ -162,11 +162,11 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
 	m_pTracker = std::shared_ptr<Tracking>(new Tracking(std::shared_ptr<Selflocalization>(this),m_pVocabulary,m_map,m_pKeyFrameDatabase,commandlineArgs,sensor));
     std::cout << "Created Tracking" << std::endl;
 	m_pMapper = std::shared_ptr<Mapping>(new Mapping(m_map,m_isMonocular));
-	//m_pMappingThread = std::shared_ptr<std::thread>(new std::thread(&Mapping::Run,m_pMapper));
+//	m_pMappingThread = std::shared_ptr<std::thread>(new std::thread(&Mapping::Run,m_pMapper));
 	std::cout << "Created Mapping" << std::endl;
 	
 	m_pLoopCloser = std::shared_ptr<LoopClosing>(new LoopClosing(m_map,m_pKeyFrameDatabase,m_pVocabulary,!m_isMonocular));
-	//m_pLoopClosingThread = std::shared_ptr<std::thread>(new std::thread(&LoopClosing::Run,m_pLoopCloser));
+//	m_pLoopClosingThread = std::shared_ptr<std::thread>(new std::thread(&LoopClosing::Run,m_pLoopCloser));
     std::cout << "Created Loop closing" << std::endl;
 	m_pTracker->SetLocalMapper(m_pMapper);
 	m_pTracker->SetLoopClosing(m_pLoopCloser);
@@ -176,11 +176,10 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
 
 	m_pLoopCloser->SetTracker(m_pTracker);
 	m_pLoopCloser->SetLocalMapper(m_pMapper);
-
 }
 
 void Selflocalization::tearDown()
-{
+{/*
 	m_pMapper->RequestFinish();
     m_pLoopCloser->RequestFinish();
 
@@ -188,7 +187,7 @@ void Selflocalization::tearDown()
     while(!m_pMapper->isFinished() || !m_pLoopCloser->isFinished() || m_pLoopCloser->isRunningGBA())
     {
         usleep(5000);
-    }
+    }*/
 }
 
 void Selflocalization::Reset(){
