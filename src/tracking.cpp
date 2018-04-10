@@ -1472,7 +1472,7 @@ void Tracking::Reset()
 
     // Reset Loop Closing
     std::cout << "Reseting Loop Closing...";
-    //mpLoopClosing->RequestReset();
+    mpLoopClosing->RequestReset();
     std::cout << " done" << std::endl;
 
     // Clear BoW Database
