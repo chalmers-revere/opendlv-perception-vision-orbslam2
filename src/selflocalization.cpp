@@ -53,6 +53,7 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 
 {		
   setUp(commandlineArgs);
+  KittiRunner kittiRunner(commandlineArgs["kittiPath"],std::shared_ptr<Selflocalization>(this));
 	//Initialization
 	
 	//Orb vocabulary - global pointer
@@ -180,7 +181,11 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
 	m_pLoopCloser->SetLocalMapper(m_pMapper);
 }
 
-void Selflocalization::tearDown()
+void Selflocalization::Track(cv::Mat &imLeft, cv::Mat &imRight, double &timestamp){
+	m_pTracker->GrabImageStereo(imLeft,imRight,timestamp);
+}
+
+void Selflocalization::Shutdown()
 {
 	m_pMapper->RequestFinish();
     m_pLoopCloser->RequestFinish();
@@ -190,6 +195,11 @@ void Selflocalization::tearDown()
     {
         usleep(5000);
     }
+}
+
+
+void Selflocalization::tearDown()
+{
 }
 
 void Selflocalization::Reset(){

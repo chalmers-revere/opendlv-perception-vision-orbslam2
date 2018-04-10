@@ -53,6 +53,7 @@
 #include "orbextractor.hpp"
 #include "orbvocabulary.hpp"
 #include "orbmap.hpp"
+#include "kittirunner.hpp"
 
 
 class Selflocalization
@@ -70,6 +71,8 @@ public:
     Selflocalization &operator=(Selflocalization const &) = delete;
     ~Selflocalization();
     void nextContainer(cluon::data::Envelope &a_container);
+    void Shutdown();
+    void Track(cv::Mat &imLeft, cv::Mat &imRight, double &timestamp);
 
     // Reset the system (clear map)
     void Reset();
