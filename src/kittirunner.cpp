@@ -23,6 +23,7 @@ KittiRunner::KittiRunner(const std::string &kittiPath,std::shared_ptr<Selflocali
     std::vector<std::string> vstrImageLeft;
     std::vector<std::string> vstrImageRight;
     std::vector<double> vTimestamps;
+    std::cout << "Loading Images" << std::endl;
     loadImages(kittiPath, vstrImageLeft, vstrImageRight, vTimestamps);
     const int nImages = vstrImageLeft.size();
     std::vector<double> vTimesTrack;
@@ -37,8 +38,10 @@ KittiRunner::KittiRunner(const std::string &kittiPath,std::shared_ptr<Selflocali
     for(int ni=0; ni<nImages; ni++)
     {
         // Read left and right images from file
+        std::cout << "reading image: " << vstrImageLeft[ni] << std::endl;
         imLeft = cv::imread(vstrImageLeft[ni],CV_LOAD_IMAGE_UNCHANGED);
         imRight = cv::imread(vstrImageRight[ni],CV_LOAD_IMAGE_UNCHANGED);
+        std::cout << "loaded images " << std::endl;
         double tframe = vTimestamps[ni];
 
         if(imLeft.empty())
@@ -47,12 +50,12 @@ KittiRunner::KittiRunner(const std::string &kittiPath,std::shared_ptr<Selflocali
                  << std::string(vstrImageLeft[ni]) << std::endl;
         }
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-
+        std::cout << "calling track " << std::endl;
         // Pass the images to the SLAM system
         slammer->Track(imLeft,imRight,tframe);
 
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
-
+        std::cout << "calculating sleep " << std::endl;
         double ttrack= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
 
         vTimesTrack[ni]=ttrack;
@@ -90,36 +93,40 @@ KittiRunner::~KittiRunner(){
 }
 
 void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &vstrImageLeft,
-                std::vector<std::string> &vstrImageRight, std::vector<double> &vTimestamps)
+                std::vector<std::string> &vstrImageRight, std::vector<double> &timeStamps)
 {
-    std::ifstream fTimes;
-    std::string strPathTimeFile = path + "/times.txt";
-    fTimes.open(strPathTimeFile.c_str());
-    while(!fTimes.eof())
+    std::cout << "Parsing times.txt" << std::endl;
+    std::string timeStampFilePath = path + "/times.txt";
+    std::cout << timeStampFilePath << std::endl;
+    std::ifstream inputFileStream(timeStampFilePath.c_str());
+
+    std::string line;
+    while (std::getline(inputFileStream, line))
     {
-        std::string s;
-        std::getline(fTimes,s);
-        if(!s.empty())
-        {
-            std::stringstream ss;
-            ss << s;
-            double t;
-            ss >> t;
-            vTimestamps.push_back(t);
+
+        std::cout << line << std::endl;
+        if(!line.empty()){
+
+            std::istringstream iss(line);
+            double timeStamp;
+            iss >> timeStamp;
+            timeStamps.push_back(timeStamp);
         }
     }
 
+    std::cout << "Parsing times.txt" << std::endl;
+    std::cout << "adding images to arrays" << std::endl;
     std::string strPrefixLeft = path + "/image_2/";
     std::string strPrefixRight = path + "/image_3/";
 
-    const int nTimes = vTimestamps.size();
-    vstrImageLeft.resize(nTimes);
-    vstrImageRight.resize(nTimes);
+    vstrImageLeft.resize(timeStamps.size());
+    vstrImageRight.resize(timeStamps.size());
 
-    for(int i=0; i<nTimes; i++)
+    for(unsigned long i=0; i<timeStamps.size(); i++)
     {
         std::stringstream ss;
         ss << std::setfill('0') << std::setw(6) << i;
+        std::cout << "adding image" << std::endl;
         vstrImageLeft[i] = strPrefixLeft + ss.str() + ".png";
         vstrImageRight[i] = strPrefixRight + ss.str() + ".png";
     }

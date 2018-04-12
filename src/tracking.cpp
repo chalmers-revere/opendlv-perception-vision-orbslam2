@@ -173,11 +173,11 @@ cv::Mat Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRe
             cvtColor(imGrayRight,imGrayRight,CV_BGRA2GRAY);
         }
     }
-
+    std::cout << "ccreating current frame " << std::endl;
     mCurrentFrame = std::shared_ptr<OrbFrame>(new OrbFrame(mImGray,imGrayRight,timestamp,mpORBextractorLeft,mpORBextractorRight,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth));
-
+    std::cout << "calling track" << std::endl;
     Track();
-
+    std::cout << "done" << std::endl;
     return mCurrentFrame->mTcw.clone();
 }
 
@@ -244,6 +244,7 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
 
 void Tracking::Track()
 {
+    std::cout << "tracking" << std::endl;
     if (!this->InitalizeTracking()) {
         return;
     }
