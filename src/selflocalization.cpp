@@ -182,6 +182,15 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
 }
 
 void Selflocalization::Track(cv::Mat &imLeft, cv::Mat &imRight, double &timestamp){
+	    // Check reset
+    {
+    	std::unique_lock<std::mutex> lock(mMutexReset);
+    	if(m_reset)
+    	{
+        	m_pTracker->Reset();
+        	m_reset = false;
+    	}
+	}
 	m_pTracker->GrabImageStereo(imLeft,imRight,timestamp);
 }
 
