@@ -35,9 +35,10 @@ services:
        environment:
            - DISPLAY=$DISPLAY
        volumes:
+           - /home/pontus/workspace/sem/thesis/kitty:/kitty
            - ./docker-mounts/media:/media  #Needs folder with images and an ORBvoc.txt
            - /tmp/.X11-unix:/tmp/.X11-unix
-       command: "/usr/bin/opendlv-perception-vision-orbslam2 --cid=${CID} --cameraType=0 --vocFilePath=/media/ORBvoc.txt --Camera.fx=435.2046959714599 --Camera.fy=435.2046959714599 --Camera.cx=367.4517211914062 --Camera.cy=252.2008514404297 --Camera.k1=0 --Camera.k2=0 --Camera.k3=0 --Camera.p1=0 --Camera.p2=0 --Camera.fps=15 --Camera.bf=47.90639384423901 --Camera.RGB=1 --ThDepth=35 --ORBextractor.nFeatures=2000 --ORBextractor.scaleFactor=1.2 --ORBextractor.nLevels=8 --ORBextractor.iniThFAST=20 --ORBextractor.minThFAST=7"
+       command: "valgrind /usr/bin/opendlv-perception-vision-orbslam2 --cid=${CID} --cameraType=0 --vocFilePath=/media/ORBvoc.txt --Camera.fx=435.2046959714599 --Camera.fy=435.2046959714599 --Camera.cx=367.4517211914062 --Camera.cy=252.2008514404297 --Camera.k1=0 --Camera.k2=0 --Camera.k3=0 --Camera.p1=0 --Camera.p2=0 --Camera.fps=15 --Camera.bf=47.90639384423901 --Camera.RGB=1 --ThDepth=35 --ORBextractor.nFeatures=2000 --ORBextractor.scaleFactor=1.2 --ORBextractor.nLevels=8 --ORBextractor.iniThFAST=20 --ORBextractor.minThFAST=7 --kittiPath=/kitty/dataset/sequences/01"
     vehicle_viewer:
            image: testviewer
            network_mode: host
