@@ -21,6 +21,7 @@
 
 int32_t main(int32_t argc, char **argv)
 {
+    std::cout << "Making slammer" << std::endl;
     int32_t retCode{0};
     auto commandlineArguments = cluon::getCommandlineArguments(argc, argv);
     if (0 == commandlineArguments.count("cid"))
@@ -44,9 +45,10 @@ int32_t main(int32_t argc, char **argv)
 
         // Interface to a running OpenDaVINCI session (ignoring any incoming Envelopes).
         cluon::data::Envelope data;
-        Selflocalization selflocalization;
-        //std::shared_ptr<Slam> slammer = std::shared_ptr<Slam>(new Slam(10));
-        cluon::OD4Session od4
+        std::cout << "Making slammer" << std::endl;
+        Selflocalization selflocalization(commandlineArguments);
+        std::cout << "Creating selflocalization with ID " << ID << std::endl;
+        /*cluon::OD4Session od4
         {
             static_cast<uint16_t>(std::stoi(commandlineArguments["cid"])),
             [&data, &orbObject = selflocalization ,&od4session = od4, senderStamp = ID](cluon::data::Envelope &&envelope){
@@ -61,7 +63,7 @@ int32_t main(int32_t argc, char **argv)
             std::this_thread::sleep_for(1s);
             selflocalization.nextContainer(data);
             std::chrono::system_clock::time_point tp;
-        }
+        }*/
     }
     return retCode;
 }

@@ -53,6 +53,7 @@
 #include "orbextractor.hpp"
 #include "orbvocabulary.hpp"
 #include "orbmap.hpp"
+#include "kittirunner.hpp"
 
 
 class Selflocalization
@@ -65,17 +66,19 @@ public:
         RGBD=2
     };
 
-    Selflocalization();
+    Selflocalization(std::map<std::string, std::string> commandlineArgs);
     Selflocalization(Selflocalization const &) = delete;
     Selflocalization &operator=(Selflocalization const &) = delete;
     ~Selflocalization();
     void nextContainer(cluon::data::Envelope &a_container);
+    void Shutdown();
+    void Track(cv::Mat &imLeft, cv::Mat &imRight, double &timestamp);
 
     // Reset the system (clear map)
     void Reset();
 
 private:
-    void setUp();
+    void setUp(std::map<std::string, std::string> commandlineArgs);
     void tearDown();
     bool m_isMonocular;
     int m_saveCounter = 0;

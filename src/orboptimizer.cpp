@@ -21,9 +21,9 @@
 #include "g2o/core/block_solver.h"
 #include "g2o/core/optimization_algorithm_levenberg.h"
 #include "g2o/solvers/eigen/linear_solver_eigen.h"
-#include "g2o/types/sba/types_six_dof_expmap.h"
 #include "g2o/core/robust_kernel_impl.h"
 #include "g2o/solvers/dense/linear_solver_dense.h"
+#include "g2o/types/sba/types_six_dof_expmap.h"
 //#include "g2o/types/sim3/types_seven_dof_expmap.h"
 
 #include "orboptimizer.hpp"
@@ -245,22 +245,21 @@ void OrbOptimizer::BundleAdjustment(const std::vector<std::shared_ptr<OrbKeyFram
 
 int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
 {
+    
     g2o::SparseOptimizer optimizer;
     auto linearSolver = g2o::make_unique<orbLinearSolver>();
     g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<orbBlockSolver>(std::move(linearSolver)));
 	optimizer.setAlgorithm(solver);
 
     int nInitialCorrespondences=0;
-
+    const int N = pFrame->N;
+    std::cout << N << std::endl;
     // Set Frame vertex
     g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
     vSE3->setEstimate(Orbconverter::toSE3Quat(pFrame->mTcw));
     vSE3->setId(0);
     vSE3->setFixed(false);
     optimizer.addVertex(vSE3);
-
-    // Set MapPoint vertices
-    const int N = pFrame->N;
 
     std::vector<g2o::EdgeSE3ProjectXYZOnlyPose*> vpEdgesMono;
     std::vector<size_t> vnIndexEdgeMono;
@@ -382,7 +381,7 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
     std::vector<bool> vectorBoolOutliers = pFrame->mvbOutlier;
     for(size_t it=0; it<4; it++)
     {
-
+        std::cout << "Number of stereo edges " << vpEdgesStereo.size()<< std::endl;
         vSE3->setEstimate(Orbconverter::toSE3Quat(pFrame->mTcw));
         optimizer.initializeOptimization(0);
         optimizer.optimize(its[it]);
@@ -1251,7 +1250,6 @@ int OrbOptimizer::OptimizeSim3(std::shared_ptr<OrbKeyFrame> pKF1, std::shared_pt
     // Recover optimized Sim3
     g2o::VertexSim3Expmap* vSim3_recov = static_cast<g2o::VertexSim3Expmap*>(optimizer.vertex(0));
     g2oS12= vSim3_recov->estimate();
-
     return nIn;
 }
 

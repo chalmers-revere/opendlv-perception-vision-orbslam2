@@ -35,6 +35,7 @@ set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
     -D_XOPEN_SOURCE=700 \
     -D_FORTIFY_SOURCE=2 \
+    -g \
     -O2 \
     -fstack-protector \
     -fomit-frame-pointer \
@@ -130,6 +131,7 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src/orbmap.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbvocabulary.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/tracking.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/orbkeyframe.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/kittirunner.cpp
 ${CMAKE_BINARY_DIR}/opendlv-standard-message-set.cpp)
 
 ################################################################################

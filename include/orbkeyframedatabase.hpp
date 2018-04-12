@@ -41,7 +41,6 @@ public:
     void erase(std::shared_ptr<OrbKeyFrame> pKF);
 
     void clear();
-
     // Loop Detection
     std::vector<std::shared_ptr<OrbKeyFrame>> DetectLoopCandidates(std::shared_ptr<OrbKeyFrame> pKF, float minScore);
 
