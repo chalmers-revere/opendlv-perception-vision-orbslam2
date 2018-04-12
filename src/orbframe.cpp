@@ -61,14 +61,13 @@ OrbFrame::OrbFrame(const cv::Mat &leftImage, const cv::Mat &rightImage, const do
 {
     // Frame ID
     mnId = nNextId++;
-    CommonSetup();
 
     // ORB extraction
     std::thread threadLeft(&OrbFrame::ExtractORB, this, 0, leftImage);
     std::thread threadRight(&OrbFrame::ExtractORB, this, 1, rightImage);
     threadLeft.join();
     threadRight.join();
-
+    CommonSetup();
     ComputeStereoMatches();
 
     // This is done only for the first Frame (or after a change in the calibration)
@@ -152,6 +151,7 @@ void OrbFrame::CommonSetup()
 
     N = static_cast<int>(mvKeys.size());
 
+
     if(mvKeys.empty())
     {
         return;
@@ -210,7 +210,7 @@ void OrbFrame::ExtractORB(int rightImage, const cv::Mat &image)
     }
     else
     {
-        mpORBextractorRight->ExtractFeatures(image, mvKeys, mDescriptors);
+        mpORBextractorRight->ExtractFeatures(image, mvKeysRight, mDescriptorsRight);
     }
 }
 

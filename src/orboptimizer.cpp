@@ -381,7 +381,6 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
     std::vector<bool> vectorBoolOutliers = pFrame->mvbOutlier;
     for(size_t it=0; it<4; it++)
     {
-
         vSE3->setEstimate(Orbconverter::toSE3Quat(pFrame->mTcw));
         optimizer.initializeOptimization(0);
         optimizer.optimize(its[it]);

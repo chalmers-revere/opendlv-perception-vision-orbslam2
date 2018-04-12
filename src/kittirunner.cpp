@@ -109,8 +109,8 @@ void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &
         }
     }
 
-    std::string strPrefixLeft = path + "/image_0/";
-    std::string strPrefixRight = path + "/image_1/";
+    std::string strPrefixLeft = path + "/image_2/";
+    std::string strPrefixRight = path + "/image_3/";
 
     const int nTimes = vTimestamps.size();
     vstrImageLeft.resize(nTimes);
