@@ -57,7 +57,10 @@ KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_
         if(isStereo){
             slammer->Track(imLeft,imRight,tframe);    
         }
-        slammer->Track(imLeft,tframe);
+        else {
+            slammer->Track(imLeft,tframe);
+        }
+
 
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
         std::cout << "calculating sleep " << std::endl;
@@ -121,8 +124,8 @@ void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &
 
     std::cout << "Parsing times.txt" << std::endl;
     std::cout << "adding images to arrays" << std::endl;
-    std::string strPrefixLeft = path + "/image_2/";
-    std::string strPrefixRight = path + "/image_3/";
+    std::string strPrefixLeft = path + "/image_0/";
+    std::string strPrefixRight = path + "/image_1/";
 
     vstrImageLeft.resize(timeStamps.size());
     vstrImageRight.resize(timeStamps.size());
