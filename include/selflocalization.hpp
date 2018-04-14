@@ -73,6 +73,7 @@ public:
     void nextContainer(cluon::data::Envelope &a_container);
     void Shutdown();
     void Track(cv::Mat &imLeft, cv::Mat &imRight, double &timestamp);
+    void Track(cv::Mat &imLeft, double &timestamp);
 
     // Reset the system (clear map)
     void Reset();

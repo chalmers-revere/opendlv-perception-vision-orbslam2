@@ -19,7 +19,7 @@
 
 #include "kittirunner.hpp"
 
-KittiRunner::KittiRunner(const std::string &kittiPath,std::shared_ptr<Selflocalization> slammer){
+KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_ptr<Selflocalization> slammer){
     std::vector<std::string> vstrImageLeft;
     std::vector<std::string> vstrImageRight;
     std::vector<double> vTimestamps;
@@ -40,7 +40,9 @@ KittiRunner::KittiRunner(const std::string &kittiPath,std::shared_ptr<Selflocali
         // Read left and right images from file
         std::cout << "reading image: " << vstrImageLeft[ni] << std::endl;
         imLeft = cv::imread(vstrImageLeft[ni],CV_LOAD_IMAGE_UNCHANGED);
-        imRight = cv::imread(vstrImageRight[ni],CV_LOAD_IMAGE_UNCHANGED);
+        if(isStereo){
+            imRight = cv::imread(vstrImageRight[ni],CV_LOAD_IMAGE_UNCHANGED);
+        }
         std::cout << "loaded images " << std::endl;
         double tframe = vTimestamps[ni];
 
@@ -52,7 +54,10 @@ KittiRunner::KittiRunner(const std::string &kittiPath,std::shared_ptr<Selflocali
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
         std::cout << "calling track " << std::endl;
         // Pass the images to the SLAM system
-        slammer->Track(imLeft,imRight,tframe);
+        if(isStereo){
+            slammer->Track(imLeft,imRight,tframe);    
+        }
+        slammer->Track(imLeft,tframe);
 
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
         std::cout << "calculating sleep " << std::endl;
