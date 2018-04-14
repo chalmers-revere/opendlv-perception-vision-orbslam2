@@ -173,11 +173,11 @@ cv::Mat Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRe
             cvtColor(imGrayRight,imGrayRight,CV_BGRA2GRAY);
         }
     }
-    std::cout << "ccreating current frame " << std::endl;
+   
     mCurrentFrame = std::shared_ptr<OrbFrame>(new OrbFrame(mImGray,imGrayRight,timestamp,mpORBextractorLeft,mpORBextractorRight,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth));
-    std::cout << "calling track" << std::endl;
+
     Track();
-    std::cout << "done" << std::endl;
+
     return mCurrentFrame->mTcw.clone();
 }
 
@@ -267,10 +267,12 @@ void Tracking::Track()
             if(mVelocity.empty() || mCurrentFrame->mnId<mnLastRelocFrameId+2)
             {
                 bOK = TrackReferenceKeyFrame();
+                std::cout << "Track reference keyframe is " << bOK << std::endl; 
             }
             else
             {
                 bOK = TrackWithMotionModel();
+                std::cout << "Track with motion model is " << bOK << std::endl;
                 if(!bOK)
                     bOK = TrackReferenceKeyFrame();
             }
@@ -357,16 +359,21 @@ void Tracking::Track()
     // If we have an initial estimation of the camera pose and matching. Track the local map.
     if(!m_onlyTracking)
     {
-        if(bOK)
+        if(bOK){
             bOK = TrackLocalMap();
+            std::cout << "Track local map is " << bOK << std::endl;
+        }
+
     }
     else
     {
         // mbVO true means that there are few matches to MapPoints in the map. We cannot retrieve
         // a local map and therefore we do not perform TrackLocalMap(). Once the system relocalizes
         // the camera we will use the local map again.
-        if(bOK && !mbVO)
+        if(bOK && !mbVO){
             bOK = TrackLocalMap();
+            std::cout << "Track local map2 is " << bOK << std::endl;
+        }
     }
 
     if(bOK)
@@ -720,6 +727,7 @@ bool Tracking::TrackReferenceKeyFrame()
 
     int nmatches = matcher.SearchByBoW(mpReferenceKF,mCurrentFrame,vpMapPointMatches);
 
+    std::cout << "nmatches " << nmatches << std::endl;
     if(nmatches<15)
         return false;
 
@@ -737,7 +745,6 @@ bool Tracking::TrackReferenceKeyFrame()
             if(mCurrentFrame->mvbOutlier[i])
             {
                 std::shared_ptr<OrbMapPoint> pMP = mCurrentFrame->mvpMapPoints[i];
-
                 mCurrentFrame->mvpMapPoints[i]=static_cast<std::shared_ptr<OrbMapPoint>>(NULL);
                 mCurrentFrame->mvbOutlier[i]=false;
                 pMP->SetTrackInView(false);
@@ -748,7 +755,6 @@ bool Tracking::TrackReferenceKeyFrame()
                 nmatchesMap++;
         }
     }
-
     return nmatchesMap>=10;
 }
 
@@ -802,7 +808,6 @@ void Tracking::UpdateLastFrame()
         {
             cv::Mat x3D = mLastFrame->UnprojectStereo(i);
             std::shared_ptr<OrbMapPoint> pNewMP = std::shared_ptr<OrbMapPoint>(new OrbMapPoint(x3D, mLastFrame,mpMap,i));
-
             mLastFrame->mvpMapPoints[i]=pNewMP;
 
             mlpTemporalPoints.push_back(pNewMP);
@@ -836,6 +841,7 @@ bool Tracking::TrackWithMotionModel()
         th=15;
     else
         th=7;
+
     int nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,th,mSensor==Selflocalization::MONOCULAR);
 
     // If few matches, uses a wider window search

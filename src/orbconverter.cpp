@@ -40,7 +40,6 @@ g2o::SE3Quat Orbconverter::toSE3Quat(const cv::Mat &cvMat)
     R << cvMat.at<float>(0,0), cvMat.at<float>(0,1), cvMat.at<float>(0,2),
          cvMat.at<float>(1,0), cvMat.at<float>(1,1), cvMat.at<float>(1,2),
          cvMat.at<float>(2,0), cvMat.at<float>(2,1), cvMat.at<float>(2,2);
-
     Eigen::Vector3d t(cvMat.at<float>(0,3), cvMat.at<float>(1,3), cvMat.at<float>(2,3));
 
     return g2o::SE3Quat(R,t);
