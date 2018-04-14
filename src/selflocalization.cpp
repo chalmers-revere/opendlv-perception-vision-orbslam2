@@ -55,7 +55,7 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
   setUp(commandlineArgs);
   std::cout << "Starting Kittirunner" << std::endl;
   std::cout << commandlineArgs["kittiPath"] << std::endl;
-  KittiRunner kittiRunner(commandlineArgs["kittiPath"],std::shared_ptr<Selflocalization>(this));
+  KittiRunner kittiRunner(commandlineArgs["kittiPath"],!m_isMonocular,std::shared_ptr<Selflocalization>(this));
 	//Initialization
 	
 	//Orb vocabulary - global pointer
@@ -156,7 +156,7 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
     std::cout << "Hello" << std::endl;
     m_pExtractOrb = std::shared_ptr<OrbExtractor>(new OrbExtractor(nFeatures, scaleFactor, nLevels, initialFastTh, minFastTh));
 	*/
-	const int sensor = static_cast<int>(m_isMonocular);
+	const int sensor = std::stoi(commandlineArgs["cameraType"]);
 
 	
 	m_pKeyFrameDatabase = std::shared_ptr<OrbKeyFrameDatabase>(new OrbKeyFrameDatabase(*m_pVocabulary.get()));
@@ -194,6 +194,20 @@ void Selflocalization::Track(cv::Mat &imLeft, cv::Mat &imRight, double &timestam
     	}
 	}
 	m_pTracker->GrabImageStereo(imLeft,imRight,timestamp);
+}
+
+
+void Selflocalization::Track(cv::Mat &imLeft, double &timestamp){
+	    // Check reset
+    {
+    	std::unique_lock<std::mutex> lock(mMutexReset);
+    	if(m_reset)
+    	{
+        	m_pTracker->Reset();
+        	m_reset = false;
+    	}
+	}
+	m_pTracker->GrabImageMonocular(imLeft,timestamp);
 }
 
 void Selflocalization::Shutdown()

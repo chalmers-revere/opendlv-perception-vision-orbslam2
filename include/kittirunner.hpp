@@ -32,7 +32,7 @@
 class KittiRunner
 {
 public:
-    KittiRunner(const std::string &path, std::shared_ptr<Selflocalization> slammer);
+    KittiRunner(const std::string &path, bool isStereo, std::shared_ptr<Selflocalization> slammer);
     KittiRunner(KittiRunner const &) = delete;
     KittiRunner &operator=(KittiRunner const &) = delete;
     ~KittiRunner();
