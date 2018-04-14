@@ -94,7 +94,7 @@ void OrbOptimizer::BundleAdjustment(const std::vector<std::shared_ptr<OrbKeyFram
             continue;
         g2o::VertexSBAPointXYZ* vPoint = new g2o::VertexSBAPointXYZ();
         vPoint->setEstimate(Orbconverter::toVector3d(pMP->GetWorldPosition()));
-        const int id = pMP->Id+maxKFid+1;
+        const int id = pMP->GetSequenceId()+maxKFid+1;
         vPoint->setId(id);
         vPoint->setMarginalized(true);
         optimizer.addVertex(vPoint);
@@ -226,7 +226,7 @@ void OrbOptimizer::BundleAdjustment(const std::vector<std::shared_ptr<OrbKeyFram
 
         if(pMP->IsCorrupt())
             continue;
-        g2o::VertexSBAPointXYZ* vPoint = static_cast<g2o::VertexSBAPointXYZ*>(optimizer.vertex(pMP->Id+maxKFid+1));
+        g2o::VertexSBAPointXYZ* vPoint = static_cast<g2o::VertexSBAPointXYZ*>(optimizer.vertex(pMP->GetSequenceId()+maxKFid+1));
 
         if(nLoopKF==0)
         {
@@ -577,9 +577,11 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
     for(std::list<std::shared_ptr<OrbMapPoint>>::iterator lit=lLocalMapPoints.begin(), lend=lLocalMapPoints.end(); lit!=lend; lit++)
     {
         std::shared_ptr<OrbMapPoint> pMP = *lit;
+
         g2o::VertexSBAPointXYZ* vPoint = new g2o::VertexSBAPointXYZ();
         vPoint->setEstimate(Orbconverter::toVector3d(pMP->GetWorldPosition()));
-        int id = pMP->Id+maxKFid+1;
+        std::cout << pMP->GetSequenceId() << " sequence id" << std::endl;
+        int id = pMP->GetSequenceId()+maxKFid+1;
         vPoint->setId(id);
         vPoint->setMarginalized(true);
         optimizer.addVertex(vPoint);
@@ -782,7 +784,7 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
     for(std::list<std::shared_ptr<OrbMapPoint>>::iterator lit=lLocalMapPoints.begin(), lend=lLocalMapPoints.end(); lit!=lend; lit++)
     {
         std::shared_ptr<OrbMapPoint> pMP = *lit;
-        g2o::VertexSBAPointXYZ* vPoint = static_cast<g2o::VertexSBAPointXYZ*>(optimizer.vertex(pMP->Id+maxKFid+1));
+        g2o::VertexSBAPointXYZ* vPoint = static_cast<g2o::VertexSBAPointXYZ*>(optimizer.vertex(pMP->GetSequenceId()+maxKFid+1));
         pMP->SetWorldPosition(Orbconverter::toCvMat(vPoint->estimate()));
         pMP->UpdateMeanAndDepthValues();
     }

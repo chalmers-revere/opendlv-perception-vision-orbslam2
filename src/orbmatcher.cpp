@@ -1395,8 +1395,13 @@ ORBmatcher::SearchByProjection(std::shared_ptr<OrbFrame> &CurrentFrame, const st
                 if (vIndices2.empty())
                     continue;
 
-                const cv::Mat dMP = pMP->GetDescriptor();
-
+                cv::Mat dMP = pMP->GetDescriptor();
+                if(dMP.rows==0){
+                    pMP->ComputeDistinctiveDescriptors();
+                    dMP=pMP->GetDescriptor();
+                    std::cout << "constructor tag " << pMP->m_constructorTag << std::endl;
+                    continue;
+                }
                 int bestDist = 256;
                 int bestIdx2 = -1;
 

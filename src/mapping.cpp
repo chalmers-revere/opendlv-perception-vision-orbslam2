@@ -86,7 +86,7 @@ void Mapping::Run()
             {
                 // Local BA
                 if(mpMap->OrbKeyFramesCount()>2)
-                    OrbOptimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA, mpMap);
+                   //OrbOptimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA, mpMap);
 
                 // Check redundant local Keyframes
                 KeyFrameCulling();
