@@ -56,9 +56,11 @@ KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_
         // Pass the images to the SLAM system
         if(isStereo){
             slammer->Track(imLeft,imRight,tframe);    
-        }else{
+        }
+        else {
             slammer->Track(imLeft,tframe);
         }
+
 
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
         
