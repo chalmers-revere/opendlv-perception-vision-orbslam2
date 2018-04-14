@@ -27,12 +27,12 @@
 #include <orbmappoint.hpp>
 #include <orbbowvector.hpp>
 #include <orbfeaturevector.hpp>
-
+#include <memory>
 class OrbMap;
 class OrbMapPoint;
 class OrbKeyFrameDatabase;
 
-class OrbKeyFrame
+class OrbKeyFrame : public std::enable_shared_from_this<OrbKeyFrame>
 {
 public:
     OrbKeyFrame(std::shared_ptr<OrbFrame> frame, std::shared_ptr<OrbMap> map,
