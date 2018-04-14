@@ -41,6 +41,7 @@ KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_
         std::cout << "reading image: " << vstrImageLeft[ni] << std::endl;
         imLeft = cv::imread(vstrImageLeft[ni],CV_LOAD_IMAGE_UNCHANGED);
         if(isStereo){
+            std::cout << "reading image: " << vstrImageRight[ni] << std::endl;
             imRight = cv::imread(vstrImageRight[ni],CV_LOAD_IMAGE_UNCHANGED);
         }
         std::cout << "loaded images " << std::endl;
@@ -112,7 +113,7 @@ void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &
     while (std::getline(inputFileStream, line))
     {
 
-        std::cout << line << std::endl;
+
         if(!line.empty()){
 
             std::istringstream iss(line);
@@ -124,8 +125,8 @@ void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &
 
     std::cout << "Parsing times.txt" << std::endl;
     std::cout << "adding images to arrays" << std::endl;
-    std::string strPrefixLeft = path + "/image_0/";
-    std::string strPrefixRight = path + "/image_1/";
+    std::string strPrefixLeft = path + "/image_2/";
+    std::string strPrefixRight = path + "/image_3/";
 
     vstrImageLeft.resize(timeStamps.size());
     vstrImageRight.resize(timeStamps.size());
@@ -134,7 +135,6 @@ void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &
     {
         std::stringstream ss;
         ss << std::setfill('0') << std::setw(6) << i;
-        std::cout << "adding image" << std::endl;
         vstrImageLeft[i] = strPrefixLeft + ss.str() + ".png";
         vstrImageRight[i] = strPrefixRight + ss.str() + ".png";
     }
