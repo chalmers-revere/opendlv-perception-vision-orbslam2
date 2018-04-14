@@ -19,27 +19,29 @@
 
 #include <orbmappoint.hpp>
 #include <orbmatcher.hpp>
+long unsigned int OrbMapPoint::nNextId=0;
 
 OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map)
-    : Id(), m_nextId(), m_firstKeyframeId(refenceKeyFrame->mnId), m_FirstKeyFrame(refenceKeyFrame->mnId),
+    : m_firstKeyframeId(refenceKeyFrame->mnId), m_FirstKeyFrame(refenceKeyFrame->mnId),
       m_refenceKeyFrame(refenceKeyFrame), m_map(map)
 {
     position.copyTo(m_worldPosition);
     m_meanViewingDirection = cv::Mat::zeros(3, 1, CV_32F);
-
+    m_constructorTag = 0;
     // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
     std::unique_lock<std::mutex> lock(m_constructorMutex);
-    m_sequenceId = m_nextId++;
+    m_sequenceId = nNextId++;
+    this->ComputeDistinctiveDescriptors();
 }
 
 OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> frame, std::shared_ptr<OrbMap> map, const int &keyPointIndex)
-    : Id(), m_nextId(), m_map(map)
+    : m_map(map)
 {
     position.copyTo(m_worldPosition);
     cv::Mat cameraCenter = frame->GetCameraCenter();
     m_meanViewingDirection = m_worldPosition - cameraCenter;
     m_meanViewingDirection = m_meanViewingDirection / cv::norm(m_meanViewingDirection);
-
+    m_constructorTag = 1;
     cv::Mat offset = position - cameraCenter;
     const float distance = (float)cv::norm(offset);
     const int level = frame->mvKeysUn[keyPointIndex].octave;
@@ -53,11 +55,11 @@ OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> f
 
     // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
     std::unique_lock<std::mutex> lock(m_constructorMutex);
-    m_sequenceId = m_nextId++;
+    m_sequenceId = nNextId++;
 }
 
 OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> frame, std::shared_ptr<OrbMap> map, const int &keyPointIndex)
-        : Id(), m_nextId(), m_map(map)
+        : m_map(map)
 {
     position.copyTo(m_worldPosition);
     cv::Mat cameraCenter = frame->GetCameraCenter();
@@ -69,7 +71,7 @@ OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> fram
     const int level = frame->mvKeysUn[keyPointIndex].octave;
     const float levelScaleFactor = frame->mvScaleFactors[level];
     const int levels = frame->mnScaleLevels;
-
+    m_constructorTag = 2;
     m_maxDistance = distance*levelScaleFactor;
     m_minDistance = m_maxDistance/frame->mvScaleFactors[levels-1];
 
@@ -77,17 +79,16 @@ OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> fram
 
     // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
     std::unique_lock<std::mutex> lock(m_constructorMutex);
-    m_sequenceId = m_nextId++;
+    m_sequenceId = nNextId++;
 }
 
 OrbMapPoint::~OrbMapPoint()
-{
-
-}
+{}
 
 std::map<std::shared_ptr<OrbKeyFrame>,size_t> OrbMapPoint::GetObservingKeyframes()
 {
     // use proper mutex
+    std::unique_lock<std::mutex> lock(m_featureMutex);
     return m_observingKeyframes;
 }
 
@@ -125,11 +126,13 @@ cv::Mat OrbMapPoint::GetWorldPosition()
 
 cv::Mat OrbMapPoint::GetMeanViewingDirection()
 {
-    return cv::Mat();
+    std::unique_lock<std::mutex> lock(m_positionMutex);
+    return m_meanViewingDirection;
 }
 
 std::shared_ptr<OrbKeyFrame> OrbMapPoint::GetReferenceKeyFrame() {
-    return std::shared_ptr<OrbKeyFrame>();
+    std::unique_lock<std::mutex> lock(m_featureMutex);
+    return m_refenceKeyFrame;
 }
 
 // src/orbframe.cpp
@@ -142,17 +145,25 @@ int OrbMapPoint::GetObservingKeyFrameCount()
 
 int OrbMapPoint::GetSequenceId()
 {
-    return 0;
+    return m_sequenceId;
 }
 
 void OrbMapPoint::AddObservingKeyframe(std::shared_ptr<OrbKeyFrame> keyFrame, size_t idx)
 {
     if (keyFrame.get() && idx)
     {
+        std::unique_lock<std::mutex> lock(this->m_featureMutex);
+        if(this->m_observingKeyframes.count(keyFrame))
+            return;
+        this->m_observingKeyframes[keyFrame]=idx;
+        if(keyFrame->mvuRight[idx]>=0)
+            m_observingKeyFramesCount+=2;
+        else
+            m_observingKeyFramesCount++;
     }
 }
 // src/orboptimizer.cpp
-// 767:            pMPi->EraseObservingKeyframe(pKFi);
+// 767:            pMPi->EraseObservingKeyframe(keyFramei);
 void OrbMapPoint::EraseObservingKeyframe(std::shared_ptr<OrbKeyFrame> keyFrame)
 {
     // aquire proper mutex
@@ -185,10 +196,10 @@ void OrbMapPoint::EraseObservingKeyframe(std::shared_ptr<OrbKeyFrame> keyFrame)
 // 70:            int indexKF2 = mapPoint2->GetObeservationIndexOfKeyFrame(localKeyFrame2);
 
 // src/orboptimizer.cpp
-// 854:        const int i2 = pMP2->GetObeservationIndexOfKeyFrame(pKF2);
+// 854:        const int i2 = pMP2->GetObeservationIndexOfKeyFrame(keyFrame2);
 int OrbMapPoint::GetObeservationIndexOfKeyFrame(std::shared_ptr<OrbKeyFrame> keyFrame)
 {
-    // use proper mutex
+    std::unique_lock<std::mutex> lock(m_featureMutex);
     if (this->m_observingKeyframes.count(keyFrame))
         return this->m_observingKeyframes[keyFrame];
     else
@@ -199,30 +210,86 @@ bool OrbMapPoint::KeyFrameInObservingKeyFrames(std::shared_ptr<OrbKeyFrame> keyF
 {
     if (keyFrame.get())
     {
+        std::unique_lock<std::mutex> lock(m_featureMutex);
+        return (m_observingKeyframes.count(keyFrame));
     }
     return false;
 }
 
 void OrbMapPoint::SetCorruptFlag()
 {
+     std::map<std::shared_ptr<OrbKeyFrame>,size_t> obs;
+    {
+        std::unique_lock<std::mutex> lock1(m_featureMutex);
+        std::unique_lock<std::mutex> lock2(m_positionMutex);
+        m_corrupt=true;
+        obs = m_observingKeyframes;
+        m_observingKeyframes.clear();
+    }
+    for(std::map<std::shared_ptr<OrbKeyFrame>,size_t>::iterator mit=obs.begin(), mend=obs.end(); mit!=mend; mit++)
+    {
+        std::shared_ptr<OrbKeyFrame> keyFrame = mit->first;
+        keyFrame->EraseMapPointMatch(mit->second);
+    }
+
+    m_map->DeleteOrbMapPoint(std::shared_ptr<OrbMapPoint>(shared_from_this()));
 }
 
 void OrbMapPoint::Replace(std::shared_ptr<OrbMapPoint> orbMapPoint)
 {
     if (orbMapPoint != 0)
     {
+        if(orbMapPoint->GetSequenceId()==this->GetSequenceId())
+            return;
+
+        int nvisible, nfound;
+        std::map<std::shared_ptr<OrbKeyFrame>,size_t> obs;
+        {
+            std::unique_lock<std::mutex> lock1(m_featureMutex);
+            std::unique_lock<std::mutex> lock2(m_positionMutex);
+            obs=m_observingKeyframes;
+            m_observingKeyframes.clear();
+            m_corrupt=true;
+            nvisible = m_visibleCounter;
+            nfound = m_foundCounter;
+            m_replaced = orbMapPoint;
+        }
+
+        for(std::map<std::shared_ptr<OrbKeyFrame>,size_t>::iterator mit=obs.begin(), mend=obs.end(); mit!=mend; mit++)
+        {
+        // Replace measurement in keyframe
+            std::shared_ptr<OrbKeyFrame> keyFrame = mit->first;
+
+            if(!orbMapPoint->KeyFrameInObservingKeyFrames(keyFrame))
+            {
+                keyFrame->ReplaceMapPointMatch(mit->second, orbMapPoint);
+                orbMapPoint->AddObservingKeyframe(keyFrame,mit->second);
+            }
+            else
+            {
+                keyFrame->EraseMapPointMatch(mit->second);
+            }
+        }
+        orbMapPoint->IncreaseFound(nfound);
+        orbMapPoint->IncreaseVisible(nvisible);
+        orbMapPoint->ComputeDistinctiveDescriptors();
+        m_map->DeleteOrbMapPoint(std::shared_ptr<OrbMapPoint>(shared_from_this()));
     }
 }
 
 std::shared_ptr<OrbMapPoint> OrbMapPoint::GetReplaced()
 {
-    return std::shared_ptr<OrbMapPoint>();
+    std::unique_lock<std::mutex> lock1(m_featureMutex);
+    std::unique_lock<std::mutex> lock2(m_positionMutex);
+    return m_replaced;
 }
 
 void OrbMapPoint::IncreaseVisible(int n)
 {
     if (n)
     {
+        std::unique_lock<std::mutex> lock(m_featureMutex);
+        m_visibleCounter+=n;
     }
 }
 
@@ -230,12 +297,15 @@ void OrbMapPoint::IncreaseFound(int n)
 {
     if (n)
     {
+        std::unique_lock<std::mutex> lock(m_featureMutex);
+        m_foundCounter+=n;
     }
 }
 
 float OrbMapPoint::GetFoundRatio()
 {
-    return 0;
+    std::unique_lock<std::mutex> lock(m_featureMutex);
+    return static_cast<float>(m_foundCounter)/m_visibleCounter;
 }
 
 void OrbMapPoint::ComputeDistinctiveDescriptors()
@@ -245,7 +315,7 @@ void OrbMapPoint::ComputeDistinctiveDescriptors()
     if (this->m_corrupt)
         return;
     std::map<std::shared_ptr<OrbKeyFrame>, size_t> observingKeyFrames = this->m_observingKeyframes;
-    featureMutex.unlock();
+    //featureMutex.unlock();
     if (observingKeyFrames.empty())
     {
         return;
@@ -305,14 +375,14 @@ void OrbMapPoint::ComputeDistinctiveDescriptors()
         delete distances[i];
     }
     delete distances;
-    featureMutex.lock();
+    //featureMutex.lock();
     this->m_descriptor = descriptors[BestIdx].clone();
 }
 // include/orbframe.hpp
 // 97:    cv::Mat GetDescriptors() { return m_descriptors; }
 cv::Mat OrbMapPoint::GetDescriptor()
 {
-    // use mutex
+    std::unique_lock<std::mutex> lock(m_featureMutex);
     return m_descriptor.clone();
 }
 // src/orboptimizer.cpp
@@ -359,12 +429,14 @@ void OrbMapPoint::UpdateMeanAndDepthValues()
 
 float OrbMapPoint::GetMinDistanceInvariance()
 {
-    return 0;
+    std::unique_lock<std::mutex> lock(m_positionMutex);
+    return 0.8f*m_minDistance;
 }
 
 float OrbMapPoint::GetMaxDistanceInvariance()
 {
-    return 0;
+    std::unique_lock<std::mutex> lock(m_positionMutex);
+    return 1.2f*m_maxDistance;
 }
 
 int OrbMapPoint::PredictScale(const float &currentDist, std::shared_ptr<OrbKeyFrame> keyFrame) {
@@ -402,61 +474,61 @@ int OrbMapPoint::PredictScale(const float &currentDist, std::shared_ptr<OrbFrame
 
 int OrbMapPoint::GetTrackScaleLevel()
 {
-    return 0;
+    return mnTrackScaleLevel;
 }
 
 bool OrbMapPoint::GetTrackInView()
 {
-    return false;
+    return mbTrackInView;
 }
 
 float OrbMapPoint::GTrackViewCos()
 {
-    return 0;
+    return mTrackViewCos;
 }
 
 long unsigned int OrbMapPoint::GetTrackReferenceForFrame()
 {
-    return 0;
+    return mnTrackReferenceForFrame;
 }
 
 long unsigned int OrbMapPoint::GetLastFrameSeen()
 {
-    return 0;
+    return mnLastFrameSeen;
 }
 
 // include/orbframe.hpp
 // 124:    long unsigned int GetBALocalForKF(){return mnBALocalForKF; }
 
 // src/orboptimizer.cpp
-// 491:                    if(pMP->GetBALocalForKF()!=pKF->Id)
-// 508:            if(pKFi->GetBALocalForKF()!=pKF->Id && pKFi->GetBAFixedForKF()!=pKF->Id)
+// 491:                    if(pMP->GetBALocalForKF()!=keyFrame->Id)
+// 508:            if(keyFramei->GetBALocalForKF()!=keyFrame->Id && keyFramei->GetBAFixedForKF()!=keyFrame->Id)
 
 long unsigned int OrbMapPoint::GetBALocalForKF()
 {
-    return this->mnBAGlobalForKF;
+    return this->mnBALocalForKF;
 }
 
 long unsigned int OrbMapPoint::GetFuseCandidateForKF()
 {
-    return 0;
+    return this->mnFuseCandidateForKF;
 }
 
 long unsigned int OrbMapPoint::GetLoopPointForKF()
 {
-    return 0;
+    return this->mnLoopPointForKF;
 }
 
 long unsigned int OrbMapPoint::GetCorrectedByKF()
 {
-    return 0;
+    return this->mnCorrectedByKF;
 }
 
 long unsigned int OrbMapPoint::GetCorrectedReference()
 {
-    return 0;
+    return this->mnCorrectedReference;
 }
-
+/*
 cv::Mat OrbMapPoint::GetPosGBA()
 {
     return cv::Mat();
@@ -473,14 +545,12 @@ void OrbMapPoint::SetTrackScaleLevel(long unsigned int TrackScaleLevel)
     {
     };
 }
-
-void OrbMapPoint::SetTrackInView(long unsigned int TrackInView)
+*/
+void OrbMapPoint::SetTrackInView(bool TrackInView)
 {
-    if (TrackInView != 0)
-    {
-    };
+    mbTrackInView = TrackInView;
 }
-
+/*
 void OrbMapPoint::SetackViewCos(long unsigned int ackViewCos)
 {
     if (ackViewCos != 0)
@@ -494,11 +564,12 @@ void OrbMapPoint::SetTrackReferenceForFrame(long unsigned int TrackReferenceForF
     {
     };
 }
-
+*/
 void OrbMapPoint::SetLastFrameSeen(long unsigned int LastFrameSeen)
 {
     if (LastFrameSeen != 0)
     {
+        mnLastFrameSeen=LastFrameSeen;
     };
 }
 // include/orbframe.hpp
@@ -531,19 +602,20 @@ void OrbMapPoint::SetTrackViewCos(const float d)
 // 125:    void SetBALocalForKF(long unsigned int inBALocal){ mnBALocalForKF = inBALocal; }
 
 // src/orboptimizer.cpp
-// 470:    pKF->SetBALocalForKF(pKF->Id);
-// 476:        pKFi->SetBALocalForKF(pKF->Id);;
-// 494:                        pMP->SetBALocalForKF(pKF->Id);
+// 470:    keyFrame->SetBALocalForKF(keyFrame->Id);
+// 476:        keyFramei->SetBALocalForKF(keyFrame->Id);;
+// 494:                        pMP->SetBALocalForKF(keyFrame->Id);
 void OrbMapPoint::SetBALocalForKF(long unsigned int BALocalForKF)
 {
     // use mutex
-    this->mnBAGlobalForKF = BALocalForKF;
+    this->mnBALocalForKF = BALocalForKF;
 }
 
 void OrbMapPoint::SetFuseCandidateForKF(long unsigned int FuseCandidateForKF)
 {
     if (FuseCandidateForKF != 0)
     {
+        mnFuseCandidateForKF=FuseCandidateForKF;
     };
 }
 
@@ -551,6 +623,7 @@ void OrbMapPoint::SetLoopPointForKF(long unsigned int LoopPointForKF)
 {
     if (LoopPointForKF != 0)
     {
+        mnLoopPointForKF = LoopPointForKF;
     };
 }
 
@@ -558,6 +631,7 @@ void OrbMapPoint::SetCorrectedByKF(long unsigned int CorrectedByKF)
 {
     if (CorrectedByKF != 0)
     {
+        mnCorrectedByKF = CorrectedByKF;
     };
 }
 
@@ -565,9 +639,10 @@ void OrbMapPoint::SetCorrectedReference(long unsigned int CorrectedReference)
 {
     if (CorrectedReference != 0)
     {
+        mnCorrectedReference = CorrectedReference;
     };
 }
-
+/*
 void OrbMapPoint::SetPosGBA(long unsigned int PosGBA)
 {
     if (PosGBA != 0)
@@ -581,3 +656,4 @@ void OrbMapPoint::SetBAGlobalForKF(long unsigned int BAGlobalForKF)
     {
     };
 }
+*/

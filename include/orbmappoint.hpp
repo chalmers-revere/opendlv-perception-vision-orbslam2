@@ -34,14 +34,14 @@ class OrbKeyFrame;
 class OrbFrame;
 class OrbMap;
 
-class OrbMapPoint
+class OrbMapPoint : public std::enable_shared_from_this<OrbMapPoint>
 {
 public:
     OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map);
     OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map, const int &keyPointIndex);
     OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map, const int &keyPointIndex);
     ~OrbMapPoint();
-
+    int m_constructorTag = -1;
     std::map<std::shared_ptr<OrbKeyFrame>, size_t> GetObservingKeyframes();
 
     void SetWorldPosition(const cv::Mat &position);
@@ -83,9 +83,6 @@ public:
     int PredictScale(const float &currentDist, std::shared_ptr<OrbKeyFrame> keyFrame);
     int PredictScale(const float &currentDist, std::shared_ptr<OrbFrame> frame);
 
-    long unsigned int Id;
-    long unsigned int m_nextId;
-
     int GetTrackScaleLevel();
     bool GetTrackInView();
     float GTrackViewCos();
@@ -96,22 +93,22 @@ public:
     long unsigned int GetLoopPointForKF();
     long unsigned int GetCorrectedByKF();
     long unsigned int GetCorrectedReference();
-    cv::Mat GetPosGBA();
-    long unsigned int GetBAGlobalForKF();
+    //cv::Mat GetPosGBA();
+    //long unsigned int GetBAGlobalForKF();
     long int GetFirstKeyFrameId(){ return m_firstKeyframeId;};
 
-    void SetTrackScaleLevel(long unsigned int TrackScaleLevel);
-    void SetTrackInView(long unsigned int TrackInView);
-    void SetackViewCos(long unsigned int ackViewCos);
-    void SetTrackReferenceForFrame(long unsigned int TrackReferenceForFrame);
+    //void SetTrackScaleLevel(long unsigned int TrackScaleLevel);
+    void SetTrackInView(bool TrackInView);
+    //void SetackViewCos(long unsigned int ackViewCos);
+    //void SetTrackReferenceForFrame(long unsigned int TrackReferenceForFrame);
     void SetLastFrameSeen(long unsigned int LastFrameSeen);
     void SetBALocalForKF(long unsigned int BALocalForKF);
     void SetFuseCandidateForKF(long unsigned int FuseCandidateForKF);
     void SetLoopPointForKF(long unsigned int LoopPointForKF);
     void SetCorrectedByKF(long unsigned int CorrectedByKF);
     void SetCorrectedReference(long unsigned int CorrectedReference);
-    void SetPosGBA(long unsigned int PosGBA);
-    void SetBAGlobalForKF(long unsigned int BAGlobalForKF);
+    //void SetPosGBA(long unsigned int PosGBA);
+    //void SetBAGlobalForKF(long unsigned int BAGlobalForKF);
     void SetTrackProjX(const float d);
     void SetTrackProjXR(float d);
     void SetTrackProjY(const float d);
@@ -119,6 +116,7 @@ public:
     void SetTrackViewCos(const float d);
 
     static std::mutex mGlobalMutex;
+    static long unsigned int nNextId;       //Static because ID is iterated for each new mappoint so needs to be accesible by all
     cv::Mat mPosGBA = {};
     long unsigned int mnBAGlobalForKF = {};
 
