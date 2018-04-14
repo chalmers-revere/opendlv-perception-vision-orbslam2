@@ -43,7 +43,7 @@ KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_
         if(isStereo){
             imRight = cv::imread(vstrImageRight[ni],CV_LOAD_IMAGE_UNCHANGED);
         }
-        std::cout << "loaded images " << std::endl;
+        //std::cout << "loaded images " << std::endl;
         double tframe = vTimestamps[ni];
 
         if(imLeft.empty())
@@ -52,15 +52,16 @@ KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_
                  << std::string(vstrImageLeft[ni]) << std::endl;
         }
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-        std::cout << "calling track " << std::endl;
+        //std::cout << "calling track " << std::endl;
         // Pass the images to the SLAM system
         if(isStereo){
             slammer->Track(imLeft,imRight,tframe);    
+        }else{
+            slammer->Track(imLeft,tframe);
         }
-        slammer->Track(imLeft,tframe);
 
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
-        std::cout << "calculating sleep " << std::endl;
+        
         double ttrack= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
 
         vTimesTrack[ni]=ttrack;
@@ -74,6 +75,8 @@ KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_
 
         if(ttrack<T)
             usleep(static_cast<int>((T-ttrack)*1e6));
+        
+        std::cout << "Image " << ni << " processed" << std::endl;
     }
 
     // Stop all threads

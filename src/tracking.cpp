@@ -246,6 +246,7 @@ void Tracking::Track()
 {
     std::cout << "tracking" << std::endl;
     if (!this->InitalizeTracking()) {
+        std::cout << "Failed to initialize" << std::endl;
         return;
     }
     std::unique_lock<std::mutex> lock(mpMap->m_MapUpdateMutex);
@@ -275,11 +276,14 @@ void Tracking::Track()
                 std::cout << "Track with motion model is " << bOK << std::endl;
                 if(!bOK)
                     bOK = TrackReferenceKeyFrame();
+                    std::cout << "Track reference keyframe is " << bOK << std::endl; 
+
             }
         }
         else
         {
             bOK = Relocalization();
+            std::cout << "Relocalizing is " << bOK << std::endl;
         }
     }
     else
@@ -474,6 +478,7 @@ void Tracking::Track()
 
 void Tracking::StereoInitialization()
 {
+    std::cout << "Initializing Stereo" << std::endl;
     if(mCurrentFrame->N>500)
     {
         // Set Frame pose to the origin
@@ -528,6 +533,7 @@ void Tracking::StereoInitialization()
 
 void Tracking::MonocularInitialization()
 {
+    std::cout << "Initialize mono tracking" << std::endl;
 
     if(!mpInitializer)
     {
