@@ -55,7 +55,7 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
   setUp(commandlineArgs);
   std::cout << "Starting Kittirunner" << std::endl;
   std::cout << commandlineArgs["kittiPath"] << std::endl;
-  KittiRunner kittiRunner(commandlineArgs["kittiPath"],!m_isMonocular,std::shared_ptr<Selflocalization>(this));
+  KittiRunner kittiRunner(commandlineArgs["kittiPath"], !m_isMonocular, std::shared_ptr<Selflocalization>(this));
 	//Initialization
 	
 	//Orb vocabulary - global pointer

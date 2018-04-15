@@ -253,7 +253,7 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
 
     int nInitialCorrespondences=0;
     const int N = pFrame->N;
-    std::cout << N << std::endl;
+    std::cout << "Number of keypoints in Frame is: " << N << std::endl;
     // Set Frame vertex
     g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
     vSE3->setEstimate(Orbconverter::toSE3Quat(pFrame->mTcw));

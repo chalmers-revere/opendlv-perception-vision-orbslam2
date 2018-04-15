@@ -275,8 +275,10 @@ void Tracking::Track()
                 bOK = TrackWithMotionModel();
                 std::cout << "Track with motion model is " << bOK << std::endl;
                 if(!bOK)
+                {
                     bOK = TrackReferenceKeyFrame();
-                    std::cout << "Track reference keyframe is " << bOK << std::endl; 
+                    std::cout << "Track reference keyframe is " << bOK << std::endl;
+                }
 
             }
         }
@@ -425,7 +427,9 @@ void Tracking::Track()
 
         // Check if we need to insert a new keyframe
         if(NeedNewKeyFrame())
+        {
             CreateNewKeyFrame();
+        }
 
         // We allow points with high innovation (considererd outliers by the Huber Function)
         // pass to the new keyframe, so that bundle adjustment will finally decide
