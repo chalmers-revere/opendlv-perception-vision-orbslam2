@@ -32,16 +32,16 @@ RUN apk update && \
         opencv-dev@testing
 #Install libs
 WORKDIR /tmp
-RUN hg clone https://bitbucket.org/eigen/eigen && cd eigen && hg pull && hg update 3.2 && mkdir build && cd build && cmake .. && make -j4 install
-RUN git clone https://github.com/marbae/g2o && cd g2o && mkdir build && cd build && cmake -DG2O_BUILD_APPS=OFF -DG2O_BUILD_EXAMPLES=OFF .. && make -j4 install
+RUN hg  clone https://bitbucket.org/eigen/eigen && cd eigen && hg pull && hg update 3.2 && mkdir build && cd build && cmake .. && make -j4 install
+RUN git  clone https://github.com/marbae/g2o && cd g2o && mkdir build && cd build && cmake -DG2O_BUILD_APPS=OFF -DG2O_BUILD_EXAMPLES=OFF .. && make -j4 install
 
 #install Microservice
 ADD . /opt/sources
 WORKDIR /opt/sources
 RUN mkdir -p build && \
     cd build && \
-    cmake -D CMAKE_BUILD_TYPE=Debug -D CMAKE_INSTALL_PREFIX=/tmp/opendlv-perception-vision-orbslam2-dest .. && \
-    make -j4 && make test && make install && upx -9 /tmp/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2
+    cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/tmp/opendlv-perception-vision-orbslam2-dest .. && \
+    make -j6 && make test && make install && upx -9 /tmp/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2
 
 
 
