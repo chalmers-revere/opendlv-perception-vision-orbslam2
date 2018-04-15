@@ -56,9 +56,20 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
   std::cout << "Starting Kittirunner" << std::endl;
   std::cout << commandlineArgs["kittiPath"] << std::endl;
   KittiRunner kittiRunner(commandlineArgs["kittiPath"],!m_isMonocular,std::shared_ptr<Selflocalization>(this));
+
+  cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArgs["cid"])), [](auto){}};
+    opendlv::proxy::PointCloudReading pointCloudPart1;
+    pointCloudPart1.startAzimuth(0.0)
+            .endAzimuth(0.0)
+            .entriesPerAzimuth(12)
+            .distances(std::string("hello"))
+            .numberOfBitsForIntensity(0);
+
+
   for(size_t i = 0; i < kittiRunner.GetImagesCount(); i++ )
   {
   	kittiRunner.ProcessImage(i);
+	od4.send(pointCloudPart1,cluon::data::TimeStamp(),0);
   	// send results to conference.
   }
   kittiRunner.ShutDown();
@@ -237,4 +248,14 @@ void Selflocalization::tearDown()
 void Selflocalization::Reset(){
     std::unique_lock<std::mutex> lock(mMutexReset);
   	m_reset = true;
+}
+
+opendlv::proxy::PointCloudReading Selflocalization::CreatePointCloudFromMap() {
+	opendlv::proxy::PointCloudReading pointCloudPart1;
+	pointCloudPart1.startAzimuth(0.0)
+	.endAzimuth(0.0)
+	.entriesPerAzimuth(12)
+	.distances(std::string("hello"))
+	.numberOfBitsForIntensity(0);
+	return pointCloudPart1;
 }
