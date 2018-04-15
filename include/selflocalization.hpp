@@ -73,6 +73,7 @@ public:
     void nextContainer(cluon::data::Envelope &a_container);
     void Shutdown();
     void Track(cv::Mat &imLeft, cv::Mat &imRight, double &timestamp);
+    void Track(cv::Mat &imLeft, double &timestamp);
 
     // Reset the system (clear map)
     void Reset();
@@ -80,6 +81,7 @@ public:
 private:
     void setUp(std::map<std::string, std::string> commandlineArgs);
     void tearDown();
+    opendlv::proxy::PointCloudReading CreatePointCloudFromMap();
     bool m_isMonocular;
     int m_saveCounter = 0;
     std::shared_ptr<Mapping> m_pMapper;

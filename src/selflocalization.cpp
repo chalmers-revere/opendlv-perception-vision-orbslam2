@@ -51,11 +51,45 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 	, m_pKeyFrameDatabase()
     , m_map()
 
-{		
-  setUp(commandlineArgs);
-  std::cout << "Starting Kittirunner" << std::endl;
-  std::cout << commandlineArgs["kittiPath"] << std::endl;
-  KittiRunner kittiRunner(commandlineArgs["kittiPath"],std::shared_ptr<Selflocalization>(this));
+{
+    setUp(commandlineArgs);
+    std::cout << "Starting Kittirunner" << std::endl;
+    std::cout << commandlineArgs["kittiPath"] << std::endl;
+    KittiRunner kittiRunner(commandlineArgs["kittiPath"],!m_isMonocular,std::shared_ptr<Selflocalization>(this));
+
+    cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArgs["cid"])), [](auto){}};
+    opendlv::proxy::PointCloudReading pointCloudPart1;
+    pointCloudPart1.startAzimuth(0.0)
+            .endAzimuth(0.0)
+            .entriesPerAzimuth(12)
+            .distances(std::string("hello"))
+            .numberOfBitsForIntensity(0);
+
+
+    for(size_t i = 0; i < kittiRunner.GetImagesCount(); i++ )
+    {
+        kittiRunner.ProcessImage(i);
+        OrbMap* map = m_map.get();
+        if(map)
+        {
+            auto mapPoints = map->GetAllMapPoints();
+            for(auto mapPoint: mapPoints)
+            {
+                OrbMapPoint* mp = mapPoint.get();
+                cv::Mat worldPosition = mp->GetWorldPosition();
+                auto x = worldPosition.at<float>(1, 0);
+                auto y = worldPosition.at<float>(1, 0);
+                auto z = worldPosition.at<float>(1, 0);
+
+                std::cout << "World position of Map point: (" << x << ", " << y << ", " << z << ")." << std::endl;
+
+                m_pTracker->mCurrentFrame->mTcw;
+            }
+        }
+        od4.send(pointCloudPart1,cluon::data::TimeStamp(),0);
+        // send results to conference.
+    }
+    kittiRunner.ShutDown();
 	//Initialization
 	
 	//Orb vocabulary - global pointer
@@ -156,7 +190,8 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
     std::cout << "Hello" << std::endl;
     m_pExtractOrb = std::shared_ptr<OrbExtractor>(new OrbExtractor(nFeatures, scaleFactor, nLevels, initialFastTh, minFastTh));
 	*/
-	const int sensor = static_cast<int>(m_isMonocular);
+	const int sensor = std::stoi(commandlineArgs["cameraType"]);
+
 
 	
 	m_pKeyFrameDatabase = std::shared_ptr<OrbKeyFrameDatabase>(new OrbKeyFrameDatabase(*m_pVocabulary.get()));
@@ -196,6 +231,20 @@ void Selflocalization::Track(cv::Mat &imLeft, cv::Mat &imRight, double &timestam
 	m_pTracker->GrabImageStereo(imLeft,imRight,timestamp);
 }
 
+
+void Selflocalization::Track(cv::Mat &imLeft, double &timestamp){
+	    // Check reset
+    {
+    	std::unique_lock<std::mutex> lock(mMutexReset);
+    	if(m_reset)
+    	{
+        	m_pTracker->Reset();
+        	m_reset = false;
+    	}
+	}
+	m_pTracker->GrabImageMonocular(imLeft,timestamp);
+}
+
 void Selflocalization::Shutdown()
 {
 	m_pMapper->RequestFinish();
@@ -216,4 +265,14 @@ void Selflocalization::tearDown()
 void Selflocalization::Reset(){
     std::unique_lock<std::mutex> lock(mMutexReset);
   	m_reset = true;
+}
+
+opendlv::proxy::PointCloudReading Selflocalization::CreatePointCloudFromMap() {
+	opendlv::proxy::PointCloudReading pointCloudPart1;
+	pointCloudPart1.startAzimuth(0.0)
+	.endAzimuth(0.0)
+	.entriesPerAzimuth(12)
+	.distances(std::string("hello"))
+	.numberOfBitsForIntensity(0);
+	return pointCloudPart1;
 }
