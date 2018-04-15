@@ -65,6 +65,7 @@ void Mapping::Run()
         // Check if there are keyframes in the queue
         if(CheckNewKeyFrames())
         {
+            std::cout << "Making a new keyframe" << std::endl;
             // BoW conversion and insertion in Map
             ProcessNewKeyFrame();
 
@@ -87,12 +88,13 @@ void Mapping::Run()
                 // Local BA
                 if(mpMap->OrbKeyFramesCount()>2)
                    //OrbOptimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA, mpMap);
-
+                std::cout << "culling keyframes" << std::endl;
                 // Check redundant local Keyframes
                 KeyFrameCulling();
             }
 
             mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
+            std::cout << "Mapping done, amount of keyframes is "<< mpMap->OrbKeyFramesCount() << " and map points " << mpMap->OrbMapPointsCount() << std::endl;
         }
         else if(Stop())
         {
