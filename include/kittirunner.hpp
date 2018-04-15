@@ -36,9 +36,19 @@ public:
     KittiRunner(KittiRunner const &) = delete;
     KittiRunner &operator=(KittiRunner const &) = delete;
     ~KittiRunner();
+    void ProcessImage(size_t imageNumber);
+    void ShutDown();
+    size_t GetImagesCount();
 
 private:
     void loadImages(const std::string &path, std::vector<std::string> &vstrImageLeft,
                 std::vector<std::string> &vstrImageRight, std::vector<double> &vTimestamps);
+    size_t m_imagesCount;
+    bool m_isStereo;
+    std::shared_ptr<Selflocalization> m_slammer;
+    std::vector<std::string> m_leftImages;
+    std::vector<std::string> m_rightImages;
+    std::vector<double> m_timeStamps;
+    std::vector<double> m_timeTrackingStatistics;
 };
 #endif

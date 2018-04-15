@@ -19,85 +19,18 @@
 
 #include "kittirunner.hpp"
 
-KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_ptr<Selflocalization> slammer){
-    std::vector<std::string> vstrImageLeft;
-    std::vector<std::string> vstrImageRight;
-    std::vector<double> vTimestamps;
+KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_ptr<Selflocalization> slammer):
+        m_imagesCount(0), m_isStereo(isStereo), m_slammer(slammer), m_leftImages(), m_rightImages(), m_timeStamps(), m_timeTrackingStatistics(){
+//    std::vector<std::string> vstrImageLeft;
+//    std::vector<std::string> vstrImageRight;
+//    std::vector<double> vTimestamps;
     std::cout << "Loading Images" << std::endl;
-    loadImages(kittiPath, vstrImageLeft, vstrImageRight, vTimestamps);
-    const int nImages = vstrImageLeft.size();
-    std::vector<double> vTimesTrack;
-    vTimesTrack.resize(nImages);
-
+    loadImages(kittiPath, m_leftImages, m_rightImages, m_timeStamps);
+    this->m_imagesCount = m_leftImages.size();
+    this->m_timeTrackingStatistics.resize(this->m_imagesCount);
     std::cout << std::endl << "-------" << std::endl;
     std::cout << "Start processing sequence ..." << std::endl;
-    std::cout << "Images in the sequence: " << nImages << std::endl;   
-
-    // Main loop
-    cv::Mat imLeft, imRight;
-    for(int ni=0; ni<nImages; ni++)
-    {
-        // Read left and right images from file
-        std::cout << "reading image: " << vstrImageLeft[ni] << std::endl;
-        imLeft = cv::imread(vstrImageLeft[ni],CV_LOAD_IMAGE_UNCHANGED);
-        if(isStereo){
-            std::cout << "reading image: " << vstrImageRight[ni] << std::endl;
-            imRight = cv::imread(vstrImageRight[ni],CV_LOAD_IMAGE_UNCHANGED);
-        }
-        //std::cout << "loaded images " << std::endl;
-        double tframe = vTimestamps[ni];
-
-        if(imLeft.empty())
-        {
-            std::cerr << std::endl << "Failed to load image at: "
-                 << std::string(vstrImageLeft[ni]) << std::endl;
-        }
-        std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-        //std::cout << "calling track " << std::endl;
-        // Pass the images to the SLAM system
-        if(isStereo){
-            slammer->Track(imLeft,imRight,tframe);    
-        }
-        else {
-            slammer->Track(imLeft,tframe);
-        }
-
-
-        std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
-        
-        double ttrack= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
-
-        vTimesTrack[ni]=ttrack;
-
-        // Wait to load the next frame
-        double T=0;
-        if(ni<nImages-1)
-            T = vTimestamps[ni+1]-tframe;
-        else if(ni>0)
-            T = tframe-vTimestamps[ni-1];
-
-        if(ttrack<T)
-            usleep(static_cast<int>((T-ttrack)*1e6));
-        
-        std::cout << "Image " << ni << " processed" << std::endl;
-    }
-
-    // Stop all threads
-    slammer->Shutdown();
-
-    // Tracking time statistics
-    std::sort(vTimesTrack.begin(),vTimesTrack.end());
-    double totaltime = 0;
-    for(int ni=0; ni<nImages; ni++)
-    {
-        totaltime+=vTimesTrack[ni];
-    }
-    std::cout << "-------" << std::endl << std::endl;
-    std::cout << "median tracking time: " << vTimesTrack[nImages/2] << std::endl;
-    std::cout << "mean tracking time: " << totaltime/nImages << std::endl;
-
-    // Save camera trajectory
-    //SLAM.SaveTrajectoryKITTI("CameraTrajectory.txt");
+    std::cout << "Images in the sequence: " << this->m_imagesCount << std::endl;
 }
 
 KittiRunner::~KittiRunner(){
@@ -114,8 +47,6 @@ void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &
     std::string line;
     while (std::getline(inputFileStream, line))
     {
-
-
         if(!line.empty()){
 
             std::istringstream iss(line);
@@ -140,4 +71,74 @@ void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &
         vstrImageLeft[i] = strPrefixLeft + ss.str() + ".png";
         vstrImageRight[i] = strPrefixRight + ss.str() + ".png";
     }
+}
+
+size_t KittiRunner::GetImagesCount() {
+    return this->m_imagesCount;
+}
+
+void KittiRunner::ShutDown() {
+    // Stop all threads
+    this->m_slammer->Shutdown();
+
+    // Tracking time statistics
+    std::sort(this->m_timeTrackingStatistics.begin(),this->m_timeTrackingStatistics.end());
+    double totaltime = 0;
+    for(size_t ni=0; ni<this->m_imagesCount; ni++)
+    {
+        totaltime+=this->m_timeTrackingStatistics[ni];
+    }
+    std::cout << "-------" << std::endl << std::endl;
+    std::cout << "median tracking time: " << this->m_timeTrackingStatistics[this->m_imagesCount/2] << std::endl;
+    std::cout << "mean tracking time: " << totaltime/this->m_imagesCount << std::endl;
+
+    // Save camera trajectory
+    //SLAM.SaveTrajectoryKITTI("CameraTrajectory.txt");
+}
+
+void KittiRunner::ProcessImage(size_t imageNumber) {
+    cv::Mat imLeft, imRight;
+    // Read left and right images from file
+    std::cout << "reading image: " << this->m_leftImages[imageNumber] << std::endl;
+    imLeft = cv::imread(this->m_leftImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
+    if(this->m_isStereo){
+        std::cout << "reading image: " << this->m_rightImages[imageNumber] << std::endl;
+        imRight = cv::imread(this->m_rightImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
+    }
+    //std::cout << "loaded images " << std::endl;
+    double tframe = this->m_timeStamps[imageNumber];
+
+    if(imLeft.empty())
+    {
+        std::cerr << std::endl << "Failed to load image at: "
+                  << std::string(this->m_leftImages[imageNumber]) << std::endl;
+    }
+    std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+    //std::cout << "calling track " << std::endl;
+    // Pass the images to the SLAM system
+    if(this->m_isStereo){
+        m_slammer->Track(imLeft,imRight,tframe);
+    }
+    else {
+        m_slammer->Track(imLeft,tframe);
+    }
+
+
+    std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+
+    double ttrack= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
+
+    this->m_timeTrackingStatistics[imageNumber]=ttrack;
+
+    // Wait to load the next frame
+    double T=0;
+    if(imageNumber < this->m_imagesCount-1)
+        T = this->m_timeStamps[imageNumber+1]-tframe;
+    else if(imageNumber>0)
+        T = tframe-this->m_timeStamps[imageNumber-1];
+
+    if(ttrack<T)
+        usleep(static_cast<int>((T-ttrack)*1e6));
+
+    std::cout << "Image " << imageNumber << " processed" << std::endl;
 }

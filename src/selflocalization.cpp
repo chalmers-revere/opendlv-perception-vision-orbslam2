@@ -52,10 +52,17 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
     , m_map()
 
 {		
-  setUp(commandlineArgs);
-  std::cout << "Starting Kittirunner" << std::endl;
-  std::cout << commandlineArgs["kittiPath"] << std::endl;
-  KittiRunner kittiRunner(commandlineArgs["kittiPath"], !m_isMonocular, std::shared_ptr<Selflocalization>(this));
+    setUp(commandlineArgs);
+    std::cout << "Starting Kittirunner" << std::endl;
+    std::cout << commandlineArgs["kittiPath"] << std::endl;
+    KittiRunner kittiRunner(commandlineArgs["kittiPath"], !m_isMonocular, std::shared_ptr<Selflocalization>(this));
+
+    for(size_t i = 0; i < kittiRunner.GetImagesCount(); i++ )
+    {
+        kittiRunner.ProcessImage(i);
+        // send results to conference.
+    }
+    kittiRunner.ShutDown();
 	//Initialization
 	
 	//Orb vocabulary - global pointer
@@ -157,6 +164,7 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
     m_pExtractOrb = std::shared_ptr<OrbExtractor>(new OrbExtractor(nFeatures, scaleFactor, nLevels, initialFastTh, minFastTh));
 	*/
 	const int sensor = std::stoi(commandlineArgs["cameraType"]);
+
 
 	
 	m_pKeyFrameDatabase = std::shared_ptr<OrbKeyFrameDatabase>(new OrbKeyFrameDatabase(*m_pVocabulary.get()));
