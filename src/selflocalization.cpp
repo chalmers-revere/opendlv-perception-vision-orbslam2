@@ -65,6 +65,7 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
             .distances(std::string("hello"))
             .numberOfBitsForIntensity(0);
 
+    size_t lastMapPoint = 0;
 
     for(size_t i = 0; i < kittiRunner.GetImagesCount(); i++ )
     {
@@ -73,17 +74,15 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
         if(map)
         {
             auto mapPoints = map->GetAllMapPoints();
-            for(auto mapPoint: mapPoints)
+            for(; lastMapPoint < mapPoints.size(); lastMapPoint++)
             {
-                OrbMapPoint* mp = mapPoint.get();
+                OrbMapPoint* mp = mapPoints[lastMapPoint].get();
                 cv::Mat worldPosition = mp->GetWorldPosition();
                 auto x = worldPosition.at<float>(1, 0);
                 auto y = worldPosition.at<float>(1, 0);
                 auto z = worldPosition.at<float>(1, 0);
 
                 std::cout << "World position of Map point: (" << x << ", " << y << ", " << z << ")." << std::endl;
-
-                m_pTracker->mCurrentFrame->mTcw;
             }
         }
         od4.send(pointCloudPart1,cluon::data::TimeStamp(),0);
