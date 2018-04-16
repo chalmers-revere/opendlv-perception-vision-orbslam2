@@ -416,7 +416,7 @@ int ORBmatcher::SearchForInitialization(std::shared_ptr<OrbFrame> &F1, std::shar
 
     std::vector<int> vMatchedDistance(F2->mvKeysUn.size(), INT_MAX);
     std::vector<int> vnMatches21(F2->mvKeysUn.size(), -1);
-
+    
     for (size_t i1 = 0, iend1 = F1->mvKeysUn.size(); i1 < iend1; i1++)
     {
         cv::KeyPoint kp1 = F1->mvKeysUn[i1];

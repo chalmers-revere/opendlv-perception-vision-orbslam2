@@ -81,10 +81,10 @@ PnPsolver::PnPsolver(std::shared_ptr<OrbFrame> F, const std::vector<std::shared_
 
     // Set camera calibration parameters
     //TODO: Decide how to handle these parameters, easiest is to encapsulate in frame
-    /*fu = F.fx;
-    fv = F.fy;
-    uc = F.cx;
-    vc = F.cy;*/
+    fu = F->fx;
+    fv = F->fy;
+    uc = F->cx;
+    vc = F->cy;
     
 
     setRansacParameters();

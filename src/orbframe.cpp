@@ -90,10 +90,10 @@ OrbFrame::OrbFrame(const cv::Mat &greyImage, const cv::Mat &imageDepth, const do
 {
     // Frame ID
     mnId = nNextId++;
-    CommonSetup();
-
     // ORB extraction
     ExtractORB(0, greyImage);
+
+    CommonSetup();
 
     ComputeStereoFromRGBD(imageDepth);
 
@@ -119,10 +119,11 @@ OrbFrame::OrbFrame(const cv::Mat &greyImage, const double &timeStamp, std::share
 {
     // Frame ID
     mnId = nNextId++;
-    CommonSetup();
 
     // ORB extraction
     ExtractORB(0, greyImage);
+
+    CommonSetup();
 
     // Set no stereo information
     mvuRight = std::vector<float>(N,-1);

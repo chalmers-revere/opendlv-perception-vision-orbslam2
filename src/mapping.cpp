@@ -86,8 +86,9 @@ void Mapping::Run()
             if(!CheckNewKeyFrames() && !stopRequested())
             {
                 // Local BA
-                if(mpMap->OrbKeyFramesCount()>2)
+                if(mpMap->OrbKeyFramesCount()>2){
                    //OrbOptimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA, mpMap);
+                }
                 std::cout << "culling keyframes" << std::endl;
                 // Check redundant local Keyframes
                 KeyFrameCulling();

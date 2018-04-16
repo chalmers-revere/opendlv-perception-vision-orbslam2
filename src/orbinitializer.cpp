@@ -37,7 +37,7 @@ OrbInitializer::OrbInitializer(std::shared_ptr<OrbFrame> referenceFrame, float s
                                                                                         m_maxIterations(),
                                                                                         m_ransacSets()
 {
-    //m_calibration = referenceFrame.m_calibration.clone(); We have to come up with something uniform
+    m_calibration = referenceFrame->mK.clone(); //We have to come up with something uniform
 
     m_referenceKeys = referenceFrame->mvKeysUn;
 
@@ -91,7 +91,7 @@ bool OrbInitializer::Initialize(std::shared_ptr<OrbFrame> currentFrame, const st
         // Select a minimum set
         for (size_t j = 0; j < 8; j++)
         {
-            int randi = 4; //DUtils::Random::RandomInt(0,availableIndices.size()-1);
+            int randi = randomInt(0,availableIndices.size()-1);
             int idx = availableIndices[randi];
 
             m_ransacSets[it][j] = idx;
@@ -443,9 +443,9 @@ float OrbInitializer::CheckFundamental(const cv::Mat &fundamentalMatrix, std::ve
         // Reprojection error in second image
         // l1 =x2tfundamentalMatrix=(a1,b1,c1)
 
-        const float a1 = f11 * uCurr + f21 + vCurr + f31;
-        const float b1 = f12 * uCurr + f22 + vCurr + f32;
-        const float c1 = f13 * uCurr + f23 + vCurr + f33;
+        const float a1 = f11 * uCurr + f21*vCurr + f31;
+        const float b1 = f12 * uCurr + f22*vCurr + f32;
+        const float c1 = f13 * uCurr + f23*vCurr + f33;
 
         const float num1 = a1 * uRef + b1 * vRef + c1;
 
@@ -925,4 +925,9 @@ void OrbInitializer::DecomposeE(const cv::Mat &E, cv::Mat &R1, cv::Mat &R2, cv::
     R2 = u * W.t() * vt;
     if (cv::determinant(R2) < 0)
         R2 = -R2;
+}
+
+int OrbInitializer::randomInt(int min, int max){
+	int d = max - min + 1;
+	return int(((double)rand()/((double)RAND_MAX + 1.0)) * d) + min;
 }

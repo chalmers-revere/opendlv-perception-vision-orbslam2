@@ -166,8 +166,7 @@ void OrbMapPoint::AddObservingKeyframe(std::shared_ptr<OrbKeyFrame> keyFrame, si
 // 767:            pMPi->EraseObservingKeyframe(keyFramei);
 void OrbMapPoint::EraseObservingKeyframe(std::shared_ptr<OrbKeyFrame> keyFrame)
 {
-    // aquire proper mutex
-
+    std::unique_lock<std::mutex> lock(m_featureMutex);
     // check if OrbKeyFrame in m_observingKeyframes
     if (this->m_observingKeyframes.count(keyFrame))
     {
@@ -183,9 +182,10 @@ void OrbMapPoint::EraseObservingKeyframe(std::shared_ptr<OrbKeyFrame> keyFrame)
         if (m_refenceKeyFrame == keyFrame)
             m_refenceKeyFrame = this->m_observingKeyframes.begin()->first;
 
-        if (this->m_observingKeyFramesCount <= 2)
-            // release mutex
+        if (this->m_observingKeyFramesCount <= 2){
+            lock.unlock();
             SetCorruptFlag();
+        }
     }
 }
 // src/orbframe.cpp

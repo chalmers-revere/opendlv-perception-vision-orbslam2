@@ -58,6 +58,7 @@ void OrbOptimizer::BundleAdjustment(const std::vector<std::shared_ptr<OrbKeyFram
     vbNotIncludedMP.resize(vpMP.size());
 
     auto linearSolver = g2o::make_unique<orbLinearSolver>();
+    linearSolver->setBlockOrdering(false);
 
     g2o::SparseOptimizer optimizer;
     g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<orbBlockSolver>(std::move(linearSolver)));
@@ -253,7 +254,6 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
 
     int nInitialCorrespondences=0;
     const int N = pFrame->N;
-    std::cout << N << std::endl;
     // Set Frame vertex
     g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
     vSE3->setEstimate(Orbconverter::toSE3Quat(pFrame->mTcw));
@@ -381,7 +381,6 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
     std::vector<bool> vectorBoolOutliers = pFrame->mvbOutlier;
     for(size_t it=0; it<4; it++)
     {
-        std::cout << "Number of stereo edges " << vpEdgesStereo.size()<< std::endl;
         vSE3->setEstimate(Orbconverter::toSE3Quat(pFrame->mTcw));
         optimizer.initializeOptimization(0);
         optimizer.optimize(its[it]);
@@ -453,6 +452,7 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
     g2o::VertexSE3Expmap* vSE3_recov = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(0));
     g2o::SE3Quat SE3quat_recov = vSE3_recov->estimate();
     cv::Mat pose = Orbconverter::toCvMat(SE3quat_recov);
+    //std::cout << "optimized pose" << pose << std::endl;
     pFrame->SetPose(pose);
 
     return nInitialCorrespondences-nBad;
@@ -580,7 +580,6 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
 
         g2o::VertexSBAPointXYZ* vPoint = new g2o::VertexSBAPointXYZ();
         vPoint->setEstimate(Orbconverter::toVector3d(pMP->GetWorldPosition()));
-        std::cout << pMP->GetSequenceId() << " sequence id" << std::endl;
         int id = pMP->GetSequenceId()+maxKFid+1;
         vPoint->setId(id);
         vPoint->setMarginalized(true);
@@ -670,6 +669,7 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
             return;
 
     optimizer.initializeOptimization();
+    optimizer.setVerbose(true);
     optimizer.optimize(5);
 
     bool bDoMore= true;

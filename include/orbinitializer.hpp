@@ -69,6 +69,8 @@ private:
 
     void DecomposeE(const cv::Mat &E, cv::Mat &R1, cv::Mat &R2, cv::Mat &t);
 
+    int randomInt(int min, int max);
+
 
     // Keypoints from Reference Frame (Frame 1)
     std::vector<cv::KeyPoint> m_referenceKeys;

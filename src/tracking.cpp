@@ -274,9 +274,10 @@ void Tracking::Track()
             {
                 bOK = TrackWithMotionModel();
                 std::cout << "Track with motion model is " << bOK << std::endl;
-                if(!bOK)
+                if(!bOK){
                     bOK = TrackReferenceKeyFrame();
                     std::cout << "Track reference keyframe is " << bOK << std::endl; 
+                }
 
             }
         }
@@ -999,6 +1000,7 @@ bool Tracking::NeedNewKeyFrame()
     const bool c1c =  mSensor!=Selflocalization::MONOCULAR && (mnMatchesInliers<nRefMatches*0.25 || bNeedToInsertClose) ;
     // Condition 2: Few tracked points compared to reference keyframe. Lots of visual odometry compared to map matches.
     const bool c2 = ((mnMatchesInliers<nRefMatches*thRefRatio|| bNeedToInsertClose) && mnMatchesInliers>15);
+    std::cout << "Condition is " << std::endl;
 
     if((c1a||c1b||c1c)&&c2)
     {
