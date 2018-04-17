@@ -58,12 +58,6 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 	KittiRunner kittiRunner(commandlineArgs["kittiPath"],!m_isMonocular,std::shared_ptr<Selflocalization>(this));
 
 	cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArgs["cid"])), [](auto){}};
-	opendlv::proxy::PointCloudReading pointCloudPart1;
-	pointCloudPart1.startAzimuth(0.0)
-			.endAzimuth(0.0)
-			.entriesPerAzimuth(12)
-			.distances(std::string("hello"))
-			.numberOfBitsForIntensity(0);
 
 	std::stringstream coordinates;
 	for(size_t i = 0; i < kittiRunner.GetImagesCount(); i++ )
@@ -77,9 +71,9 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 			{
 				OrbMapPoint* mp = mapPoint.get();
 				cv::Mat worldPosition = mp->GetWorldPosition();
-				auto x = worldPosition.at<float>(1, 0);
-				auto y = worldPosition.at<float>(2, 0);
-				auto z = worldPosition.at<float>(3, 0);
+				auto x = worldPosition.at<float>(0, 0);
+				auto y = worldPosition.at<float>(1, 0);
+				auto z = worldPosition.at<float>(2, 0);
 
 				uint8_t * x_arr;
 				uint8_t * y_arr;
@@ -101,12 +95,19 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 				coordinates << z_arr[2];
 				coordinates << z_arr[3];
 				//std::cout << "World position of Map point: (" << x << ", " << y << ", " << z << ")." << std::endl;
-
-				m_pTracker->mCurrentFrame->mTcw;
+//
+//				m_pTracker->mCurrentFrame->mTcw;
 			}
 		}
-		pointCloudPart1.distances(coordinates.str());
-		od4.send(pointCloudPart1,cluon::data::TimeStamp(),0);
+        opendlv::proxy::PointCloudReading pointCloudPart1;
+        pointCloudPart1.startAzimuth(0.0)
+                .endAzimuth(0.0)
+                .entriesPerAzimuth(12)
+                .distances(std::string(coordinates.str()))
+                .numberOfBitsForIntensity(0);
+
+        std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
+		od4.send(pointCloudPart1, cluon::time::convert(timePoint), i);
 		coordinates.clear();
 		// send results to conference.
 	}
