@@ -382,7 +382,9 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
     for(size_t it=0; it<4; it++)
     {
         vSE3->setEstimate(Orbconverter::toSE3Quat(pFrame->mTcw));
+        std::cout << "input pose: " << Orbconverter::toSE3Quat(pFrame->mTcw) << std::endl; 
         optimizer.initializeOptimization(0);
+        //optimizer.setVerbose(true);
         optimizer.optimize(its[it]);
 
         nBad=0;
@@ -452,7 +454,6 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
     g2o::VertexSE3Expmap* vSE3_recov = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(0));
     g2o::SE3Quat SE3quat_recov = vSE3_recov->estimate();
     cv::Mat pose = Orbconverter::toCvMat(SE3quat_recov);
-    //std::cout << "optimized pose" << pose << std::endl;
     pFrame->SetPose(pose);
 
     return nInitialCorrespondences-nBad;
@@ -530,6 +531,7 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
         std::shared_ptr<OrbKeyFrame> pKFi = *lit;
         g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
         vSE3->setEstimate(Orbconverter::toSE3Quat(pKFi->GetPose()));
+        std::cout << "Pose: " << pKFi->GetPose() << std::endl;
         vSE3->setId(pKFi->mnId);
         vSE3->setFixed(pKFi->mnId==0);
         optimizer.addVertex(vSE3);
@@ -543,6 +545,7 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
         std::shared_ptr<OrbKeyFrame> pKFi = *lit;
         g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
         vSE3->setEstimate(Orbconverter::toSE3Quat(pKFi->GetPose()));
+        std::cout << "Pose: " << pKFi->GetPose() << std::endl;
         vSE3->setId(pKFi->mnId);
         vSE3->setFixed(true);
         optimizer.addVertex(vSE3);
@@ -669,7 +672,7 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
             return;
 
     optimizer.initializeOptimization();
-    optimizer.setVerbose(true);
+    //optimizer.setVerbose(true);
     optimizer.optimize(5);
 
     bool bDoMore= true;

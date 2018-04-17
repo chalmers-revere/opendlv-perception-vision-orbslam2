@@ -259,7 +259,6 @@ void Tracking::Track()
     {
         // Local Mapping is activated. This is the normal behaviour, unless
         // you explicitly activate the "only tracking" mode.
-
         if(m_trackingState==OK)
         {
             // Local Mapping might have changed some MapPoints tracked in last frame
@@ -563,7 +562,7 @@ void Tracking::MonocularInitialization()
             fill(mvIniMatches.begin(),mvIniMatches.end(),-1);
             return;
         }
-
+        std::cout << "Initial frame keys: " << mInitialFrame->mvKeys.size() << "current frame keys: " << mCurrentFrame->mvKeys.size() << std::endl;
         // Find correspondences
         ORBmatcher matcher(0.9f,true);
         int nmatches = matcher.SearchForInitialization(mInitialFrame,mCurrentFrame,mvbPrevMatched,mvIniMatches,100);
@@ -624,7 +623,6 @@ void Tracking::CreateInitialMapMonocular()
 
         //Create MapPoint.
         cv::Mat worldPos(mvIniP3D[i]);
-
         std::shared_ptr<OrbMapPoint> pMP = std::shared_ptr<OrbMapPoint>(new OrbMapPoint(worldPos,pKFcur,mpMap));
 
         pKFini->AddMapPoint(pMP,i);
@@ -652,6 +650,7 @@ void Tracking::CreateInitialMapMonocular()
     std::cout << "New Map created with " << mpMap->OrbMapPointsCount() << " points" << std::endl;
 
     OrbOptimizer::GlobalBundleAdjustemnt(mpMap,20);
+    std::cout << "CurrPose :" << pKFcur->GetPose() << std::endl;
 
     // Set median depth to 1
     float medianDepth = pKFini->ComputeSceneMedianDepth(2);
@@ -740,8 +739,9 @@ bool Tracking::TrackReferenceKeyFrame()
 
     mCurrentFrame->mvpMapPoints = vpMapPointMatches;
     mCurrentFrame->SetPose(mLastFrame->mTcw);
-
-    OrbOptimizer::PoseOptimization(mCurrentFrame);
+    std::cout << "current pose " << mCurrentFrame->mTcw << std::endl;
+    int iReturn = OrbOptimizer::PoseOptimization(mCurrentFrame);
+    std::cout << "return : " << iReturn << std::endl;
 
     // Discard outliers
     int nmatchesMap = 0;
@@ -928,7 +928,6 @@ bool Tracking::TrackLocalMap()
 
         }
     }
-
     // Decide if the tracking was succesful
     // More restrictive if there was a relocalization recently
     if(mCurrentFrame->mnId<mnLastRelocFrameId+mMaxFrames && mnMatchesInliers<50)
@@ -1030,6 +1029,7 @@ bool Tracking::NeedNewKeyFrame()
 
 void Tracking::CreateNewKeyFrame()
 {
+    std::cout << "We need a new keyframe" << std::endl;
     if(!mpLocalMapper->SetNotStop(true))
         return;
 

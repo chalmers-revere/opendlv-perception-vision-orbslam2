@@ -30,7 +30,7 @@ OrbMap::~OrbMap()
 
 void OrbMap::PushOrbKeyFrame(std::shared_ptr<OrbKeyFrame> orbKeyFrame) {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
-    this->m_keyFrames.push_back(orbKeyFrame);
+    this->m_keyFrames.insert(orbKeyFrame);
     if (orbKeyFrame->mnId > this->m_maxOrbKeyFrameId) {
         this->m_maxOrbKeyFrameId = orbKeyFrame->mnId;
     }
@@ -39,22 +39,20 @@ void OrbMap::PushOrbKeyFrame(std::shared_ptr<OrbKeyFrame> orbKeyFrame) {
 void OrbMap::PushOrbMapPoint(std::shared_ptr<OrbMapPoint> orbMapPoint)
 {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
-    this->m_mapPoints.push_back(orbMapPoint);
+    this->m_mapPoints.insert(orbMapPoint);
 }
 
 void OrbMap::DeleteOrbMapPoint(std::shared_ptr<OrbMapPoint> orbMapPoint)
 {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
-    this->m_mapPoints.erase(std::remove(this->m_mapPoints.begin(), this->m_mapPoints.end(), orbMapPoint),
-                            this->m_mapPoints.end());
+    this->m_mapPoints.erase(orbMapPoint);
 
 }
 
 void OrbMap::DeleteOrbKeyFrame(std::shared_ptr<OrbKeyFrame> orbKeyFrame)
 {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
-    this->m_keyFrames.erase(std::remove(this->m_keyFrames.begin(), this->m_keyFrames.end(), orbKeyFrame),
-                            this->m_keyFrames.end());
+    this->m_keyFrames.erase(orbKeyFrame);
 }
 
 void OrbMap::SetReferenceMapPoints(std::vector<std::shared_ptr<OrbMapPoint>> referenceMapPoints)
@@ -66,13 +64,13 @@ void OrbMap::SetReferenceMapPoints(std::vector<std::shared_ptr<OrbMapPoint>> ref
 std::vector<std::shared_ptr<OrbKeyFrame>> OrbMap::GetAllKeyFrames()
 {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
-    return this->m_keyFrames;
+    return std::vector<std::shared_ptr<OrbKeyFrame>>(m_keyFrames.begin(),m_keyFrames.end());
 }
 
 std::vector<std::shared_ptr<OrbMapPoint>> OrbMap::GetAllMapPoints()
 {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
-    return this->m_mapPoints;
+    return std::vector<std::shared_ptr<OrbMapPoint>>(m_mapPoints.begin(),m_mapPoints.end());
 }
 
 std::vector<std::shared_ptr<OrbMapPoint>> OrbMap::GetReferenceMapPoints()

@@ -31,7 +31,6 @@ OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> r
     // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
     std::unique_lock<std::mutex> lock(m_constructorMutex);
     m_sequenceId = nNextId++;
-    this->ComputeDistinctiveDescriptors();
 }
 
 OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> frame, std::shared_ptr<OrbMap> map, const int &keyPointIndex)

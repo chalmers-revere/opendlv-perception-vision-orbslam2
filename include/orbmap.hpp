@@ -101,8 +101,8 @@ class OrbMap {
     std::vector<std::shared_ptr<OrbKeyFrame>> m_OrbKeyFrameOrigins;
 
  private:
-    std::vector<std::shared_ptr<OrbKeyFrame>> m_keyFrames;
-    std::vector<std::shared_ptr<OrbMapPoint>> m_mapPoints;
+    std::set<std::shared_ptr<OrbKeyFrame>> m_keyFrames;
+    std::set<std::shared_ptr<OrbMapPoint>> m_mapPoints;
     std::vector<std::shared_ptr<OrbMapPoint>> m_referenceMapPoints;
     long unsigned int m_maxOrbKeyFrameId;
     int m_majorChangeIndex;

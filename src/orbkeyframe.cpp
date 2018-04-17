@@ -66,6 +66,7 @@ void OrbKeyFrame::ComputeBoW()
 
 void OrbKeyFrame::SetPose(const cv::Mat &cameraPose)
 {
+    std::cout << "cameraPose: " << cameraPose << std::endl;
     std::unique_lock<std::mutex> lock(m_poseMutex);
     cameraPose.copyTo(m_cameraPose);
     cv::Mat Rcw = m_cameraPose.rowRange(0, 3).colRange(0, 3);

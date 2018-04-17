@@ -416,6 +416,7 @@ int ORBmatcher::SearchForInitialization(std::shared_ptr<OrbFrame> &F1, std::shar
 
     std::vector<int> vMatchedDistance(F2->mvKeysUn.size(), INT_MAX);
     std::vector<int> vnMatches21(F2->mvKeysUn.size(), -1);
+    std::cout << "F1 size: " << F1->mvKeysUn.size() << "F2 size: " << F2->mvKeysUn.size() << std::endl;
     
     for (size_t i1 = 0, iend1 = F1->mvKeysUn.size(); i1 < iend1; i1++)
     {
@@ -426,7 +427,8 @@ int ORBmatcher::SearchForInitialization(std::shared_ptr<OrbFrame> &F1, std::shar
 
         std::vector<size_t> vIndices2 = F2->GetFeaturesInArea(vbPrevMatched[i1].x, vbPrevMatched[i1].y, windowSize,
                                                              level1, level1);
-
+                                                        
+        //std::cout << "vIndices: " << vIndices2.size() << std::endl;
         if (vIndices2.empty())
             continue;
 
@@ -457,7 +459,7 @@ int ORBmatcher::SearchForInitialization(std::shared_ptr<OrbFrame> &F1, std::shar
                 bestDist2 = dist;
             }
         }
-
+        //std::cout << "bestDist: " << bestDist << std::endl;
         if (bestDist <= TH_LOW)
         {
             if (bestDist < (float) bestDist2 * mfNNratio)
