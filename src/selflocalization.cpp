@@ -78,11 +78,28 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 				OrbMapPoint* mp = mapPoint.get();
 				cv::Mat worldPosition = mp->GetWorldPosition();
 				auto x = worldPosition.at<float>(1, 0);
-				auto y = worldPosition.at<float>(1, 0);
-				auto z = worldPosition.at<float>(1, 0);
-				coordinates << x;
-				coordinates << y;
-				coordinates << z;
+				auto y = worldPosition.at<float>(2, 0);
+				auto z = worldPosition.at<float>(3, 0);
+
+				uint8_t * x_arr;
+				uint8_t * y_arr;
+				uint8_t * z_arr;
+				x_arr = reinterpret_cast<uint8_t*>(&x);
+				y_arr = reinterpret_cast<uint8_t*>(&y);
+				z_arr = reinterpret_cast<uint8_t*>(&z);
+
+				coordinates << x_arr[0];
+				coordinates << x_arr[1];
+				coordinates << x_arr[2];
+				coordinates << x_arr[3];
+				coordinates << y_arr[0];
+				coordinates << y_arr[1];
+				coordinates << y_arr[2];
+				coordinates << y_arr[3];
+				coordinates << z_arr[0];
+				coordinates << z_arr[1];
+				coordinates << z_arr[2];
+				coordinates << z_arr[3];
 				//std::cout << "World position of Map point: (" << x << ", " << y << ", " << z << ")." << std::endl;
 
 				m_pTracker->mCurrentFrame->mTcw;
