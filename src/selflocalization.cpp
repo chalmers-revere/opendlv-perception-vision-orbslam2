@@ -104,7 +104,7 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 			}
 		}
 
-		if(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - this->m_last_envelope_ts).count() > 1000000) {
+
             opendlv::proxy::PointCloudReading pointCloudPart1;
             pointCloudPart1.startAzimuth(0.0)
                     .endAzimuth(0.0)
@@ -115,8 +115,7 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
             std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
             std::cout << "Sending OD4" << std::endl;
             od4.send(pointCloudPart1, cluon::time::convert(timePoint), i);
-            this->m_last_envelope_ts = std::chrono::steady_clock::now();
-		}
+
 
 		coordinates.clear();
 		// send results to conference.
