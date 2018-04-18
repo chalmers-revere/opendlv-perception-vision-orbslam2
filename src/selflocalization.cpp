@@ -49,9 +49,11 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 		, m_pExtractOrb()
 		, m_pVocabulary()
 		, m_pKeyFrameDatabase()
-		, m_map()
+		, m_map(),
+        m_last_envelope_ts()
 
 {
+    this->m_last_envelope_ts = std::chrono::steady_clock::now();
 	setUp(commandlineArgs);
 	std::cout << "Starting Kittirunner" << std::endl;
 	std::cout << commandlineArgs["kittiPath"] << std::endl;
@@ -74,40 +76,48 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 				auto x = worldPosition.at<float>(0, 0);
 				auto y = worldPosition.at<float>(1, 0);
 				auto z = worldPosition.at<float>(2, 0);
-
-				uint8_t * x_arr;
-				uint8_t * y_arr;
-				uint8_t * z_arr;
-				x_arr = reinterpret_cast<uint8_t*>(&x);
-				y_arr = reinterpret_cast<uint8_t*>(&y);
-				z_arr = reinterpret_cast<uint8_t*>(&z);
-
-				coordinates << x_arr[0];
-				coordinates << x_arr[1];
-				coordinates << x_arr[2];
-				coordinates << x_arr[3];
-				coordinates << y_arr[0];
-				coordinates << y_arr[1];
-				coordinates << y_arr[2];
-				coordinates << y_arr[3];
-				coordinates << z_arr[0];
-				coordinates << z_arr[1];
-				coordinates << z_arr[2];
-				coordinates << z_arr[3];
+				coordinates << std::fixed <<  std::setprecision(4) << x << ':';
+				coordinates << std::fixed <<  std::setprecision(4) << y << ':';
+				coordinates << std::fixed <<  std::setprecision(4) << z << ':';
+//				int8_t * x_arr;
+//				int8_t * y_arr;
+//				int8_t * z_arr;
+//				x_arr = reinterpret_cast<int8_t*>(&x);
+//				y_arr = reinterpret_cast<int8_t*>(&y);
+//				z_arr = reinterpret_cast<int8_t*>(&z);
+//
+//				coordinates << x_arr[0];
+//				coordinates << x_arr[1];
+//				coordinates << x_arr[2];
+//				coordinates << x_arr[3];
+//				coordinates << y_arr[0];
+//				coordinates << y_arr[1];
+//				coordinates << y_arr[2];
+//				coordinates << y_arr[3];
+//				coordinates << z_arr[0];
+//				coordinates << z_arr[1];
+//				coordinates << z_arr[2];
+//				coordinates << z_arr[3];
 				//std::cout << "World position of Map point: (" << x << ", " << y << ", " << z << ")." << std::endl;
 //
 //				m_pTracker->mCurrentFrame->mTcw;
 			}
 		}
-        opendlv::proxy::PointCloudReading pointCloudPart1;
-        pointCloudPart1.startAzimuth(0.0)
-                .endAzimuth(0.0)
-                .entriesPerAzimuth(12)
-                .distances(std::string(coordinates.str()))
-                .numberOfBitsForIntensity(0);
 
-        std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
-		od4.send(pointCloudPart1, cluon::time::convert(timePoint), i);
+		if(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - this->m_last_envelope_ts).count() > 1000000) {
+            opendlv::proxy::PointCloudReading pointCloudPart1;
+            pointCloudPart1.startAzimuth(0.0)
+                    .endAzimuth(0.0)
+                    .entriesPerAzimuth(12)
+                    .distances(std::string(coordinates.str()))
+                    .numberOfBitsForIntensity(0);
+
+            std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
+            std::cout << "Sending OD4" << std::endl;
+            od4.send(pointCloudPart1, cluon::time::convert(timePoint), i);
+            this->m_last_envelope_ts = std::chrono::steady_clock::now();
+		}
+
 		coordinates.clear();
 		// send results to conference.
 	}
