@@ -38,7 +38,7 @@ KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_
     for(int ni=0; ni<nImages; ni++)
     {
         // Read left and right images from file
-        std::cout << "reading image: " << vstrImageLeft[ni] << std::endl;
+        //std::cout << "reading image: " << vstrImageLeft[ni] << std::endl;
         imLeft = cv::imread(vstrImageLeft[ni],CV_LOAD_IMAGE_UNCHANGED);
         if(isStereo){
             imRight = cv::imread(vstrImageRight[ni],CV_LOAD_IMAGE_UNCHANGED);

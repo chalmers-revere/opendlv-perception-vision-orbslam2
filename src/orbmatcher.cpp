@@ -40,7 +40,7 @@ ORBmatcher::SearchByProjection(std::shared_ptr<OrbFrame> &F, const std::vector<s
 {
     int nmatches = 0;
 
-    const bool bFactor = std::abs(th-1.0) < 0.0001f;
+    const bool bFactor = std::abs(th-1.0) < 0.0000000001f;
 
     for (size_t iMP = 0; iMP < pMP.size(); iMP++)
     {
@@ -137,6 +137,7 @@ bool ORBmatcher::CheckDistEpipolarLine(const cv::KeyPoint &keyPoint1, const cv::
                                        const std::shared_ptr<OrbKeyFrame> keyFrame2)
 {
     // Epipolar line in second image l = x1'F12 = [a b c]
+    //std::cout << "fundamental: " <<  fundamental << std::endl;
     const float a = keyPoint1.pt.x * fundamental.at<float>(0, 0) + keyPoint1.pt.y * fundamental.at<float>(1, 0) +
                     fundamental.at<float>(2, 0);
     const float b = keyPoint1.pt.x * fundamental.at<float>(0, 1) + keyPoint1.pt.y * fundamental.at<float>(1, 1) +
@@ -147,13 +148,13 @@ bool ORBmatcher::CheckDistEpipolarLine(const cv::KeyPoint &keyPoint1, const cv::
     const float numerator = a * keyPoint2.pt.x + b * keyPoint2.pt.y + c;
 
     const float denominator = a * a + b * b;
-
-    if (std::abs(denominator) < 0.0001)
+    //std::cout << "denominator: " << denominator << std::endl;
+    if (std::abs(denominator) < 0.00000000000000001)
         return false;
 
     const float dsqr = numerator * numerator / denominator;
-
-    return dsqr < 3.84f * keyFrame2->mvInvLevelSigma2[keyPoint2.octave];
+    //std::cout << dsqr << std::endl;
+    return dsqr < 3.84f * keyFrame2->mvLevelSigma2[keyPoint2.octave];
 }
 
 int ORBmatcher::SearchByBoW(std::shared_ptr<OrbKeyFrame> keyFrame, std::shared_ptr<OrbFrame> &F,
@@ -416,7 +417,7 @@ int ORBmatcher::SearchForInitialization(std::shared_ptr<OrbFrame> &F1, std::shar
 
     std::vector<int> vMatchedDistance(F2->mvKeysUn.size(), INT_MAX);
     std::vector<int> vnMatches21(F2->mvKeysUn.size(), -1);
-    std::cout << "F1 size: " << F1->mvKeysUn.size() << "F2 size: " << F2->mvKeysUn.size() << std::endl;
+    //std::cout << "F1 size: " << F1->mvKeysUn.size() << "F2 size: " << F2->mvKeysUn.size() << std::endl;
     
     for (size_t i1 = 0, iend1 = F1->mvKeysUn.size(); i1 < iend1; i1++)
     {

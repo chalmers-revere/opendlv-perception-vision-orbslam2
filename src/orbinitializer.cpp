@@ -350,8 +350,8 @@ float OrbInitializer::CheckHomography(const cv::Mat &homographyMatrix, const cv:
         // x2in1 = homographyMatrixInv*x2
 
         const float wCurrInRefInv = 1.0f / (h31inv * uCurr + h32inv * vCurr + h33inv);
-        const float uCurrInRef = (h11inv * uCurr + h12inv + vCurr * h13inv) * wCurrInRefInv;
-        const float vCurrInRef = (h21inv * uCurr * h22inv + vCurr + h23inv) * wCurrInRefInv;
+        const float uCurrInRef = (h11inv * uCurr + h12inv*vCurr + h13inv) * wCurrInRefInv;
+        const float vCurrInRef = (h21inv * uCurr + h22inv*vCurr + h23inv) * wCurrInRefInv;
 
         const float squareDist1 = (uRef - uCurrInRef) * (uRef - uCurrInRef) + (vRef - vCurrInRef) * (vRef - vCurrInRef);
 

@@ -66,7 +66,7 @@ void OrbKeyFrame::ComputeBoW()
 
 void OrbKeyFrame::SetPose(const cv::Mat &cameraPose)
 {
-    std::cout << "cameraPose: " << cameraPose << std::endl;
+    //std::cout << "cameraPose: " << cameraPose << std::endl;
     std::unique_lock<std::mutex> lock(m_poseMutex);
     cameraPose.copyTo(m_cameraPose);
     cv::Mat Rcw = m_cameraPose.rowRange(0, 3).colRange(0, 3);
@@ -402,7 +402,7 @@ void OrbKeyFrame::UpdateConnections()
         // mspConnectedKeyFrames = spConnectedKeyFrames;
         m_connectedKeyFrameWeights = KFcounter;
         m_orderedConnectedKeyFrames = std::vector<std::shared_ptr<OrbKeyFrame>>(lKFs.begin(),lKFs.end());
-        std::cout << lWs.size() << std::endl;
+        //std::cout << lWs.size() << std::endl;
         m_orderedWeights = std::vector<int>(lWs.begin(), lWs.end());
 
         if(m_isFirstConnection && mnId!=0)

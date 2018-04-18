@@ -553,51 +553,51 @@ void OrbExtractor::ExtractFeatures(cv::InputArray inputImage,std::vector<cv::Key
     cv::Mat descriptors;
     
     int nKeypoints = 0;
-  for (int level = 0; level < m_nLevels; ++level){
-    nKeypoints += (int)allKeypoints[level].size();
+    for (int level = 0; level < m_nLevels; ++level){
+        nKeypoints += (int)allKeypoints[level].size();
     }
-  if( nKeypoints == 0 )
+    if( nKeypoints == 0 )
     {
-    a_descriptors.release();
+        a_descriptors.release();
     }
-  else
-  {
-    a_descriptors.create(nKeypoints, 32, CV_8U);
-    descriptors = a_descriptors.getMat();
-  }
+    else
+    {
+        a_descriptors.create(nKeypoints, 32, CV_8U);
+        descriptors = a_descriptors.getMat();
+    }
     a_keypoints.clear();
-  a_keypoints.reserve(nKeypoints);
+    a_keypoints.reserve(nKeypoints);
 
-  int offset = 0;
-  for (int level = 0; level < m_nLevels; ++level)
+    int offset = 0;
+    for (int level = 0; level < m_nLevels; ++level)
     {
-    std::vector<cv::KeyPoint>& keypoints = allKeypoints[level];
-    int nkeypointsLevel = (int)keypoints.size();
+        std::vector<cv::KeyPoint>& keypoints = allKeypoints[level];
+        int nkeypointsLevel = (int)keypoints.size();
 
-    if(nkeypointsLevel==0)
-       continue;
+        if(nkeypointsLevel==0)
+            continue;
 
-    // preprocess the resized image
-    cv::Mat workingMat = m_vImagePyramid[level].clone();
-    cv::GaussianBlur(workingMat, workingMat, cv::Size(7, 7), 2, 2, cv::BORDER_REFLECT_101);
+        // preprocess the resized image
+        cv::Mat workingMat = m_vImagePyramid[level].clone();
+        cv::GaussianBlur(workingMat, workingMat, cv::Size(7, 7), 2, 2, cv::BORDER_REFLECT_101);
 
-    // Compute the descriptors
-    cv::Mat desc = descriptors.rowRange(offset, offset + nkeypointsLevel);
-    computeDescriptors(workingMat, keypoints, desc, m_vPattern);
+        // Compute the descriptors
+        cv::Mat desc = descriptors.rowRange(offset, offset + nkeypointsLevel);
+        computeDescriptors(workingMat, keypoints, desc, m_vPattern);
 
-    offset += nkeypointsLevel;
+        offset += nkeypointsLevel;
 
-    // Scale keypoint coordinates
-    if (level != 0)
-    {
-        float scale = m_vScaleFactor[level];
-        for (std::vector<cv::KeyPoint>::iterator keypoint = keypoints.begin(),
-             keypointEnd = keypoints.end(); keypoint != keypointEnd; ++keypoint)
-             keypoint->pt *= scale;
+        // Scale keypoint coordinates
+        if (level != 0)
+        {
+            float scale = m_vScaleFactor[level];
+            for (std::vector<cv::KeyPoint>::iterator keypoint = keypoints.begin(),
+                    keypointEnd = keypoints.end(); keypoint != keypointEnd; ++keypoint)
+                keypoint->pt *= scale;
+        }
+        // And add the keypoints to the output
+        a_keypoints.insert(a_keypoints.end(), keypoints.begin(), keypoints.end());
     }
-    // And add the keypoints to the output
-    a_keypoints.insert(a_keypoints.end(), keypoints.begin(), keypoints.end());
-  }
     
 }
 
@@ -635,95 +635,6 @@ void OrbExtractor::ComputePyramid(cv::Mat image)
         }
     }
 
-}
-void OrbExtractor::ComputeKeyPointsOctTree(std::vector<std::vector<cv::KeyPoint> >& allKeypoints)
-{
-    allKeypoints.resize(m_nLevels);
-
-  const float W = 30;
-
-  for (int level = 0; level < m_nLevels; ++level)
-  {
-    const int minBorderX = EDGE_THRESHOLD-3;
-    const int minBorderY = minBorderX;
-    const int maxBorderX = m_vImagePyramid[level].cols-EDGE_THRESHOLD+3;
-    const int maxBorderY = m_vImagePyramid[level].rows-EDGE_THRESHOLD+3;
-
-    std::vector<cv::KeyPoint> vToDistributeKeys;
-    vToDistributeKeys.reserve(m_nFeatures*10);
-
-    const float width = (maxBorderX-minBorderX);
-    const float height = (maxBorderY-minBorderY);
-
-    const int nCols = static_cast<int>(width/W);
-    const int nRows = static_cast<int>(height/W);
-    const int wCell = static_cast<int>(ceil(width/nCols));
-    const int hCell = static_cast<int>(ceil(height/nRows));
-
-    for(int i=0; i<nRows; i++)
-    {
-      const float iniY =minBorderY+i*hCell;
-      float maxY = iniY+hCell+6;
-
-        if(iniY>=maxBorderY-3)
-           continue;
-        if(maxY>maxBorderY)
-           maxY = maxBorderY;
-
-        for(int j=0; j<nCols; j++)
-          {
-            const float iniX =minBorderX+j*wCell;
-            float maxX = iniX+wCell+6;
-            if(iniX>=maxBorderX-6)
-               continue;
-            if(maxX>maxBorderX)
-               maxX = maxBorderX;
-
-             std::vector<cv::KeyPoint> vKeysCell;
-             cv::FAST(m_vImagePyramid[level].rowRange(static_cast<int>(iniY),static_cast<int>(maxY)).colRange(static_cast<int>(iniX),static_cast<int>(maxX)),
-                     vKeysCell,m_initialFastTh,true);
-
-             if(vKeysCell.empty())
-             {
-                cv::FAST(m_vImagePyramid[level].rowRange(static_cast<int>(iniY),static_cast<int>(maxY)).colRange(static_cast<int>(iniX),static_cast<int>(maxX)),
-                         vKeysCell,m_minFastTh,true);
-             }
-
-             if(!vKeysCell.empty())
-             {
-               for(std::vector<cv::KeyPoint>::iterator vit=vKeysCell.begin(); vit!=vKeysCell.end();vit++)
-               {
-                  (*vit).pt.x+=j*wCell;
-                  (*vit).pt.y+=i*hCell;
-                  vToDistributeKeys.push_back(*vit);
-               }
-             }
-
-          }
-       }
-
-       std::vector<cv::KeyPoint> & keypoints = allKeypoints[level];
-       keypoints.reserve(m_nFeatures);
-
-       keypoints = DistributeOctTree(vToDistributeKeys, minBorderX, maxBorderX,
-                                     minBorderY, maxBorderY,m_nFeaturesPerLevel[level]);
-
-        const int scaledPatchSize = PATCH_SIZE*static_cast<int>(m_vScaleFactor[level]);
-
-        // Add border to coordinates and scale information
-        const int nkps = keypoints.size();
-        for(int i=0; i<nkps ; i++)
-        {
-            keypoints[i].pt.x+=minBorderX;
-            keypoints[i].pt.y+=minBorderY;
-            keypoints[i].octave=level;
-            keypoints[i].size = scaledPatchSize;
-        }
-    }
-
-    // compute orientations
-    for (int level = 0; level < m_nLevels; ++level)
-        computeOrientation(m_vImagePyramid[level], allKeypoints[level], m_umax);
 }
 
 std::vector<cv::KeyPoint> OrbExtractor::DistributeOctTree(const std::vector<cv::KeyPoint>& vToDistributeKeys, const int &minX,
@@ -950,4 +861,94 @@ std::vector<cv::KeyPoint> OrbExtractor::DistributeOctTree(const std::vector<cv::
     }
 
     return vResultKeys;
+}
+
+void OrbExtractor::ComputeKeyPointsOctTree(std::vector<std::vector<cv::KeyPoint> >& allKeypoints)
+{
+  allKeypoints.resize(m_nLevels);
+
+  const float W = 30;
+
+  for (int level = 0; level < m_nLevels; ++level)
+  {
+    const int minBorderX = EDGE_THRESHOLD-3;
+    const int minBorderY = minBorderX;
+    const int maxBorderX = m_vImagePyramid[level].cols-EDGE_THRESHOLD+3;
+    const int maxBorderY = m_vImagePyramid[level].rows-EDGE_THRESHOLD+3;
+
+    std::vector<cv::KeyPoint> vToDistributeKeys;
+    vToDistributeKeys.reserve(m_nFeatures*10);
+
+    const float width = (maxBorderX-minBorderX);
+    const float height = (maxBorderY-minBorderY);
+
+    const int nCols = static_cast<int>(width/W);
+    const int nRows = static_cast<int>(height/W);
+    const int wCell = static_cast<int>(ceil(width/nCols));
+    const int hCell = static_cast<int>(ceil(height/nRows));
+
+    for(int i=0; i<nRows; i++)
+    {
+      const float iniY =minBorderY+i*hCell;
+      float maxY = iniY+hCell+6;
+
+        if(iniY>=maxBorderY-3)
+           continue;
+        if(maxY>maxBorderY)
+           maxY = maxBorderY;
+
+        for(int j=0; j<nCols; j++)
+          {
+            const float iniX =minBorderX+j*wCell;
+            float maxX = iniX+wCell+6;
+            if(iniX>=maxBorderX-6)
+               continue;
+            if(maxX>maxBorderX)
+               maxX = maxBorderX;
+
+             std::vector<cv::KeyPoint> vKeysCell;
+             cv::FAST(m_vImagePyramid[level].rowRange(static_cast<int>(iniY),static_cast<int>(maxY)).colRange(static_cast<int>(iniX),static_cast<int>(maxX)),
+                     vKeysCell,m_initialFastTh,true);
+
+             if(vKeysCell.empty())
+             {
+                cv::FAST(m_vImagePyramid[level].rowRange(static_cast<int>(iniY),static_cast<int>(maxY)).colRange(static_cast<int>(iniX),static_cast<int>(maxX)),
+                         vKeysCell,m_minFastTh,true);
+             }
+
+             if(!vKeysCell.empty())
+             {
+               for(std::vector<cv::KeyPoint>::iterator vit=vKeysCell.begin(); vit!=vKeysCell.end();vit++)
+               {
+                  (*vit).pt.x+=j*wCell;
+                  (*vit).pt.y+=i*hCell;
+                  vToDistributeKeys.push_back(*vit);
+               }
+             }
+
+          }
+       }
+
+       std::vector<cv::KeyPoint> & keypoints = allKeypoints[level];
+       keypoints.reserve(m_nFeatures);
+
+       keypoints = DistributeOctTree(vToDistributeKeys, minBorderX, maxBorderX,
+                                     minBorderY, maxBorderY,m_nFeaturesPerLevel[level]);
+
+        const int scaledPatchSize = PATCH_SIZE*static_cast<int>(m_vScaleFactor[level]);
+
+        // Add border to coordinates and scale information
+        const int nkps = keypoints.size();
+        for(int i=0; i<nkps ; i++)
+        {
+            keypoints[i].pt.x+=minBorderX;
+            keypoints[i].pt.y+=minBorderY;
+            keypoints[i].octave=level;
+            keypoints[i].size = scaledPatchSize;
+        }
+    }
+
+    // compute orientations
+    for (int level = 0; level < m_nLevels; ++level)
+        computeOrientation(m_vImagePyramid[level], allKeypoints[level], m_umax);
 }

@@ -865,7 +865,7 @@ void PnPsolver::qr_solve(CvMat * A, CvMat * b, CvMat * X) //use of pointers is s
       ppAik += nc;
     }
 
-    if (static_cast<int>(eta) == 0) {
+    if (std::fabs(eta) < 0.000000000001f) {
       A1[k] = A2[k] = 0.0;
       std::cerr << "A is singular, this shouldn't happen." << std::endl;
       return;

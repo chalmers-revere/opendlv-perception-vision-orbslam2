@@ -87,9 +87,9 @@ void Mapping::Run()
             {
                 // Local BA
                 if(mpMap->OrbKeyFramesCount()>2){
-                    //OrbOptimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA, mpMap);
+                    OrbOptimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA, mpMap);
                 }
-                std::cout << "culling keyframes" << std::endl;
+                //std::cout << "culling keyframes" << std::endl;
                 // Check redundant local Keyframes
                 KeyFrameCulling();
             }
@@ -512,7 +512,7 @@ void Mapping::CreateNewMapPoints()
 
             // Triangulation is succesfull
             std::shared_ptr<OrbMapPoint> pMP = std::shared_ptr<OrbMapPoint>(new OrbMapPoint(x3D,mpCurrentKeyFrame,mpMap));
-
+            //std::cout << "Making a new mappoint" << std::endl;
             pMP->AddObservingKeyframe(mpCurrentKeyFrame,idx1);            
             pMP->AddObservingKeyframe(pKF2,idx2);
 
@@ -737,9 +737,9 @@ cv::Mat Mapping::ComputeF12(std::shared_ptr<OrbKeyFrame> &pKF1, std::shared_ptr<
 
 cv::Mat Mapping::SkewSymmetricMatrix(const cv::Mat &v)
 {
-    return (cv::Mat_<float>(3,3) <<             0, -v.at<float>(2), v.at<float>(1),
-            v.at<float>(2),               0,-v.at<float>(0),
-            -v.at<float>(1),  v.at<float>(0),              0);
+    return (cv::Mat_<float>(3,3) << 0, -v.at<float>(2), v.at<float>(1),
+            v.at<float>(2), 0,-v.at<float>(0),
+            -v.at<float>(1), v.at<float>(0), 0);
 }
 
 void Mapping::ResetIfRequested()

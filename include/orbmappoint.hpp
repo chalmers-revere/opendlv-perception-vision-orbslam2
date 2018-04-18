@@ -163,11 +163,11 @@ private:
      std::shared_ptr<OrbKeyFrame> m_refenceKeyFrame = {};
 
     // Tracking counters
-    int m_visibleCounter = {};
-    int m_foundCounter = {};
+    int m_visibleCounter = 1;
+    int m_foundCounter = 1;
 
     // Bad flag (we do not currently erase MapPoint from memory)
-    bool m_corrupt = {};
+    bool m_corrupt = false;
     std::shared_ptr<OrbMapPoint> m_replaced = {};
 
     // Scale invariance distances

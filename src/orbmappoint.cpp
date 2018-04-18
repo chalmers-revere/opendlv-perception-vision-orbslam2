@@ -176,11 +176,10 @@ void OrbMapPoint::EraseObservingKeyframe(std::shared_ptr<OrbKeyFrame> keyFrame)
         else
             this->m_observingKeyFramesCount -= 1;
 
-        this->m_observingKeyframes.erase(keyFrame);
-
         if (m_refenceKeyFrame == keyFrame)
             m_refenceKeyFrame = this->m_observingKeyframes.begin()->first;
-
+        
+        this->m_observingKeyframes.erase(keyFrame);
         if (this->m_observingKeyFramesCount <= 2){
             lock.unlock();
             SetCorruptFlag();

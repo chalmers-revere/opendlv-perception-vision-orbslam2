@@ -376,13 +376,13 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
     const float chi2Mono[4]={5.991f,5.991f,5.991f,5.991f};
     const float chi2Stereo[4]={7.815f,7.815f,7.815f, 7.815f};
     const int its[4]={10,10,10,10};    
-
+    std::cout << vpEdgesMono.size() << std::endl;
     int nBad=0;
-    std::vector<bool> vectorBoolOutliers = pFrame->mvbOutlier;
     for(size_t it=0; it<4; it++)
     {
+        std::vector<bool> vectorBoolOutliers = pFrame->mvbOutlier;
         vSE3->setEstimate(Orbconverter::toSE3Quat(pFrame->mTcw));
-        std::cout << "input pose: " << Orbconverter::toSE3Quat(pFrame->mTcw) << std::endl; 
+        //std::cout << "input pose: " << Orbconverter::toSE3Quat(pFrame->mTcw) << std::endl; 
         optimizer.initializeOptimization(0);
         //optimizer.setVerbose(true);
         optimizer.optimize(its[it]);
@@ -531,7 +531,7 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
         std::shared_ptr<OrbKeyFrame> pKFi = *lit;
         g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
         vSE3->setEstimate(Orbconverter::toSE3Quat(pKFi->GetPose()));
-        std::cout << "Pose: " << pKFi->GetPose() << std::endl;
+        //std::cout << "Pose: " << pKFi->GetPose() << std::endl;
         vSE3->setId(pKFi->mnId);
         vSE3->setFixed(pKFi->mnId==0);
         optimizer.addVertex(vSE3);
@@ -545,7 +545,7 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
         std::shared_ptr<OrbKeyFrame> pKFi = *lit;
         g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
         vSE3->setEstimate(Orbconverter::toSE3Quat(pKFi->GetPose()));
-        std::cout << "Pose: " << pKFi->GetPose() << std::endl;
+        //std::cout << "Pose: " << pKFi->GetPose() << std::endl;
         vSE3->setId(pKFi->mnId);
         vSE3->setFixed(true);
         optimizer.addVertex(vSE3);
@@ -589,8 +589,6 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
         optimizer.addVertex(vPoint);
 
         const std::map<std::shared_ptr<OrbKeyFrame>,size_t> observations = pMP->GetObservingKeyframes();
-        std::vector<cv::KeyPoint> vectorKP = pKF->mvKeysUn;
-        std::vector<float> vectorRight = pKF->mvuRight;
                 
 
         //Set edges
@@ -598,6 +596,9 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
         {
             std::shared_ptr<OrbKeyFrame> pKFi = mit->first;
         	std::vector<float> invSigma2Vector = pKFi->mvInvLevelSigma2;
+            std::vector<cv::KeyPoint> vectorKP = pKFi->mvKeysUn;
+            std::vector<float> vectorRight = pKFi->mvuRight;
+
 
 
             if(!pKFi->isBad())

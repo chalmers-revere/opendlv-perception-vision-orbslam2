@@ -244,7 +244,6 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
 
 void Tracking::Track()
 {
-    std::cout << "tracking" << std::endl;
     if (!this->InitalizeTracking()) {
         std::cout << "Failed to initialize" << std::endl;
         return;
@@ -267,15 +266,15 @@ void Tracking::Track()
             if(mVelocity.empty() || mCurrentFrame->mnId<mnLastRelocFrameId+2)
             {
                 bOK = TrackReferenceKeyFrame();
-                std::cout << "Track reference keyframe is " << bOK << std::endl; 
+                //std::cout << "Track reference keyframe is " << bOK << std::endl; 
             }
             else
             {
                 bOK = TrackWithMotionModel();
-                std::cout << "Track with motion model is " << bOK << std::endl;
+                //std::cout << "Track with motion model is " << bOK << std::endl;
                 if(!bOK){
                     bOK = TrackReferenceKeyFrame();
-                    std::cout << "Track reference keyframe is " << bOK << std::endl; 
+                    //std::cout << "Track reference keyframe is " << bOK << std::endl; 
                 }
 
             }
@@ -376,7 +375,7 @@ void Tracking::Track()
         // the camera we will use the local map again.
         if(bOK && !mbVO){
             bOK = TrackLocalMap();
-            std::cout << "Track local map2 is " << bOK << std::endl;
+            //std::cout << "Track local map2 is " << bOK << std::endl;
         }
     }
 
@@ -478,7 +477,7 @@ void Tracking::Track()
 
 void Tracking::StereoInitialization()
 {
-    std::cout << "Initializing Stereo" << std::endl;
+    //std::cout << "Initializing Stereo" << std::endl;
     if(mCurrentFrame->N>500)
     {
         // Set Frame pose to the origin
@@ -533,7 +532,7 @@ void Tracking::StereoInitialization()
 
 void Tracking::MonocularInitialization()
 {
-    std::cout << "Initialize mono tracking" << std::endl;
+    //std::cout << "Initialize mono tracking" << std::endl;
 
     if(!mpInitializer)
     {
@@ -562,7 +561,7 @@ void Tracking::MonocularInitialization()
             fill(mvIniMatches.begin(),mvIniMatches.end(),-1);
             return;
         }
-        std::cout << "Initial frame keys: " << mInitialFrame->mvKeys.size() << "current frame keys: " << mCurrentFrame->mvKeys.size() << std::endl;
+        //std::cout << "Initial frame keys: " << mInitialFrame->mvKeys.size() << "current frame keys: " << mCurrentFrame->mvKeys.size() << std::endl;
         // Find correspondences
         ORBmatcher matcher(0.9f,true);
         int nmatches = matcher.SearchForInitialization(mInitialFrame,mCurrentFrame,mvbPrevMatched,mvIniMatches,100);
@@ -650,7 +649,7 @@ void Tracking::CreateInitialMapMonocular()
     std::cout << "New Map created with " << mpMap->OrbMapPointsCount() << " points" << std::endl;
 
     OrbOptimizer::GlobalBundleAdjustemnt(mpMap,20);
-    std::cout << "CurrPose :" << pKFcur->GetPose() << std::endl;
+    //std::cout << "CurrPose :" << pKFcur->GetPose() << std::endl;
 
     // Set median depth to 1
     float medianDepth = pKFini->ComputeSceneMedianDepth(2);
@@ -733,15 +732,15 @@ bool Tracking::TrackReferenceKeyFrame()
 
     int nmatches = matcher.SearchByBoW(mpReferenceKF,mCurrentFrame,vpMapPointMatches);
 
-    std::cout << "nmatches " << nmatches << std::endl;
+    //std::cout << "nmatches " << nmatches << std::endl;
     if(nmatches<15)
         return false;
 
     mCurrentFrame->mvpMapPoints = vpMapPointMatches;
     mCurrentFrame->SetPose(mLastFrame->mTcw);
-    std::cout << "current pose " << mCurrentFrame->mTcw << std::endl;
-    int iReturn = OrbOptimizer::PoseOptimization(mCurrentFrame);
-    std::cout << "return : " << iReturn << std::endl;
+    //std::cout << "current pose " << mCurrentFrame->mTcw << std::endl;
+    OrbOptimizer::PoseOptimization(mCurrentFrame);
+    //std::cout << "return : " << iReturn << std::endl;
 
     // Discard outliers
     int nmatchesMap = 0;
@@ -906,7 +905,8 @@ bool Tracking::TrackLocalMap()
     // Optimize Pose
     OrbOptimizer::PoseOptimization(mCurrentFrame);
     mnMatchesInliers = 0;
-
+    int nRejectOutlier = 0;
+    int nRejectUnseen = 0;
     // Update MapPoints Statistics
     for(int i=0; i<mCurrentFrame->N; i++)
     {
@@ -925,11 +925,17 @@ bool Tracking::TrackLocalMap()
             }
             else if(mSensor==Selflocalization::STEREO)
                 mCurrentFrame->mvpMapPoints[i] = static_cast<std::shared_ptr<OrbMapPoint>>(NULL);
-
+            
+            else
+                nRejectOutlier++;
         }
+        else
+            nRejectUnseen++;
     }
+    std::cout << "Unseen: " << nRejectUnseen << "Outlier: " << nRejectOutlier << std::endl;
     // Decide if the tracking was succesful
     // More restrictive if there was a relocalization recently
+    std::cout << "Inliers: " << mnMatchesInliers << std::endl;
     if(mCurrentFrame->mnId<mnLastRelocFrameId+mMaxFrames && mnMatchesInliers<50)
         return false;
 
@@ -999,7 +1005,6 @@ bool Tracking::NeedNewKeyFrame()
     const bool c1c =  mSensor!=Selflocalization::MONOCULAR && (mnMatchesInliers<nRefMatches*0.25 || bNeedToInsertClose) ;
     // Condition 2: Few tracked points compared to reference keyframe. Lots of visual odometry compared to map matches.
     const bool c2 = ((mnMatchesInliers<nRefMatches*thRefRatio|| bNeedToInsertClose) && mnMatchesInliers>15);
-    std::cout << "Condition is " << std::endl;
 
     if((c1a||c1b||c1c)&&c2)
     {
@@ -1029,7 +1034,6 @@ bool Tracking::NeedNewKeyFrame()
 
 void Tracking::CreateNewKeyFrame()
 {
-    std::cout << "We need a new keyframe" << std::endl;
     if(!mpLocalMapper->SetNotStop(true))
         return;
 

@@ -65,7 +65,7 @@ void LoopClosing::Run()
             // Detect loop candidates and check covisibility consistency
             if(DetectLoop())
             {
-                std::cout << "Loop found computing sim3" << std::endl;
+                std::cout << "computing sim3" << std::endl;
                // Compute similarity transformation [sR|t]
                // In the stereo/RGBD case s=1
                if(ComputeSim3())
@@ -324,6 +324,7 @@ bool LoopClosing::ComputeSim3()
                 matcher.SearchBySim3(mpCurrentKF,pKF,vpMapPointMatches,s,R,t,7.5);
 
                 g2o::Sim3 gScm(Orbconverter::toMatrix3d(R),Orbconverter::toVector3d(t),s);
+                std::cout << "Optimizing Sim3" << std::endl;
                 nInliers = OrbOptimizer::OptimizeSim3(mpCurrentKF, pKF, vpMapPointMatches, gScm, 10, mbFixScale);
 
                 // If optimization is succesful stop ransacs and continue
