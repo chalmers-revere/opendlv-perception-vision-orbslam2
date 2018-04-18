@@ -59,67 +59,48 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 	std::cout << commandlineArgs["kittiPath"] << std::endl;
 	KittiRunner kittiRunner(commandlineArgs["kittiPath"],!m_isMonocular,std::shared_ptr<Selflocalization>(this));
 
-	cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArgs["cid"])), [](auto){}};
+    cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArgs["cid"])), [](auto){}};
 
 	std::stringstream coordinates;
+
+	size_t lastMapPoint = 0;
+
 	for(size_t i = 0; i < kittiRunner.GetImagesCount(); i++ )
 	{
 		kittiRunner.ProcessImage(i);
 		OrbMap* map = m_map.get();
 		if(map)
 		{
+            coordinates.str(std::string());
 			auto mapPoints = map->GetAllMapPoints();
-			for(auto mapPoint: mapPoints)
+			for(; lastMapPoint < mapPoints.size(); lastMapPoint++)
 			{
-				OrbMapPoint* mp = mapPoint.get();
+				OrbMapPoint* mp = mapPoints[lastMapPoint].get();
 				cv::Mat worldPosition = mp->GetWorldPosition();
 				auto x = worldPosition.at<float>(0, 0);
 				auto y = worldPosition.at<float>(1, 0);
 				auto z = worldPosition.at<float>(2, 0);
+
 				coordinates << std::fixed <<  std::setprecision(4) << x << ':';
 				coordinates << std::fixed <<  std::setprecision(4) << y << ':';
 				coordinates << std::fixed <<  std::setprecision(4) << z << ':';
-//				int8_t * x_arr;
-//				int8_t * y_arr;
-//				int8_t * z_arr;
-//				x_arr = reinterpret_cast<int8_t*>(&x);
-//				y_arr = reinterpret_cast<int8_t*>(&y);
-//				z_arr = reinterpret_cast<int8_t*>(&z);
-//
-//				coordinates << x_arr[0];
-//				coordinates << x_arr[1];
-//				coordinates << x_arr[2];
-//				coordinates << x_arr[3];
-//				coordinates << y_arr[0];
-//				coordinates << y_arr[1];
-//				coordinates << y_arr[2];
-//				coordinates << y_arr[3];
-//				coordinates << z_arr[0];
-//				coordinates << z_arr[1];
-//				coordinates << z_arr[2];
-//				coordinates << z_arr[3];
-				//std::cout << "World position of Map point: (" << x << ", " << y << ", " << z << ")." << std::endl;
-//
-//				m_pTracker->mCurrentFrame->mTcw;
 			}
 		}
 
+        std::cout << "Length of mapPoints is: " << coordinates.str().length() << "." << std::endl;
+        opendlv::proxy::PointCloudReading pointCloudPart1;
+        pointCloudPart1.startAzimuth(0.0)
+                .endAzimuth(0.0)
+                .entriesPerAzimuth(12)
+                .distances(std::string(coordinates.str()))
+                .numberOfBitsForIntensity(0);
 
-            opendlv::proxy::PointCloudReading pointCloudPart1;
-            pointCloudPart1.startAzimuth(0.0)
-                    .endAzimuth(0.0)
-                    .entriesPerAzimuth(12)
-                    .distances(std::string(coordinates.str()))
-                    .numberOfBitsForIntensity(0);
-
-            std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
-            std::cout << "Sending OD4" << std::endl;
-            od4.send(pointCloudPart1, cluon::time::convert(timePoint), i);
-
-
-		coordinates.clear();
-		// send results to conference.
+        std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
+        std::cout << "Sending OD4" << std::endl;
+        od4.send(pointCloudPart1, cluon::time::convert(timePoint), i);
+        // send results to conference.
 	}
+
 	kittiRunner.ShutDown();
 	//Initialization
 
