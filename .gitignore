@@ -2,3 +2,5 @@
 Images/
 
 build/
+
+\.env
