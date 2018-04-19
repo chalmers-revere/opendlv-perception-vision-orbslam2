@@ -72,6 +72,16 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 		if(map)
 		{
             coordinates.str(std::string());
+
+            cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
+            cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).colRange(3, 4);
+
+            cv::Mat cameraPosition = -R*T;
+
+            coordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(0, 0) << ':';
+            coordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(1, 0) << ':';
+            coordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(2, 0) << ':';
+
 			auto mapPoints = map->GetAllMapPoints();
 			for(; lastMapPoint < mapPoints.size(); lastMapPoint++)
 			{
@@ -86,6 +96,7 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 				coordinates << std::fixed <<  std::setprecision(4) << z << ':';
 			}
 		}
+
 
         std::cout << "Length of mapPoints is: " << coordinates.str().length() << "." << std::endl;
         opendlv::proxy::PointCloudReading pointCloudPart1;
