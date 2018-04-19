@@ -49,7 +49,7 @@ class OrbMapPoint;
 class OrbMapPoint;
 class OrbKeyFrame;
 
-class OrbFrame
+class OrbFrame : public std::enable_shared_from_this<OrbFrame>
 {
 public:
     OrbFrame(const std::shared_ptr<OrbFrame>&frame);

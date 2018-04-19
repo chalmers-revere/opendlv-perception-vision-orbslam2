@@ -36,6 +36,7 @@
 //#include "opendavinci/generated/odcore/data/CompactPointCloud.h"
 
 #include <thread>
+#include <iomanip>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -81,6 +82,7 @@ public:
 private:
     void setUp(std::map<std::string, std::string> commandlineArgs);
     void tearDown();
+    opendlv::proxy::PointCloudReading CreatePointCloudFromMap();
     bool m_isMonocular;
     int m_saveCounter = 0;
     std::shared_ptr<Mapping> m_pMapper;
@@ -96,6 +98,7 @@ private:
 
     std::mutex mMutexReset = {};
     bool m_reset = false;
+    std::chrono::steady_clock::time_point m_last_envelope_ts;
 };
 
 

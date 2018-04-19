@@ -284,7 +284,7 @@ bool OrbFrame::isInFrustum(std::shared_ptr<OrbMapPoint> mapPoint, float viewingC
     }
 
     // Predict scale in the image
-    const int nPredictedLevel = mapPoint->PredictScale(dist, std::shared_ptr<OrbFrame>(this));
+    const int nPredictedLevel = mapPoint->PredictScale(dist, std::shared_ptr<OrbFrame>(shared_from_this()));
 
     // Data used by the tracking
     mapPoint->SetTrackInView(static_cast<unsigned long>(true));

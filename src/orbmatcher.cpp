@@ -1330,8 +1330,7 @@ int ORBmatcher::SearchBySim3(std::shared_ptr<OrbKeyFrame> pKF1, std::shared_ptr<
     return nFound;
 }
 
-int
-ORBmatcher::SearchByProjection(std::shared_ptr<OrbFrame> &CurrentFrame, const std::shared_ptr<OrbFrame> &LastFrame, const float th, const bool bMono)
+int ORBmatcher::SearchByProjection(std::shared_ptr<OrbFrame> &CurrentFrame, const std::shared_ptr<OrbFrame> &LastFrame, const float th, const bool bMono)
 {
     int nmatches = 0;
 
@@ -1353,13 +1352,14 @@ ORBmatcher::SearchByProjection(std::shared_ptr<OrbFrame> &CurrentFrame, const st
 
     const bool bForward = tlc.at<float>(2) > CurrentFrame->mb && !bMono;
     const bool bBackward = -tlc.at<float>(2) > CurrentFrame->mb && !bMono;
-
+    int lastPoints = 0;
     for (int i = 0; i < LastFrame->N; i++)
     {
         std::shared_ptr<OrbMapPoint> pMP = LastFrame->mvpMapPoints[i];
 
         if (pMP)
         {
+            lastPoints++;
             if (!LastFrame->mvbOutlier[i])
             {
                 // Project
@@ -1455,7 +1455,7 @@ ORBmatcher::SearchByProjection(std::shared_ptr<OrbFrame> &CurrentFrame, const st
             }
         }
     }
-
+    std::cout << "lastpoints: " << lastPoints << std::endl;
     //Apply rotation consistency
     if (mbCheckOrientation)
     {

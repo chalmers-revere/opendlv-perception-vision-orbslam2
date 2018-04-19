@@ -100,7 +100,7 @@ public:
     //void SetTrackScaleLevel(long unsigned int TrackScaleLevel);
     void SetTrackInView(bool TrackInView);
     //void SetackViewCos(long unsigned int ackViewCos);
-    //void SetTrackReferenceForFrame(long unsigned int TrackReferenceForFrame);
+    void SetTrackReferenceForFrame(long unsigned int TrackReferenceForFrame);
     void SetLastFrameSeen(long unsigned int LastFrameSeen);
     void SetBALocalForKF(long unsigned int BALocalForKF);
     void SetFuseCandidateForKF(long unsigned int FuseCandidateForKF);

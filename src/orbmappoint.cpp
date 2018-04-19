@@ -555,14 +555,15 @@ void OrbMapPoint::SetackViewCos(long unsigned int ackViewCos)
     {
     };
 }
-
+*/
 void OrbMapPoint::SetTrackReferenceForFrame(long unsigned int TrackReferenceForFrame)
 {
     if (TrackReferenceForFrame != 0)
     {
+        mnTrackReferenceForFrame = TrackReferenceForFrame;
     };
 }
-*/
+
 void OrbMapPoint::SetLastFrameSeen(long unsigned int LastFrameSeen)
 {
     if (LastFrameSeen != 0)

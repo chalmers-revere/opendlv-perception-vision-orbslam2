@@ -424,7 +424,9 @@ void Tracking::Track()
 
         // Check if we need to insert a new keyframe
         if(NeedNewKeyFrame())
+        {
             CreateNewKeyFrame();
+        }
 
         // We allow points with high innovation (considererd outliers by the Huber Function)
         // pass to the new keyframe, so that bundle adjustment will finally decide
@@ -847,9 +849,8 @@ bool Tracking::TrackWithMotionModel()
         th=15;
     else
         th=7;
-
     int nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,th,mSensor==Selflocalization::MONOCULAR);
-
+    std::cout << "nmatches: " << nmatches << std::endl;
     // If few matches, uses a wider window search
     if(nmatches<20)
     {
@@ -1150,7 +1151,7 @@ void Tracking::SearchLocalPoints()
             nToMatch++;
         }
     }
-
+    std::cout << "nToMatch: " << nToMatch << std::endl;
     if(nToMatch>0)
     {
         ORBmatcher matcher(0.8f);
@@ -1160,7 +1161,8 @@ void Tracking::SearchLocalPoints()
         // If the camera has been relocalised recently, perform a coarser search
         if(mCurrentFrame->mnId<mnLastRelocFrameId+2)
             th=5;
-        matcher.SearchByProjection(mCurrentFrame,mvpLocalMapPoints,th);
+        int matches = matcher.SearchByProjection(mCurrentFrame,mvpLocalMapPoints,th);
+        std::cout << "local matches: " << matches << std::endl;
     }
 }
 
@@ -1188,12 +1190,12 @@ void Tracking::UpdateLocalPoints()
             std::shared_ptr<OrbMapPoint> pMP = *itMP;
             if(!pMP)
                 continue;
-            if(pMP->GetLastFrameSeen()==mCurrentFrame->mnId)
+            if(pMP->GetTrackReferenceForFrame()==mCurrentFrame->mnId)
                 continue;
             if(!pMP->IsCorrupt())
             {
                 mvpLocalMapPoints.push_back(pMP);
-                pMP->SetLastFrameSeen(mCurrentFrame->mnId);
+                pMP->SetTrackReferenceForFrame(mCurrentFrame->mnId);
             }
         }
     }
