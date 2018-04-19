@@ -850,7 +850,7 @@ bool Tracking::TrackWithMotionModel()
     else
         th=7;
     int nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,th,mSensor==Selflocalization::MONOCULAR);
-    std::cout << "nmatches: " << nmatches << std::endl;
+    //std::cout << "nmatches: " << nmatches << std::endl;
     // If few matches, uses a wider window search
     if(nmatches<20)
     {
@@ -933,10 +933,10 @@ bool Tracking::TrackLocalMap()
         else
             nRejectUnseen++;
     }
-    std::cout << "Unseen: " << nRejectUnseen << "Outlier: " << nRejectOutlier << std::endl;
+    //std::cout << "Unseen: " << nRejectUnseen << "Outlier: " << nRejectOutlier << std::endl;
     // Decide if the tracking was succesful
     // More restrictive if there was a relocalization recently
-    std::cout << "Inliers: " << mnMatchesInliers << std::endl;
+    //std::cout << "Inliers: " << mnMatchesInliers << std::endl;
     if(mCurrentFrame->mnId<mnLastRelocFrameId+mMaxFrames && mnMatchesInliers<50)
         return false;
 
@@ -1151,7 +1151,7 @@ void Tracking::SearchLocalPoints()
             nToMatch++;
         }
     }
-    std::cout << "nToMatch: " << nToMatch << std::endl;
+    //std::cout << "nToMatch: " << nToMatch << std::endl;
     if(nToMatch>0)
     {
         ORBmatcher matcher(0.8f);
@@ -1161,8 +1161,8 @@ void Tracking::SearchLocalPoints()
         // If the camera has been relocalised recently, perform a coarser search
         if(mCurrentFrame->mnId<mnLastRelocFrameId+2)
             th=5;
-        int matches = matcher.SearchByProjection(mCurrentFrame,mvpLocalMapPoints,th);
-        std::cout << "local matches: " << matches << std::endl;
+        matcher.SearchByProjection(mCurrentFrame,mvpLocalMapPoints,th);
+        //std::cout << "local matches: " << matches << std::endl;
     }
 }
 

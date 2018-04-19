@@ -1352,14 +1352,12 @@ int ORBmatcher::SearchByProjection(std::shared_ptr<OrbFrame> &CurrentFrame, cons
 
     const bool bForward = tlc.at<float>(2) > CurrentFrame->mb && !bMono;
     const bool bBackward = -tlc.at<float>(2) > CurrentFrame->mb && !bMono;
-    int lastPoints = 0;
     for (int i = 0; i < LastFrame->N; i++)
     {
         std::shared_ptr<OrbMapPoint> pMP = LastFrame->mvpMapPoints[i];
 
         if (pMP)
         {
-            lastPoints++;
             if (!LastFrame->mvbOutlier[i])
             {
                 // Project
@@ -1455,8 +1453,7 @@ int ORBmatcher::SearchByProjection(std::shared_ptr<OrbFrame> &CurrentFrame, cons
             }
         }
     }
-    std::cout << "lastpoints: " << lastPoints << std::endl;
-    //Apply rotation consistency
+        //Apply rotation consistency
     if (mbCheckOrientation)
     {
         int ind1 = -1;

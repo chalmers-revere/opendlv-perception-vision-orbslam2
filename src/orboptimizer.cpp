@@ -35,6 +35,8 @@ typedef BlockSolver< BlockSolverTraits<6, 3> > BlockSolver_6_3;*/
 
 typedef g2o::BlockSolver<g2o::BlockSolverTraits<6,3>> orbBlockSolver; 
 typedef g2o::LinearSolverEigen<orbBlockSolver::PoseMatrixType> orbLinearSolver;
+typedef g2o::BlockSolver<g2o::BlockSolverTraits<7,3>> essentialBlockSolver;
+typedef g2o::LinearSolverEigen<essentialBlockSolver::PoseMatrixType> essentialLinearSolver;
 
 OrbOptimizer::OrbOptimizer()
 {
@@ -376,7 +378,7 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
     const float chi2Mono[4]={5.991f,5.991f,5.991f,5.991f};
     const float chi2Stereo[4]={7.815f,7.815f,7.815f, 7.815f};
     const int its[4]={10,10,10,10};    
-    std::cout << vpEdgesMono.size() << std::endl;
+    //std::cout << vpEdgesMono.size() << std::endl;
     int nBad=0;
     for(size_t it=0; it<4; it++)
     {
@@ -803,8 +805,8 @@ void OrbOptimizer::OptimizeEssentialGraph(std::shared_ptr<OrbMap> pMap, std::sha
 {
     // Setup optimizer
     g2o::SparseOptimizer optimizer;
-    auto linearSolver = g2o::make_unique<orbLinearSolver>();
-    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<orbBlockSolver>(std::move(linearSolver)));
+    auto linearSolver = g2o::make_unique<essentialLinearSolver>();
+    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<essentialBlockSolver>(std::move(linearSolver)));
     optimizer.setAlgorithm(solver);
 
     solver->setUserLambdaInit(1e-16);
@@ -1063,8 +1065,8 @@ void OrbOptimizer::OptimizeEssentialGraph(std::shared_ptr<OrbMap> pMap, std::sha
 int OrbOptimizer::OptimizeSim3(std::shared_ptr<OrbKeyFrame> pKF1, std::shared_ptr<OrbKeyFrame> pKF2, std::vector<std::shared_ptr<OrbMapPoint>> &vpMatches1, g2o::Sim3 &g2oS12, const float th2, const bool bFixScale)
 {
     g2o::SparseOptimizer optimizer;
-    auto linearSolver = g2o::make_unique<orbLinearSolver>();
-    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<orbBlockSolver>(std::move(linearSolver)));
+    auto linearSolver = g2o::make_unique<essentialLinearSolver>();
+    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<essentialBlockSolver>(std::move(linearSolver)));
 	optimizer.setAlgorithm(solver);
 
     // Calibration
@@ -1157,8 +1159,8 @@ int OrbOptimizer::OptimizeSim3(std::shared_ptr<OrbKeyFrame> pKF1, std::shared_pt
         obs1 << kpUn1.pt.x, kpUn1.pt.y;
 
         g2o::EdgeSim3ProjectXYZ* e12 = new g2o::EdgeSim3ProjectXYZ();
-        e12->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id2)));
-        e12->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(0)));
+        e12->setVertex(0, optimizer.vertex(id2));
+        e12->setVertex(1, optimizer.vertex(0));
         e12->setMeasurement(obs1);
 
 
@@ -1178,8 +1180,8 @@ int OrbOptimizer::OptimizeSim3(std::shared_ptr<OrbKeyFrame> pKF1, std::shared_pt
 
         g2o::EdgeInverseSim3ProjectXYZ* e21 = new g2o::EdgeInverseSim3ProjectXYZ();
 
-        e21->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id1)));
-        e21->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(0)));
+        e21->setVertex(0, optimizer.vertex(id1));
+        e21->setVertex(1, optimizer.vertex(0));
         e21->setMeasurement(obs2);
 
 
