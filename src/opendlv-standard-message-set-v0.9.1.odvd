@@ -347,4 +347,9 @@ message opendlv.logic.cognition.GroundSteeringLimit [id = 1191] {
 message opendlv.logic.cognition.GroundSpeedLimit [id = 1192] {
   float speedLimit [id = 1];
 }
+message opendlv.proxy.OrbslamMap [id = 1193] {
+  bytes cameraCoordinates [id = 1];
+  bytes cameraPose [id = 3];
+  bytes mapCoordinates [id = 3];
+}
 
