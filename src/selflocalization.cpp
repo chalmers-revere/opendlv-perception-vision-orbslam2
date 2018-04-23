@@ -61,7 +61,8 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 
     cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArgs["cid"])), [](auto){}};
 
-	std::stringstream coordinates;
+	std::stringstream mappointCoordinates;
+	std::stringstream cameraCoordinates;
 
 	size_t lastMapPoint = 0;
 
@@ -71,7 +72,18 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 		OrbMap* map = m_map.get();
 		if(map)
 		{
-            coordinates.str(std::string());
+            mappointCoordinates.str(std::string());
+            cameraCoordinates.str(std::string());
+
+            cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
+            cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).colRange(3, 4);
+
+            cv::Mat cameraPosition = -R*T;
+
+            cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(0, 0) << ':';
+            cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(1, 0) << ':';
+            cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(2, 0) << ':';
+
 			auto mapPoints = map->GetAllMapPoints();
 			for(; lastMapPoint < mapPoints.size(); lastMapPoint++)
 			{
@@ -81,23 +93,21 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 				auto y = worldPosition.at<float>(1, 0);
 				auto z = worldPosition.at<float>(2, 0);
 
-				coordinates << std::fixed <<  std::setprecision(4) << x << ':';
-				coordinates << std::fixed <<  std::setprecision(4) << y << ':';
-				coordinates << std::fixed <<  std::setprecision(4) << z << ':';
+				mappointCoordinates << std::fixed <<  std::setprecision(4) << x << ':';
+				mappointCoordinates << std::fixed <<  std::setprecision(4) << y << ':';
+				mappointCoordinates << std::fixed <<  std::setprecision(4) << z << ':';
 			}
 		}
 
-        std::cout << "Length of mapPoints is: " << coordinates.str().length() << "." << std::endl;
-        opendlv::proxy::PointCloudReading pointCloudPart1;
-        pointCloudPart1.startAzimuth(0.0)
-                .endAzimuth(0.0)
-                .entriesPerAzimuth(12)
-                .distances(std::string(coordinates.str()))
-                .numberOfBitsForIntensity(0);
+
+        std::cout << "Length of mapPoints is: " << mappointCoordinates.str().length() << "." << std::endl;
+		opendlv::proxy::OrbslamMap orbSlamMap;
+		orbSlamMap.mapCoordinates(mappointCoordinates.str());
+		orbSlamMap.cameraCoordinates(cameraCoordinates.str());
 
         std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
         std::cout << "Sending OD4" << std::endl;
-        od4.send(pointCloudPart1, cluon::time::convert(timePoint), i);
+        od4.send(orbSlamMap, cluon::time::convert(timePoint), i);
         // send results to conference.
 	}
 
