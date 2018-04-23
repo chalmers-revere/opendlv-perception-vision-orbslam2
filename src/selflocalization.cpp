@@ -63,6 +63,7 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 
 	std::stringstream mappointCoordinates;
 	std::stringstream cameraCoordinates;
+    std::stringstream cameraRotation;
 
 	size_t lastMapPoint = 0;
 
@@ -74,15 +75,20 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 		{
             mappointCoordinates.str(std::string());
             cameraCoordinates.str(std::string());
+            cameraRotation.str(std::string());
 
             cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
             cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).colRange(3, 4);
 
-            cv::Mat cameraPosition = -R*T;
+            cv::Mat cameraPosition = -R * T;
 
             cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(0, 0) << ':';
             cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(1, 0) << ':';
             cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(2, 0) << ':';
+
+            cameraRotation << std::fixed << std::setprecision(4) << R.at<float>(0, 2) << ':';
+            cameraRotation << std::fixed << std::setprecision(4) << R.at<float>(1, 2) << ':';
+            cameraRotation << std::fixed << std::setprecision(4) << R.at<float>(2, 2) << ':';
 
 			auto mapPoints = map->GetAllMapPoints();
 			for(; lastMapPoint < mapPoints.size(); lastMapPoint++)
@@ -104,6 +110,7 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 		opendlv::proxy::OrbslamMap orbSlamMap;
 		orbSlamMap.mapCoordinates(mappointCoordinates.str());
 		orbSlamMap.cameraCoordinates(cameraCoordinates.str());
+		orbSlamMap.cameraRotation(cameraRotation.str());
 
         std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
         std::cout << "Sending OD4" << std::endl;
