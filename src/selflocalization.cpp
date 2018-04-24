@@ -78,7 +78,9 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
             cameraRotation.str(std::string());
 
             cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
-            cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).colRange(3, 4);
+            cv::Mat Tcw = m_pTracker->mCurrentFrame->mTcw;
+            cv::Mat T = Tcw.rowRange(0, 3).colRange(3, 4);
+
 
             cv::Mat cameraPosition = -R * T;
 
@@ -95,6 +97,8 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 			{
 				OrbMapPoint* mp = mapPoints[lastMapPoint].get();
 				cv::Mat worldPosition = mp->GetWorldPosition();
+
+                cv::Mat mapPointCameraPosition = Tcw.rowRange(0,3).colRange(0,3) * worldPosition + Tcw.rowRange(0,3).col(3);
 				auto x = worldPosition.at<float>(0, 0);
 				auto y = worldPosition.at<float>(1, 0);
 				auto z = worldPosition.at<float>(2, 0);
