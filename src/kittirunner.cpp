@@ -64,12 +64,12 @@ void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &
     vstrImageLeft.resize(timeStamps.size());
     vstrImageRight.resize(timeStamps.size());
 
-    for(unsigned long i=0; i<timeStamps.size(); i++)
+    for(unsigned long i=500; i<timeStamps.size(); i++)
     {
         std::stringstream ss;
         ss << std::setfill('0') << std::setw(6) << i;
-        vstrImageLeft[i] = strPrefixLeft + ss.str() + ".png";
-        vstrImageRight[i] = strPrefixRight + ss.str() + ".png";
+        vstrImageLeft[i-500] = strPrefixLeft + ss.str() + ".png";
+        vstrImageRight[i-500] = strPrefixRight + ss.str() + ".png";
     }
 }
 
@@ -98,12 +98,49 @@ void KittiRunner::ShutDown() {
 
 void KittiRunner::ProcessImage(size_t imageNumber) {
     cv::Mat imLeft, imRight;
+    cv::Mat R1, R2, P1, P2;
+    cv::Rect validRoI[2];
+
+    //CAMERA PARAMETERS
+        cv::Mat mtxLeft = (cv::Mat_<double>(3, 3) <<
+        669.783, 0, 637.704,
+        0, 669.783, 360.875,
+        0, 0, 1);
+        cv::Mat distLeft = (cv::Mat_<double>(5, 1) << -0.173042, 0.0258831, 0, 0, 0);
+        cv::Mat mtxRight = (cv::Mat_<double>(3, 3) <<
+        700.225, 0, 660.759,
+        0, 700.225, 364.782,
+        0, 0, 1);
+        cv::Mat distRight = (cv::Mat_<double>(5, 1) << -0.174209, 0.026726, 0, 0, 0);
+        cv::Mat rodrigues = (cv::Mat_<double>(3, 1) << -0.0132397, 0.021005, -0.00121284);
+        cv::Mat R;
+        cv::Rodrigues(rodrigues, R);
+        cv::Mat Q;
+        cv::Mat T = (cv::Mat_<double>(3, 1) << -0.12, 0, 0);
+         cv::Mat rmap[2][2];
+
+        
+
     // Read left and right images from file
     std::cout << "reading image: " << this->m_leftImages[imageNumber] << std::endl;
     imLeft = cv::imread(this->m_leftImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
+    int width = imLeft.cols;
+    int height = imLeft.rows;
+    cv::Size stdSize = cv::Size(width, height);
     if(this->m_isStereo){
         std::cout << "reading image: " << this->m_rightImages[imageNumber] << std::endl;
         imRight = cv::imread(this->m_rightImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
+
+          
+        cv::stereoRectify(mtxLeft, distLeft, mtxRight, distRight, stdSize, R, T, R1, R2, P1, P2, Q, cv::CALIB_ZERO_DISPARITY, 0.0, stdSize, &validRoI[0], &validRoI[1]);
+        cv::initUndistortRectifyMap(mtxLeft, distLeft, R1, P1, stdSize, CV_16SC2, rmap[0][0], rmap[0][1]);
+        cv::initUndistortRectifyMap(mtxRight, distRight, R2, P2, stdSize, CV_16SC2, rmap[1][0], rmap[1][1]);
+        cv::remap(imLeft, imLeft, rmap[0][0], rmap[0][1], cv::INTER_LINEAR);
+        cv::remap(imRight, imRight, rmap[1][0], rmap[1][1], cv::INTER_LINEAR);
+
+
+
+
     }
     //std::cout << "loaded images " << std::endl;
     double tframe = this->m_timeStamps[imageNumber];
@@ -131,14 +168,14 @@ void KittiRunner::ProcessImage(size_t imageNumber) {
     this->m_timeTrackingStatistics[imageNumber]=ttrack;
 
     // Wait to load the next frame
-    double T=0;
+    double Ti=0;
     if(imageNumber < this->m_imagesCount-1)
-        T = this->m_timeStamps[imageNumber+1]-tframe;
+        Ti = this->m_timeStamps[imageNumber+1]-tframe;
     else if(imageNumber>0)
-        T = tframe-this->m_timeStamps[imageNumber-1];
+        Ti = tframe-this->m_timeStamps[imageNumber-1];
 
-    if(ttrack<T)
-        usleep(static_cast<int>((T-ttrack)*1e6));
+    if(ttrack<Ti)
+        usleep(static_cast<int>((Ti-ttrack)*1e6));
 
-    std::cout << "Image " << imageNumber << " processed" << std::endl;
+    //std::cout << "Image " << imageNumber << " processed" << std::endl;
 }

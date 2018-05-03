@@ -76,7 +76,7 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
             cameraCoordinates.str(std::string());
 
             cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
-            cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).colRange(3, 4);
+            cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).col(3);
 
             cv::Mat cameraPosition = -R*T;
 
