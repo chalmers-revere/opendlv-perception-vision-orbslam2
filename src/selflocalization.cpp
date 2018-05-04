@@ -70,12 +70,13 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 	{
 		kittiRunner.ProcessImage(i);
 		OrbMap* map = m_map.get();
-		if(map)
+		if(map && m_pTracker->GetTrackingState())
 		{
             mappointCoordinates.str(std::string());
             cameraCoordinates.str(std::string());
 
             cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
+			
             cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).col(3);
 
             cv::Mat cameraPosition = -R*T;

@@ -50,5 +50,25 @@ private:
     std::vector<std::string> m_rightImages;
     std::vector<double> m_timeStamps;
     std::vector<double> m_timeTrackingStatistics;
+
+    //Rectification parameters
+        cv::Mat mtxLeft = {}; 
+        cv::Mat distLeft = {};
+        cv::Mat mtxRight = {};
+        cv::Mat distRight = {};
+        cv::Mat R = {};
+        cv::Mat rodrigues = {};
+        cv::Mat Q = {};
+        cv::Mat T = {};
+        cv::Mat rmap[2][2];
+        cv::Mat imLeft = {};
+        cv::Mat imRight = {};
+        cv::Size stdSize = {}; 
+
+        cv::Mat R1 = {};
+        cv::Mat R2 = {};
+        cv::Mat P1 = {};
+        cv::Mat P2 = {};
+        cv::Rect validRoI[2] = {};
 };
 #endif
