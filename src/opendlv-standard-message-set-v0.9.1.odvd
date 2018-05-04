@@ -349,7 +349,7 @@ message opendlv.logic.cognition.GroundSpeedLimit [id = 1192] {
 }
 message opendlv.proxy.OrbslamMap [id = 1193] {
   bytes cameraCoordinates [id = 1];
-  bytes cameraPose [id = 2];
+  bytes cameraRotation [id = 2];
   bytes mapCoordinates [id = 3];
 }
 
