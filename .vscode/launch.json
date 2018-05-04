@@ -1,0 +1,27 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/opendlv-perception-vision-orbslam2",
+            "args": ["--name=cam0", "--width=2560", "--height=720", "--bpp=24", "--cid=111", "--cameraType=1", "--vocFilePath=${workspaceFolder}/../images/ORBvoc.txt", "--Camera.fx=707.634468", "--Camera.fy=707.634468", "--Camera.cx=639.8428", "--Camera.cy=377.6489", "--Camera.k1=0", "--Camera.k2=0", "--Camera.k3=0", "--Camera.p1=0", "--Camera.p2=0", "--Camera.fps=15.0", "--Camera.bf=84.916", "--Camera.RGB=1", "--ThDepth=50", "--ORBextractor.nFeatures=4000", "--ORBextractor.scaleFactor=1.2", "--ORBextractor.nLevels=8", "--ORBextractor.iniThFAST=15", "--ORBextractor.minThFAST=3", "--kittiPath=${workspaceFolder}/../kitti/dataset/sequences/lindholmen"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ]
+}

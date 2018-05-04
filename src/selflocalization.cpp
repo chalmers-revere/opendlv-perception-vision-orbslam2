@@ -39,7 +39,7 @@
   * @param a_argv Command line arguments.
   */
 Selflocalization::Selflocalization(std::map<std::string, std::string> commandlineArgs) :
-		m_isMonocular()
+		  m_isMonocular()
 		, m_pMapper()
 		, m_pTracker()
 		, m_pLoopCloser()
@@ -49,13 +49,13 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 		, m_pExtractOrb()
 		, m_pVocabulary()
 		, m_pKeyFrameDatabase()
-		, m_map(),
-        m_last_envelope_ts()
+		, m_map()
+		, m_last_envelope_ts()
 
 {
     this->m_last_envelope_ts = std::chrono::steady_clock::now();
 	setUp(commandlineArgs);
-	std::cout << "Starting Kittirunner" << std::endl;
+	/*std::cout << "Starting Kittirunner" << std::endl;
 	std::cout << commandlineArgs["kittiPath"] << std::endl;
 	KittiRunner kittiRunner(commandlineArgs["kittiPath"],!m_isMonocular,std::shared_ptr<Selflocalization>(this));
 
@@ -112,7 +112,7 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
         // send results to conference.
 	}
 
-	kittiRunner.ShutDown();
+	kittiRunner.ShutDown();*/
 	//Initialization
 
 	//Orb vocabulary - global pointer
@@ -141,55 +141,26 @@ Selflocalization::~Selflocalization()
 /*
 *Takes data from conference, in our case image?
 */
-void Selflocalization::nextContainer(cluon::data::Envelope &a_container)
+void Selflocalization::nextContainer(cv::Mat &img)
 {
-	//cv::Mat img;
+	 cluon::data::TimeStamp currentTime = cluon::time::convert(std::chrono::system_clock::now());
+	double currTime = currentTime.microseconds();
 
-	//if (a_container.dataType() == opendlv::proxy::ImageReadingShared::ID()){
-
-	cluon::data::TimeStamp currTime = a_container.sampleTimeStamp();
-	double currentTime = currTime.microseconds();
-	std::cout << "CurrentTime: " << currentTime << std::endl;
-
-
-	/*opendlv::proxy::ImageReadingShared sharedImg = cluon::extractMessage<opendlv::proxy::ImageReadingShared>(std::move(a_container));
-
-
-		img = m_pImageGrab->ExtractSharedImage(&sharedImg);
-
-	if(m_cameraType){
+	if(!m_isMonocular){
+		std::cout << "Im in the stereo container" << std::endl;
 		int width = img.cols;
 		int height = img.rows;
 		cv::Mat imgL(img, cv::Rect(0, 0, width/2, height));
 		cv::Mat imgR(img, cv::Rect(width/2, 0, width/2, height));
 		//GO TO TRACKING
+		Track(imgL,imgR, currTime);
 
-	    //cv::Mat m_cameraPose = m_pImageGrab->ImageToGreyscaleStereo(imgL,imgR,currentTime);
-		//cv::Mat m_cameraPose = m_pTracker->GrabImageStereo(imgL,imgR,timestamp);
+	
+	}else{
+		Track(img,currTime);
 
-	*/
-	//}else{
-	//GO TO TRACKING
-	//cv::Mat m_cameraPose = m_pImageGrab->ImageToGreyscaleMono(img,currentTime);
-	//cv::Mat m_cameraPose = m_pTracker->GrabImageMonocular(img,currentTime);
-	/*ORB testcode
-	std::vector<cv::KeyPoint> TestMat;
-	cv::Mat testArr;
-	cv::Mat Tcw = cv::imread("/media/test2.jpg",CV_LOAD_IMAGE_COLOR);
-	cv::cvtColor(Tcw,Tcw,cv::COLOR_RGB2GRAY);
-	cv::Mat Tcw_keypoints;
-	m_pExtractOrb->ExtractFeatures(Tcw, TestMat, testArr);
-	cv::drawKeypoints( Tcw, TestMat, Tcw_keypoints, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
-	cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
-	cv::imshow( "Display window", Tcw_keypoints );                   // Show our image inside it.
-	cv::waitKey(0);*/
+	}
 
-	//}
-
-	//std::cout << "[" << getName() << "] " << "[Unable to extract shared image." << std::endl;
-	//}
-
-	//if stereo
 }
 
 void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)

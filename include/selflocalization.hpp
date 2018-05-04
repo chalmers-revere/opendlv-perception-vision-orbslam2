@@ -71,7 +71,7 @@ public:
     Selflocalization(Selflocalization const &) = delete;
     Selflocalization &operator=(Selflocalization const &) = delete;
     ~Selflocalization();
-    void nextContainer(cluon::data::Envelope &a_container);
+    void nextContainer(cv::Mat &img);
     void Shutdown();
     void Track(cv::Mat &imLeft, cv::Mat &imRight, double &timestamp);
     void Track(cv::Mat &imLeft, double &timestamp);

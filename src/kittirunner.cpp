@@ -44,14 +44,16 @@ KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_
        0, 0, 1);
     //mtxRight = mtxLeft;
     distRight = (cv::Mat_<double>(5, 1) << -0.174209, 0.026726, 0, 0, 0);
-    T = (cv::Mat_<double>(3, 1) << 0.12, 0, 0);
+    T = (cv::Mat_<double>(3, 1) << -0.12, 0, 0);
     rodrigues = (cv::Mat_<double>(3, 1) << -0.0132397, 0.021005, -0.00121284);
         cv::Rodrigues(rodrigues, R);
-        stdSize = cv::Size(1280, 720);
+        stdSize = cv::Size(1280, 480);
 
         cv::stereoRectify(mtxLeft, distLeft, mtxRight, distRight, stdSize, R, T, R1, R2, P1, P2, Q, cv::CALIB_ZERO_DISPARITY, 0.0, stdSize, &validRoI[0], &validRoI[1]);
         cv::initUndistortRectifyMap(mtxLeft, distLeft, R1, P1, stdSize, CV_16SC2, rmap[0][0], rmap[0][1]);
         cv::initUndistortRectifyMap(mtxRight, distRight, R2, P2, stdSize, CV_16SC2, rmap[1][0], rmap[1][1]);
+        std::cout << P1 << std::endl;
+        std::cout << P2 << std::endl;
 }
 
 KittiRunner::~KittiRunner(){
@@ -85,12 +87,12 @@ void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &
     vstrImageLeft.resize(timeStamps.size());
     vstrImageRight.resize(timeStamps.size());
 
-    for(unsigned long i=500; i<timeStamps.size(); i++)
+    for(unsigned long i=5000; i<timeStamps.size(); i++)
     {
         std::stringstream ss;
         ss << std::setfill('0') << std::setw(6) << i;
-        vstrImageLeft[i-500] = strPrefixLeft + ss.str() + ".png";
-        vstrImageRight[i-500] = strPrefixRight + ss.str() + ".png";
+        vstrImageLeft[i-5000] = strPrefixLeft + ss.str() + ".png";
+        vstrImageRight[i-5000] = strPrefixRight + ss.str() + ".png";
     }
 }
 
@@ -118,7 +120,10 @@ void KittiRunner::ShutDown() {
 }
 
 void KittiRunner::ProcessImage(size_t imageNumber) {
-    
+    cv::Mat imLeft;
+    cv::Mat imRight;
+    cv::Mat imgLcrop;
+    cv::Mat imgRcrop;
 
     //CAMERA PARAMETER
 
@@ -130,21 +135,31 @@ void KittiRunner::ProcessImage(size_t imageNumber) {
 
     // Read left and right images from file
     std::cout << "reading image: " << this->m_leftImages[imageNumber] << std::endl;
-    imLeft = cv::imread(this->m_leftImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
+    imgL = cv::imread(this->m_leftImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
+    imgLcrop = imgL.rowRange(0,479);
     
     if(this->m_isStereo){
         std::cout << "reading image: " << this->m_rightImages[imageNumber] << std::endl;
-        imRight = cv::imread(this->m_rightImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
+        imgR = cv::imread(this->m_rightImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
+        imgRcrop = imgR.rowRange(0,479);
 
-        cv::remap(imLeft, imLeft, rmap[0][0], rmap[0][1], cv::INTER_LINEAR);
-        cv::remap(imRight, imRight, rmap[1][0], rmap[1][1], cv::INTER_LINEAR);
-        //int w = imLeft
-            //cv::namedWindow( "Display window",  );// Create a window for display.
-            //cv::imshow( "Display window", imLeft );   
+        cv::remap(imgLcrop,imLeft, rmap[0][0], rmap[0][1], cv::INTER_LINEAR);
+        cv::remap( imgRcrop,imRight, rmap[1][0], rmap[1][1], cv::INTER_LINEAR);
+        /*int wL = imLeft.cols;
+        int hL = imLeft.rows;
 
-            //cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
-            //cv::imshow( "Display window", imRight );   
+        int wR = imRight.cols;
+        int hR = imRight.rows;
 
+        std::cout << "Size Left: " << wL << " : " << hL << std::endl;
+
+        std::cout << "Size Right: " << wR << " : " << hR << std::endl;
+            cv::namedWindow( "Display window 1", cv::WINDOW_AUTOSIZE );// Create a window for display.
+            cv::imshow( "Display window 1", imLeft );   
+
+            cv::namedWindow( "Display window 2", cv::WINDOW_AUTOSIZE );// Create a window for display.
+            cv::imshow( "Display window 2", imLeft );   
+            cv::waitKey(0);*/
 
     }
     //std::cout << "loaded images " << std::endl;

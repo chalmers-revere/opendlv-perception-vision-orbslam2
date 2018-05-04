@@ -61,8 +61,8 @@ private:
         cv::Mat Q = {};
         cv::Mat T = {};
         cv::Mat rmap[2][2];
-        cv::Mat imLeft = {};
-        cv::Mat imRight = {};
+        cv::Mat imgL = {};
+        cv::Mat imgR = {};
         cv::Size stdSize = {}; 
 
         cv::Mat R1 = {};
