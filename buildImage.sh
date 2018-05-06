@@ -23,7 +23,7 @@ cd $(dirname $0)
 
 PROJ_ROOT=.
 
-DOCKERFILE=Dockerfile.amd64
+DOCKERFILE=Dockerfile
 IMAGE_NAME=opendlv-perception-vision-orbslam2-amd64
 
 if docker build -f ${PROJ_ROOT}/${DOCKERFILE} -t chalmersrevere/${IMAGE_NAME}:latest ${PROJ_ROOT}; then
