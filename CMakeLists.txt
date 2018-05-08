@@ -20,7 +20,7 @@ project(opendlv-perception-vision-orbslam2)
 ################################################################################
 # Defining the relevant versions of OpenDLV Standard Message Set and libcluon.
 set(OPENDLV_STANDARD_MESSAGE_SET opendlv-standard-message-set-v0.9.1.odvd)
-set(CLUON_COMPLETE cluon-complete-v0.0.82.hpp)
+set(CLUON_COMPLETE cluon-complete-v0.0.77.hpp)
 
 ################################################################################
 # This project requires C++14 or newer.
@@ -54,7 +54,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-SET(CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}/CMakeFiles")
+SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 ################################################################################
 # Extract cluon-msc from cluon-complete.hpp.
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/cluon-msc

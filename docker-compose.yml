@@ -29,19 +29,23 @@ services:
 #        command: "/opt/od4/bin/odsupercomponent --cid=${CID} --verbose=1 --configuration=/opt/opendlv.data/configuration"
 
     selflocalization:
-       image: kitti:kittiv2
+       image: orbubuntu:orbubuntuv0 #orbamd:orbamdv0
        network_mode: "host"
        ipc: host
        environment:
            - DISPLAY=$DISPLAY
+       ulimits:
+         memlock:
+           soft: 44236800
+           hard: 44236800
        volumes:
-           - ../kitti:/kitty
-           - ../images:/media  #Needs folder with images and an ORBvoc.txt
+           - /home/somliga/MasterThesis/latest/kitti:/kitty
+           - /home/somliga/MasterThesis/latest/images:/media  #Needs folder with images and an ORBvoc.txt
            - /tmp/.X11-unix:/tmp/.X11-unix
-       command: "/usr/bin/opendlv-perception-vision-orbslam2 --cid=${CID} --cameraType=1 --vocFilePath=/media/ORBvoc.txt --Camera.fx=435.2046959714599 --Camera.fy=435.2046959714599 --Camera.cx=367.4517211914062 --Camera.cy=252.2008514404297 --Camera.k1=0 --Camera.k2=0 --Camera.k3=0 --Camera.p1=0 --Camera.p2=0 --Camera.fps=15 --Camera.bf=47.90639384423901 --Camera.RGB=1 --ThDepth=35 --ORBextractor.nFeatures=2000 --ORBextractor.scaleFactor=1.2 --ORBextractor.nLevels=8 --ORBextractor.iniThFAST=20 --ORBextractor.minThFAST=7 --kittiPath=/kitty/dataset/sequences/parkinglot"
-    vehicle_viewer:
-           image: testviewer
-           network_mode: host
-           ports:
-              - 8081:8081
-           command: "--cid=${CID}"
+       command: "/tmp/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2 --name=cam0 --width=2560 --height=720 --bpp=24 --cid=${CID} --cameraType=1 --vocFilePath=/media/ORBvoc.txt --Camera.fx=707.634468 --Camera.fy=707.634468 --Camera.cx=639.8428 --Camera.cy=377.6489 --Camera.k1=0 --Camera.k2=0 --Camera.k3=0 --Camera.p1=0 --Camera.p2=0 --Camera.fps=15 --Camera.bf=84.916 --Camera.RGB=1 --ThDepth=45 --ORBextractor.nFeatures=2000 --ORBextractor.scaleFactor=1.2 --ORBextractor.nLevels=8 --ORBextractor.iniThFAST=20 --ORBextractor.minThFAST=7 --kittiPath=/kitty/dataset/sequences/parkinglot"
+#    vehicle_viewer:
+#           image: testviewer
+#           network_mode: host
+#           ports:
+#              - 8081:8081
+#           command: "--cid=${CID}"

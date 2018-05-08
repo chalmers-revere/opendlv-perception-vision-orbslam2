@@ -73,10 +73,9 @@ int32_t main(int32_t argc, char **argv) {
                 size.height = HEIGHT;
 
                 IplImage *image = cvCreateImageHeader(size, IPL_DEPTH_8U, BPP/8);
-                /*sharedMemory->lock();
+                sharedMemory->lock();
                 image->imageData = sharedMemory->data();
                 image->imageDataOrigin = image->imageData;
-                sharedMemory->unlock();*/
                 sharedMemory->unlock();
                 while (od4.isRunning()) {
                     // The shared memory uses a pthread broadcast to notify us; just sleep to get awaken up.
