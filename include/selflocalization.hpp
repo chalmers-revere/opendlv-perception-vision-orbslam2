@@ -99,6 +99,10 @@ private:
     std::mutex mMutexReset = {};
     bool m_reset = false;
     std::chrono::steady_clock::time_point m_last_envelope_ts;
+
+        //Rectification parameters
+        cv::Mat rmap[2][2];
+        
 };
 
 

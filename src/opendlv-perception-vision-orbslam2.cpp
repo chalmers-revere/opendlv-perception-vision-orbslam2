@@ -79,11 +79,10 @@ int32_t main(int32_t argc, char **argv) {
                 sharedMemory->unlock();
                 while (od4.isRunning()) {
                     // The shared memory uses a pthread broadcast to notify us; just sleep to get awaken up.
-                    std::cout << "start waiting" << std::endl;
+                    
                     sharedMemory->wait();
-                    std::cout << "done waiting" << std::endl;
+                    
                     sharedMemory->lock();
-                        std::cout << "Sending Image to Orb" << std::endl;
                         image->imageData = sharedMemory->data();
                         image->imageDataOrigin = image->imageData;
                         cv::Mat img = cv::cvarrToMat(image); 
