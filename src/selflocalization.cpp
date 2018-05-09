@@ -154,13 +154,23 @@ void Selflocalization::nextContainer(cv::Mat &img)
 		cv::Mat imgR(img, cv::Rect(width/2, 0, width/2, height));
 		//GO TO TRACKING
 		Track(imgL,imgR, currTime);
-
-	
 	}else{
 		Track(img,currTime);
-
 	}
+	sendPose();
+}
 
+void Selflocalization::sendPose(){
+	//Get the cameraPosition
+	cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
+    cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).col(3);
+    cv::Mat cameraPosition = -R*T;
+	float x = cameraPosition.at<float>(0,0);
+	float y = cameraPosition.at<float>(0,1);
+	float z = cameraPosition.at<float>(0,2);
+	std::cout << x << y << z << std::endl;
+	//Heading shift using a 2D rotation matrix
+	//Then use the wgs84 reference to convert to geodetic coordinates and send
 }
 
 void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
