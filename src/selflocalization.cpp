@@ -264,3 +264,49 @@ opendlv::proxy::PointCloudReading Selflocalization::CreatePointCloudFromMap() {
 			.numberOfBitsForIntensity(0);
 	return pointCloudPart1;
 }
+
+opendlv::proxy::OrbslamMap Selflocalization::sendToWebb(){
+		std::stringstream mappointCoordinates;
+		std::stringstream cameraCoordinates;
+		size_t lastMapPoint = 0;
+
+		OrbMap* map = m_map.get();
+		if(map && m_pTracker->GetTrackingState())
+		{
+            mappointCoordinates.str(std::string());
+            cameraCoordinates.str(std::string());
+
+            cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
+			
+            cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).col(3);
+
+            cv::Mat cameraPosition = -R*T;
+
+            cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(0, 0) << ':';
+            cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(1, 0) << ':';
+            cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(2, 0) << ':';
+
+			auto mapPoints = map->GetAllMapPoints();
+			for(; lastMapPoint < mapPoints.size(); lastMapPoint++)
+			{
+				OrbMapPoint* mp = mapPoints[lastMapPoint].get();
+				cv::Mat worldPosition = mp->GetWorldPosition();
+				auto x = worldPosition.at<float>(0, 0);
+				auto y = worldPosition.at<float>(1, 0);
+				auto z = worldPosition.at<float>(2, 0);
+
+				mappointCoordinates << std::fixed <<  std::setprecision(4) << x << ':';
+				mappointCoordinates << std::fixed <<  std::setprecision(4) << y << ':';
+				mappointCoordinates << std::fixed <<  std::setprecision(4) << z << ':';
+			}
+		}
+
+
+        std::cout << "Length of mapPoints is: " << mappointCoordinates.str().length() << "." << std::endl;
+		opendlv::proxy::OrbslamMap orbSlamMap;
+		orbSlamMap.mapCoordinates(mappointCoordinates.str());
+		orbSlamMap.cameraCoordinates(cameraCoordinates.str());
+
+		return orbSlamMap;
+        // send results to conference.
+}

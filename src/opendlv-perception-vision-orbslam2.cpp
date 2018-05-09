@@ -29,6 +29,9 @@
 #include <string>
 #include <thread>
 
+
+
+
 int32_t main(int32_t argc, char **argv) {
     int32_t retCode{0};
     auto commandlineArguments = cluon::getCommandlineArguments(argc, argv);
@@ -63,7 +66,8 @@ int32_t main(int32_t argc, char **argv) {
             Selflocalization selflocalization(commandlineArguments);
             // Interface to a running OpenDaVINCI session (ignoring any incoming Envelopes).
             cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArguments["cid"]))};
-
+            size_t frameCounter = 0;
+            
             std::unique_ptr<cluon::SharedMemory> sharedMemory(new cluon::SharedMemory{NAME});
             if (sharedMemory && sharedMemory->valid()) {
                 std::clog << argv[0] << ": Found shared memory '" << sharedMemory->name() << "' (" << sharedMemory->size() << " bytes)." << std::endl;
@@ -86,9 +90,16 @@ int32_t main(int32_t argc, char **argv) {
                         image->imageData = sharedMemory->data();
                         image->imageDataOrigin = image->imageData;
                         cv::Mat img = cv::cvarrToMat(image); 
-                    selflocalization.nextContainer(img);
+                    
                     sharedMemory->unlock();
                     cv::waitKey(1);
+                    selflocalization.nextContainer(img);
+                    
+                    opendlv::proxy::OrbslamMap orbSlamMap = selflocalization.sendToWebb();
+                    std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
+                    std::cout << "Sending OD4" << std::endl;
+                    od4.send(orbSlamMap, cluon::time::convert(timePoint), frameCounter);
+		            frameCounter++;
                 }
 
                 cvReleaseImageHeader(&image);

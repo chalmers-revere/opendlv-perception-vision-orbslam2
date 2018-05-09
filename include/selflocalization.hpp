@@ -76,8 +76,10 @@ public:
     void Track(cv::Mat &imLeft, cv::Mat &imRight, double &timestamp);
     void Track(cv::Mat &imLeft, double &timestamp);
 
+
     // Reset the system (clear map)
     void Reset();
+    opendlv::proxy::OrbslamMap sendToWebb();
 
 private:
     void setUp(std::map<std::string, std::string> commandlineArgs);
