@@ -54,26 +54,8 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 
 {
 	setUp(commandlineArgs);
-	//Initialization
-
-	//Orb vocabulary - global pointer
-	//KeyframDatabase - global pointer
-	//Map - global pointer
-	//Tracking - global pointer
-	//Local mapping - global pointer
-	//Loop closing - global pointer
-
-	//System threads
-	//Tracking lives in system thread
-	//Local mapping - global thread pointer
-	//Loop closing - global thread pointer
 
 
-
-
-	/*System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,
-               		const bool bUseViewer):mSensor(sensor), mpViewer(static_cast<Viewer*>(NULL)), mbReset(false),mbActivateLocalizationMode(false),
-					mbDeactivateLocalizationMode(false)*/
 }
 
 Selflocalization::~Selflocalization()
@@ -158,11 +140,13 @@ void Selflocalization::nextContainer(cv::Mat &img)
 	double currTime = currentTime.microseconds();
 
 	if(!m_isMonocular){
-		std::cout << "Im in the stereo container" << std::endl;
+		//std::cout << "Im in the stereo container" << std::endl;
 		int width = img.cols;
 		int height = img.rows;
 		cv::Mat imgL(img, cv::Rect(0, 0, width/2, height));
 		cv::Mat imgR(img, cv::Rect(width/2, 0, width/2, height));
+		cv::remap(imgL,imgL, rmap[0][0], rmap[0][1], cv::INTER_LINEAR);
+        cv::remap( imgR,imgR, rmap[1][0], rmap[1][1], cv::INTER_LINEAR);
 		//GO TO TRACKING
 		Track(imgL,imgR, currTime);
 	}else{
@@ -229,6 +213,74 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
     */
 	const int sensor = std::stoi(commandlineArgs["cameraType"]);
 
+	if(sensor){
+		//Declare variables
+		cv::Mat mtxLeft; 
+        cv::Mat distLeft;
+        cv::Mat mtxRight;
+        cv::Mat distRight;
+        cv::Mat R;
+        cv::Mat rodrigues;
+        cv::Mat Q;
+        cv::Mat T;
+        
+        cv::Mat imgL;
+        cv::Mat imgR;
+        cv::Size stdSize; 
+
+        cv::Mat R1;
+        cv::Mat R2;
+        cv::Mat P1;
+        cv::Mat P2;
+        cv::Rect validRoI[2];
+		//Grab parameters
+		    float fx = std::stof(commandlineArgs["Camera.fx"]);
+    		float fy = std::stof(commandlineArgs["Camera.fy"]);
+    		float cx = std::stof(commandlineArgs["Camera.cx"]);
+    		float cy = std::stof(commandlineArgs["Camera.cy"]);
+			float k1 = std::stof(commandlineArgs["Camera.k1"]);
+    		float k2 = std::stof(commandlineArgs["Camera.k2"]);
+    		float k3 = std::stof(commandlineArgs["Camera.k3"]);
+    		float p1 = std::stof(commandlineArgs["Camera.p1"]);
+    		float p2 = std::stof(commandlineArgs["Camera.p2"]);
+    		float rx = std::stof(commandlineArgs["Camera.rx"]);
+    		float cv = std::stof(commandlineArgs["Camera.cv"]);
+    		float rz = std::stof(commandlineArgs["Camera.rz"]); 
+			float bs = std::stof(commandlineArgs["Camera.baseline"]);
+			int width = std::stoi(commandlineArgs["width"]);
+			int height = std::stoi(commandlineArgs["height"]);
+			//Left Camera
+		    mtxLeft = (cv::Mat_<double>(3, 3) <<
+        		fx, 0, cx,
+        		0, fy, cy,
+        		0, 0, 1);
+    		distLeft = (cv::Mat_<double>(5, 1) << k1, k2, p1, p2, k3);
+			//Right Camera
+    		mtxRight = (cv::Mat_<double>(3, 3) <<
+       			700.225, 0, 660.759,
+       			0, 700.225, 364.782,
+       			0, 0, 1);
+    		distRight = (cv::Mat_<double>(5, 1) << -0.174209, 0.026726, 0, 0, 0);
+
+    	T = (cv::Mat_<double>(3, 1) << -bs, 0, 0);
+    	rodrigues = (cv::Mat_<double>(3, 1) << -rx, cv, rz);
+        cv::Rodrigues(rodrigues, R);
+        stdSize = cv::Size(width/2, height);
+
+        cv::stereoRectify(mtxLeft, distLeft, mtxRight, distRight, stdSize, R, T, R1, R2, P1, P2, Q, cv::CALIB_ZERO_DISPARITY, 0.0, stdSize, &validRoI[0], &validRoI[1]);
+        cv::initUndistortRectifyMap(mtxLeft, distLeft, R1, P1, stdSize, CV_16SC2, rmap[0][0], rmap[0][1]);
+        cv::initUndistortRectifyMap(mtxRight, distRight, R2, P2, stdSize, CV_16SC2, rmap[1][0], rmap[1][1]);
+
+		//New commandline arguments
+		commandlineArgs["Camera.fx"] = std::to_string(P1.at<double>(0,0));
+		commandlineArgs["Camera.fy"] = std::to_string(P1.at<double>(1,1));
+		commandlineArgs["Camera.cx"] = std::to_string(P1.at<double>(0,2));
+		commandlineArgs["Camera.cy"] = std::to_string(P1.at<double>(1,2));
+		commandlineArgs["Camera.k1"] = std::to_string(0);
+		commandlineArgs["Camera.k2"] = std::to_string(0);
+		commandlineArgs["Camera.bf"] = std::to_string(-P2.at<double>(0,3));
+		std::cout << P2.at<double>(0,3) << std::endl;
+	}
 
 
 	m_pKeyFrameDatabase = std::shared_ptr<OrbKeyFrameDatabase>(new OrbKeyFrameDatabase(*m_pVocabulary.get()));
@@ -312,4 +364,50 @@ opendlv::proxy::PointCloudReading Selflocalization::CreatePointCloudFromMap() {
 			.distances(std::string("hello"))
 			.numberOfBitsForIntensity(0);
 	return pointCloudPart1;
+}
+
+opendlv::proxy::OrbslamMap Selflocalization::sendToWebb(){
+		std::stringstream mappointCoordinates;
+		std::stringstream cameraCoordinates;
+		size_t lastMapPoint = 0;
+
+		OrbMap* map = m_map.get();
+		if(map && m_pTracker->GetTrackingState())
+		{
+            mappointCoordinates.str(std::string());
+            cameraCoordinates.str(std::string());
+
+            cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
+			
+            cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).col(3);
+
+            cv::Mat cameraPosition = -R*T;
+
+            cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(0, 0) << ':';
+            cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(1, 0) << ':';
+            cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(2, 0) << ':';
+
+			auto mapPoints = map->GetAllMapPoints();
+			for(; lastMapPoint < mapPoints.size(); lastMapPoint++)
+			{
+				OrbMapPoint* mp = mapPoints[lastMapPoint].get();
+				cv::Mat worldPosition = mp->GetWorldPosition();
+				auto x = worldPosition.at<float>(0, 0);
+				auto y = worldPosition.at<float>(1, 0);
+				auto z = worldPosition.at<float>(2, 0);
+
+				mappointCoordinates << std::fixed <<  std::setprecision(4) << x << ':';
+				mappointCoordinates << std::fixed <<  std::setprecision(4) << y << ':';
+				mappointCoordinates << std::fixed <<  std::setprecision(4) << z << ':';
+			}
+		}
+
+
+        std::cout << "Length of mapPoints is: " << mappointCoordinates.str().length() << "." << std::endl;
+		opendlv::proxy::OrbslamMap orbSlamMap;
+		orbSlamMap.mapCoordinates(mappointCoordinates.str());
+		orbSlamMap.cameraCoordinates(cameraCoordinates.str());
+
+		return orbSlamMap;
+        // send results to conference.
 }

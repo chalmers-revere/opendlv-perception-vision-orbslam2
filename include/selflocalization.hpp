@@ -80,8 +80,10 @@ public:
     void Track(cv::Mat &imLeft, cv::Mat &imRight, double &timestamp);
     void Track(cv::Mat &imLeft, double &timestamp);
 
+
     // Reset the system (clear map)
     void Reset();
+    opendlv::proxy::OrbslamMap sendToWebb();
 
 private:
     void setUp(std::map<std::string, std::string> commandlineArgs);
@@ -103,6 +105,7 @@ private:
     std::mutex mMutexReset = {};
     bool m_reset = false;
     std::chrono::steady_clock::time_point m_last_envelope_ts;
+<<<<<<< HEAD
     std::array<double,2> m_gpsReference = {};
     double m_referenceHeading=0;
     int m_cid = 0;
@@ -111,6 +114,12 @@ private:
     const double RAD2DEG = 57.295779513082325; // 1.0 / DEG2RAD;
     const double PI = 3.14159265f;
 
+=======
+
+        //Rectification parameters
+        cv::Mat rmap[2][2];
+        
+>>>>>>> 684435fbdb7b620c84ad025658361eefa11f4ed7
 };
 
 

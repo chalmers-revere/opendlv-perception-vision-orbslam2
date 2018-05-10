@@ -29,6 +29,9 @@
 #include <string>
 #include <thread>
 
+
+
+
 int32_t main(int32_t argc, char **argv) {
     int32_t retCode{0};
     auto commandlineArguments = cluon::getCommandlineArguments(argc, argv);
@@ -68,7 +71,8 @@ int32_t main(int32_t argc, char **argv) {
             Selflocalization selflocalization(commandlineArguments);
             // Interface to a running OpenDaVINCI session (ignoring any incoming Envelopes).
             cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArguments["cid"]))};
-
+            size_t frameCounter = 0;
+            
             std::unique_ptr<cluon::SharedMemory> sharedMemory(new cluon::SharedMemory{NAME});
             if (sharedMemory && sharedMemory->valid()) {
                 std::clog << argv[0] << ": Found shared memory '" << sharedMemory->name() << "' (" << sharedMemory->size() << " bytes)." << std::endl;
@@ -82,25 +86,35 @@ int32_t main(int32_t argc, char **argv) {
                 image->imageData = sharedMemory->data();
                 image->imageDataOrigin = image->imageData;
                 sharedMemory->unlock();
+                size_t lastMapPoint = 0;
+                int frameCounter = 0;
                 while (od4.isRunning()) {
                     // The shared memory uses a pthread broadcast to notify us; just sleep to get awaken up.
-                    std::cout << "start waiting" << std::endl;
+                    
                     sharedMemory->wait();
-                    std::cout << "done waiting" << std::endl;
+                    
                     sharedMemory->lock();
-                        std::cout << "Sending Image to Orb" << std::endl;
                         image->imageData = sharedMemory->data();
                         image->imageDataOrigin = image->imageData;
                         cv::Mat img = cv::cvarrToMat(image); 
-                    selflocalization.nextContainer(img);
+                    
                     sharedMemory->unlock();
                     cv::waitKey(1);
+                    selflocalization.nextContainer(img);
+
                     std::pair<bool,opendlv::logic::sensation::Geolocation> posePacket = selflocalization.sendPose();
                     if(posePacket.first){
                         std::chrono::system_clock::time_point tp;
                         cluon::data::TimeStamp sampleTime = cluon::time::convert(tp);
                         od4.send(posePacket.second,sampleTime,ID);
                     }
+                    std::pair<bool,opendlv::proxy::OrbslamMap> mapPacket = extractMap(lastMapPoint);
+                    if(mapPacket.first){
+                        std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
+                        std::cout << "Sending OD4" << std::endl;
+                        od4.send(orbSlamMap, cluon::time::convert(timePoint), frameCounter);    
+                    }
+                    frameCounter++;
                 }
 
                 cvReleaseImageHeader(&image);
