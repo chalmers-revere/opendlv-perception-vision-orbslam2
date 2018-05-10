@@ -42,8 +42,13 @@ int32_t main(int32_t argc, char **argv) {
         std::cerr << "         --verbose: when set, the image contained in the shared memory is displayed" << std::endl;
         std::cerr << "Example: " << argv[0] << " --cid=111 --name=cam0 --width=640 --height=480 --bpp=24" << std::endl;
         retCode = 1;
+    } //If we want to run a dataset through the algorithm
+    else if(commandlineArguments.count("kittiPath")>0){
+        Selflocalization selflocalization(commandlineArguments);
+        selflocalization.runKitti(commandlineArguments["kittiPath"]);
+        retCode = 0;
     }
-    else {
+    else {  //If we want to run ORB-SLAM live
         const uint32_t WIDTH{static_cast<uint32_t>(std::stoi(commandlineArguments["width"]))};
         const uint32_t HEIGHT{static_cast<uint32_t>(std::stoi(commandlineArguments["height"]))};
         const uint32_t BPP{static_cast<uint32_t>(std::stoi(commandlineArguments["bpp"]))};
@@ -90,6 +95,12 @@ int32_t main(int32_t argc, char **argv) {
                     selflocalization.nextContainer(img);
                     sharedMemory->unlock();
                     cv::waitKey(1);
+                    std::pair<bool,opendlv::logic::sensation::Geolocation> posePacket = selflocalization.sendPose();
+                    if(posePacket.first){
+                        std::chrono::system_clock::time_point tp;
+                        cluon::data::TimeStamp sampleTime = cluon::time::convert(tp);
+                        od4.send(posePacket.second,sampleTime,ID);
+                    }
                 }
 
                 cvReleaseImageHeader(&image);

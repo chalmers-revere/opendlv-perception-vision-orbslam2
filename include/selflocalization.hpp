@@ -46,6 +46,7 @@
 //#include "opendavinci/odcore/base/KeyValueConfiguration.h"
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
+#include "WGS84toCartesian.hpp"
 
 #include "tracking.hpp"
 #include "mapping.hpp"
@@ -72,6 +73,9 @@ public:
     Selflocalization &operator=(Selflocalization const &) = delete;
     ~Selflocalization();
     void nextContainer(cv::Mat &img);
+    void runKitti(std::string kittiPath);
+    std::pair<bool,opendlv::logic::sensation::Geolocation> sendPose();
+    std::pair<bool,opendlv::proxy::OrbslamMap> extractMap(size_t &lastMapPoint);
     void Shutdown();
     void Track(cv::Mat &imLeft, cv::Mat &imRight, double &timestamp);
     void Track(cv::Mat &imLeft, double &timestamp);
@@ -82,7 +86,6 @@ public:
 private:
     void setUp(std::map<std::string, std::string> commandlineArgs);
     void tearDown();
-    void sendPose();
     opendlv::proxy::PointCloudReading CreatePointCloudFromMap();
     bool m_isMonocular;
     int m_saveCounter = 0;
@@ -100,6 +103,14 @@ private:
     std::mutex mMutexReset = {};
     bool m_reset = false;
     std::chrono::steady_clock::time_point m_last_envelope_ts;
+    std::array<double,2> m_gpsReference = {};
+    double m_referenceHeading=0;
+    int m_cid = 0;
+
+    const double DEG2RAD = 0.017453292522222; // PI/180.0
+    const double RAD2DEG = 57.295779513082325; // 1.0 / DEG2RAD;
+    const double PI = 3.14159265f;
+
 };
 
 

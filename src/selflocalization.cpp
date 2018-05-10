@@ -53,66 +53,7 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 		, m_last_envelope_ts()
 
 {
-    this->m_last_envelope_ts = std::chrono::steady_clock::now();
 	setUp(commandlineArgs);
-	/*std::cout << "Starting Kittirunner" << std::endl;
-	std::cout << commandlineArgs["kittiPath"] << std::endl;
-	KittiRunner kittiRunner(commandlineArgs["kittiPath"],!m_isMonocular,std::shared_ptr<Selflocalization>(this));
-
-    cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArgs["cid"])), [](auto){}};
-
-	std::stringstream mappointCoordinates;
-	std::stringstream cameraCoordinates;
-
-	size_t lastMapPoint = 0;
-
-	for(size_t i = 0; i < kittiRunner.GetImagesCount(); i++ )
-	{
-		kittiRunner.ProcessImage(i);
-		OrbMap* map = m_map.get();
-		if(map && m_pTracker->GetTrackingState())
-		{
-            mappointCoordinates.str(std::string());
-            cameraCoordinates.str(std::string());
-
-            cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
-			
-            cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).col(3);
-
-            cv::Mat cameraPosition = -R*T;
-
-            cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(0, 0) << ':';
-            cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(1, 0) << ':';
-            cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(2, 0) << ':';
-
-			auto mapPoints = map->GetAllMapPoints();
-			for(; lastMapPoint < mapPoints.size(); lastMapPoint++)
-			{
-				OrbMapPoint* mp = mapPoints[lastMapPoint].get();
-				cv::Mat worldPosition = mp->GetWorldPosition();
-				auto x = worldPosition.at<float>(0, 0);
-				auto y = worldPosition.at<float>(1, 0);
-				auto z = worldPosition.at<float>(2, 0);
-
-				mappointCoordinates << std::fixed <<  std::setprecision(4) << x << ':';
-				mappointCoordinates << std::fixed <<  std::setprecision(4) << y << ':';
-				mappointCoordinates << std::fixed <<  std::setprecision(4) << z << ':';
-			}
-		}
-
-
-        std::cout << "Length of mapPoints is: " << mappointCoordinates.str().length() << "." << std::endl;
-		opendlv::proxy::OrbslamMap orbSlamMap;
-		orbSlamMap.mapCoordinates(mappointCoordinates.str());
-		orbSlamMap.cameraCoordinates(cameraCoordinates.str());
-
-        std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
-        std::cout << "Sending OD4" << std::endl;
-        od4.send(orbSlamMap, cluon::time::convert(timePoint), i);
-        // send results to conference.
-	}
-
-	kittiRunner.ShutDown();*/
 	//Initialization
 
 	//Orb vocabulary - global pointer
@@ -138,6 +79,76 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 Selflocalization::~Selflocalization()
 {
 }
+
+void Selflocalization::runKitti(std::string kittiPath){
+	std::cout << "Starting Kittirunner" << std::endl;
+	std::cout << kittiPath << std::endl;
+	KittiRunner kittiRunner(kittiPath,!m_isMonocular,std::shared_ptr<Selflocalization>(this));
+   	cluon::OD4Session od4{static_cast<uint16_t>(m_cid), [](auto){}};
+
+	size_t lastMapPoint = 0;
+	for(size_t i = 0; i < kittiRunner.GetImagesCount(); i++ )
+	{
+		kittiRunner.ProcessImage(i);
+
+        std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
+        std::cout << "Sending OD4" << std::endl;
+		std::pair<bool,opendlv::logic::sensation::Geolocation> posePacket = sendPose();
+        if(posePacket.first){
+             od4.send(posePacket.second,cluon::time::convert(timePoint),0);
+		}
+		std::pair<bool,opendlv::proxy::OrbslamMap> mapPacket = extractMap(lastMapPoint);
+		if(mapPacket.first){
+			od4.send(mapPacket.second, cluon::time::convert(timePoint), i);
+		}
+        // send results to conference.
+	}
+
+	kittiRunner.ShutDown();
+
+}
+
+std::pair<bool,opendlv::proxy::OrbslamMap> Selflocalization::extractMap(size_t &lastMapPoint){
+	opendlv::proxy::OrbslamMap orbSlamMap;
+	OrbMap* map = m_map.get();
+	
+	std::stringstream mappointCoordinates;
+	std::stringstream cameraCoordinates;
+
+	if(map && m_pTracker->GetTrackingState())
+	{
+        mappointCoordinates.str(std::string());
+        cameraCoordinates.str(std::string());
+
+        cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
+			
+        cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).col(3);
+
+        cv::Mat cameraPosition = -R*T;
+
+        cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(0, 0) << ':';
+        cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(1, 0) << ':';
+        cameraCoordinates << std::fixed <<  std::setprecision(4) << cameraPosition.at<float>(2, 0) << ':';
+
+		auto mapPoints = map->GetAllMapPoints();
+		for(; lastMapPoint < mapPoints.size(); lastMapPoint++)
+		{
+			OrbMapPoint* mp = mapPoints[lastMapPoint].get();
+			cv::Mat worldPosition = mp->GetWorldPosition();
+			auto x = worldPosition.at<float>(0, 0);
+			auto y = worldPosition.at<float>(1, 0);
+			auto z = worldPosition.at<float>(2, 0);
+			mappointCoordinates << std::fixed <<  std::setprecision(4) << x << ':';
+			mappointCoordinates << std::fixed <<  std::setprecision(4) << y << ':';
+			mappointCoordinates << std::fixed <<  std::setprecision(4) << z << ':';
+		}
+		std::cout << "Length of mapPoints is: " << mappointCoordinates.str().length() << "." << std::endl;
+		orbSlamMap.mapCoordinates(mappointCoordinates.str());
+		orbSlamMap.cameraCoordinates(cameraCoordinates.str());
+		return std::pair<bool,opendlv::proxy::OrbslamMap>(true,orbSlamMap);
+	}
+	return std::pair<bool,opendlv::proxy::OrbslamMap>(false,orbSlamMap);
+}
 /*
 *Takes data from conference, in our case image?
 */
@@ -160,15 +171,32 @@ void Selflocalization::nextContainer(cv::Mat &img)
 	sendPose();
 }
 
-void Selflocalization::sendPose(){
+std::pair<bool,opendlv::logic::sensation::Geolocation> Selflocalization::sendPose(){
 	//Get the cameraPosition
+	opendlv::logic::sensation::Geolocation poseMessage;
+	if(!m_pTracker->GetTrackingState()){
+		return std::pair<bool,opendlv::logic::sensation::Geolocation>(false,poseMessage);
+	}
 	cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
     cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).col(3);
     cv::Mat cameraPosition = -R*T;
-	float x = cameraPosition.at<float>(0,0);
-	float y = cameraPosition.at<float>(0,1);
-	float z = cameraPosition.at<float>(0,2);
-	std::cout << x << y << z << std::endl;
+	double x = static_cast<double>(cameraPosition.at<float>(0,0));
+	double y = static_cast<double>(cameraPosition.at<float>(0,1));
+	double z = static_cast<double>(cameraPosition.at<float>(0,2));
+	//Convert to ENU frame
+	x=z;
+	y=-x;
+	z=-y;
+	//Rotate to ENU frame
+	x=x*cos(m_referenceHeading)+y*sin(m_referenceHeading);
+	y=y*cos(m_referenceHeading)+x*sin(m_referenceHeading);
+	std::array<double,2> cartesianPos;
+  	cartesianPos[0] = x;
+  	cartesianPos[1] = y;
+  	std::array<double,2> sendGPS = wgs84::fromCartesian(m_gpsReference, cartesianPos);
+  	poseMessage.longitude(static_cast<float>(sendGPS[0]));
+  	poseMessage.latitude(static_cast<float>(sendGPS[1]));
+	return std::pair<bool,opendlv::logic::sensation::Geolocation>(true,poseMessage);
 	//Heading shift using a 2D rotation matrix
 	//Then use the wgs84 reference to convert to geodetic coordinates and send
 }
@@ -176,6 +204,11 @@ void Selflocalization::sendPose(){
 void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
 {
 	std::cout << "Setting up" << std::endl;
+	m_gpsReference[0] = static_cast<double>(std::stod(commandlineArgs["refLatitude"]));
+  	m_gpsReference[1] = static_cast<double>(std::stod(commandlineArgs["refLongitude"]));
+	m_referenceHeading = static_cast<double>(std::stod(commandlineArgs["startHeading"]));
+	m_referenceHeading = -m_referenceHeading+PI/2;
+	m_cid = std::stoi(commandlineArgs["cid"]);
 	m_isMonocular = std::stoi(commandlineArgs["cameraType"]) == 0;
 	std::string vocFilePath = commandlineArgs["vocFilePath"]; //Create mount
 	m_pVocabulary = std::shared_ptr<OrbVocabulary>(new OrbVocabulary(vocFilePath));
