@@ -191,6 +191,7 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
 	m_gpsReference[0] = static_cast<double>(std::stod(commandlineArgs["refLatitude"]));
   	m_gpsReference[1] = static_cast<double>(std::stod(commandlineArgs["refLongitude"]));
 	m_referenceHeading = static_cast<double>(std::stod(commandlineArgs["startHeading"]));
+	m_referenceHeading = m_referenceHeading*DEG2RAD;
 	m_referenceHeading = -m_referenceHeading+PI/2;
 	m_cid = std::stoi(commandlineArgs["cid"]);
 	m_isMonocular = std::stoi(commandlineArgs["cameraType"]) == 0;

@@ -105,7 +105,7 @@ private:
     std::mutex mMutexReset = {};
     bool m_reset = false;
     std::chrono::steady_clock::time_point m_last_envelope_ts;
-<<<<<<< HEAD
+
     std::array<double,2> m_gpsReference = {};
     double m_referenceHeading=0;
     int m_cid = 0;
@@ -113,13 +113,8 @@ private:
     const double DEG2RAD = 0.017453292522222; // PI/180.0
     const double RAD2DEG = 57.295779513082325; // 1.0 / DEG2RAD;
     const double PI = 3.14159265f;
-
-=======
-
-        //Rectification parameters
-        cv::Mat rmap[2][2];
-        
->>>>>>> 684435fbdb7b620c84ad025658361eefa11f4ed7
+    //Rectification parameters
+    cv::Mat rmap[2][2];
 };
 
 
