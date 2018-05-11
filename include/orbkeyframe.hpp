@@ -47,6 +47,10 @@ public:
     cv::Mat GetRotation();
     cv::Mat GetTranslation();
 
+    static bool FrameIDCompare(std::shared_ptr<OrbKeyFrame> keyFrame1, std::shared_ptr<OrbKeyFrame> keyFrame2){
+        return keyFrame1->mnId < keyFrame2->mnId;
+    }
+
     // Bag of Words Representation
     void ComputeBoW();
 
