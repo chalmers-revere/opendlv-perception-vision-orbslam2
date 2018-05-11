@@ -146,8 +146,6 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
             }
             mappointCoordinates.str(std::string());
 		}
-
-        // send results to conference.
 	}
 	this->m_pTracker->WriteToPoseFile("poses.txt");
 	kittiRunner.ShutDown();
