@@ -50,6 +50,7 @@ public:
 
     void SetLocalMapper(std::shared_ptr<Mapping> pLocalMapper);
     void SetLoopClosing(std::shared_ptr<LoopClosing> pLoopClosing);
+    void WriteToPoseFile(const std::string &filename);
 
     // Load new settings
     // The focal lenght should be similar or scale prediction will fail when projecting points

@@ -1584,3 +1584,57 @@ bool Tracking::InitalizeTracking() {
     }
     return true;
 }
+void Tracking::WriteToPoseFile(const std::string &filename)
+{
+    std::cout << std::endl << "Saving camera trajectory to " << filename << " ..." << std::endl;
+    if(mSensor==Selflocalization::MONOCULAR)
+    {
+        std::cerr << "ERROR: SaveTrajectoryKITTI cannot be used for monocular." << std::endl;
+        return;
+    }
+
+    std::vector<std::shared_ptr<OrbKeyFrame>> keyFrames = mpMap->GetAllKeyFrames();
+    std::sort(keyFrames.begin(),keyFrames.end(),OrbKeyFrame::FrameIDCompare);
+
+    // Transform all keyframes so that the first keyframe is at the origin.
+    // After a loop closure the first keyframe might not be at the origin.
+    cv::Mat Two = keyFrames[0]->GetPoseInverse();
+
+    std::ofstream f;
+    f.open(filename.c_str());
+    f << std::fixed;
+
+    // Frame pose is stored relative to its reference keyframe (which is optimized by BA and pose graph).
+    // We need to get first the keyframe pose and then concatenate the relative transformation.
+    // Frames not localized (tracking failure) are not saved.
+
+    // For each frame we have a reference keyframe (lRit), the timestamp (lT) and a flag
+    // which is true when tracking failed (lbL).
+    std::list<std::shared_ptr<OrbKeyFrame>>::iterator lRit = this->mlpReferences.begin();
+    std::list<double>::iterator lT = mlFrameTimes.begin();
+    for(std::list<cv::Mat>::iterator lit = mlRelativeFramePoses.begin(), lend = mlRelativeFramePoses.end();lit!=lend;lit++, lRit++, lT++)
+    {
+        std::shared_ptr<OrbKeyFrame> pKF(lRit->get());
+
+        cv::Mat Trw = cv::Mat::eye(4,4,CV_32FC1);
+
+        while(pKF->isBad())
+        {
+            //  cout << "bad parent" << endl;
+            Trw = Trw*pKF->mTcp;
+            pKF = pKF->GetParent();
+        }
+
+        Trw = Trw*pKF->GetPose()*Two;
+
+        cv::Mat Tcw = (*lit)*Trw;
+        cv::Mat Rwc = Tcw.rowRange(0,3).colRange(0,3).t();
+        cv::Mat twc = -Rwc*Tcw.rowRange(0,3).col(3);
+
+        f << std::setprecision(9) << Rwc.at<float>(0,0) << " " << Rwc.at<float>(0,1)  << " " << Rwc.at<float>(0,2) << " "  << twc.at<float>(0) << " " <<
+          Rwc.at<float>(1,0) << " " << Rwc.at<float>(1,1)  << " " << Rwc.at<float>(1,2) << " "  << twc.at<float>(1) << " " <<
+          Rwc.at<float>(2,0) << " " << Rwc.at<float>(2,1)  << " " << Rwc.at<float>(2,2) << " "  << twc.at<float>(2) << std::endl;
+    }
+    f.close();
+    std::cout << std::endl << "trajectory saved!" << std::endl;
+}

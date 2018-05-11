@@ -140,11 +140,16 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
             std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
             od4.send(orbSlamMap, cluon::time::convert(timePoint), i);
 
+            if(i == 3)
+            {
+                this->m_pTracker->WriteToPoseFile("poses.txt");
+            }
             mappointCoordinates.str(std::string());
 		}
 
+        // send results to conference.
 	}
-
+	this->m_pTracker->WriteToPoseFile("poses.txt");
 	kittiRunner.ShutDown();
 }
 
