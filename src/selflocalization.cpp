@@ -65,7 +65,8 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 	std::stringstream cameraCoordinates;
     std::stringstream cameraRotation;
 
-	size_t lastMapPoint = 0;
+//	size_t lastMapPoint = 0;
+//    size_t lastLoopClosingId = 0;
 
 	for(size_t i = 0; i < kittiRunner.GetImagesCount(); i++ )
 	{
@@ -77,10 +78,11 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
             cameraCoordinates.str(std::string());
             cameraRotation.str(std::string());
 
+
+
             cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
             cv::Mat Tcw = m_pTracker->mCurrentFrame->mTcw;
             cv::Mat T = Tcw.rowRange(0, 3).colRange(3, 4);
-
 
             cv::Mat cameraPosition = -R * T;
 
@@ -92,10 +94,14 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
             cameraRotation << std::fixed << std::setprecision(4) << R.at<float>(1, 2) << ':';
             cameraRotation << std::fixed << std::setprecision(4) << R.at<float>(2, 2) << ':';
 
+
+            uint32_t lastSentIndex = 0;
+            int mapPointCount = 0;
+
 			auto mapPoints = map->GetAllMapPoints();
-			for(; lastMapPoint < mapPoints.size(); lastMapPoint++)
+			for(size_t j = 0; j < mapPoints.size(); j++)
 			{
-				OrbMapPoint* mp = mapPoints[lastMapPoint].get();
+				OrbMapPoint* mp = mapPoints[j].get();
 				cv::Mat worldPosition = mp->GetWorldPosition();
 
                 cv::Mat mapPointCameraPosition = Tcw.rowRange(0,3).colRange(0,3) * worldPosition + Tcw.rowRange(0,3).col(3);
@@ -106,43 +112,40 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 				mappointCoordinates << std::fixed <<  std::setprecision(4) << x << ':';
 				mappointCoordinates << std::fixed <<  std::setprecision(4) << y << ':';
 				mappointCoordinates << std::fixed <<  std::setprecision(4) << z << ':';
+
+                mapPointCount++;
+                if(mapPointCount > 1000)
+                {
+                    opendlv::proxy::OrbslamMap orbSlamMap;
+                    orbSlamMap.mapCoordinateIndex(lastSentIndex);
+                    orbSlamMap.mapCoordinates(mappointCoordinates.str());
+                    orbSlamMap.cameraCoordinates(cameraCoordinates.str());
+                    orbSlamMap.cameraRotation(cameraRotation.str());
+
+                    std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
+                    od4.send(orbSlamMap, cluon::time::convert(timePoint), i);
+
+                    mappointCoordinates.str(std::string());
+                    lastSentIndex = static_cast<uint32_t>(mapPointCount) - 1;
+                    mapPointCount = 0;
+                }
 			}
+
+            opendlv::proxy::OrbslamMap orbSlamMap;
+            orbSlamMap.mapCoordinateIndex(lastSentIndex);
+            orbSlamMap.mapCoordinates(mappointCoordinates.str());
+            orbSlamMap.cameraCoordinates(cameraCoordinates.str());
+            orbSlamMap.cameraRotation(cameraRotation.str());
+
+            std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
+            od4.send(orbSlamMap, cluon::time::convert(timePoint), i);
+
+            mappointCoordinates.str(std::string());
 		}
 
-
-        std::cout << "Length of mapPoints is: " << mappointCoordinates.str().length() << "." << std::endl;
-		opendlv::proxy::OrbslamMap orbSlamMap;
-		orbSlamMap.mapCoordinates(mappointCoordinates.str());
-		orbSlamMap.cameraCoordinates(cameraCoordinates.str());
-		orbSlamMap.cameraRotation(cameraRotation.str());
-
-        std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
-        std::cout << "Sending OD4" << std::endl;
-        od4.send(orbSlamMap, cluon::time::convert(timePoint), i);
-        // send results to conference.
 	}
 
 	kittiRunner.ShutDown();
-	//Initialization
-
-	//Orb vocabulary - global pointer
-	//KeyframDatabase - global pointer
-	//Map - global pointer
-	//Tracking - global pointer
-	//Local mapping - global pointer
-	//Loop closing - global pointer
-
-	//System threads
-	//Tracking lives in system thread
-	//Local mapping - global thread pointer
-	//Loop closing - global thread pointer
-
-
-
-
-	/*System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,
-               		const bool bUseViewer):mSensor(sensor), mpViewer(static_cast<Viewer*>(NULL)), mbReset(false),mbActivateLocalizationMode(false),
-					mbDeactivateLocalizationMode(false)*/
 }
 
 Selflocalization::~Selflocalization()
