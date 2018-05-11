@@ -1614,15 +1614,15 @@ void Tracking::WriteToPoseFile(const std::string &filename)
     std::list<double>::iterator lT = mlFrameTimes.begin();
     for(std::list<cv::Mat>::iterator lit = mlRelativeFramePoses.begin(), lend = mlRelativeFramePoses.end();lit!=lend;lit++, lRit++, lT++)
     {
-        std::shared_ptr<OrbKeyFrame> pKF(lRit->get());
+        OrbKeyFrame * pKF = lRit->get();
 
-        cv::Mat Trw = cv::Mat::eye(4,4,CV_32FC1);
+        cv::Mat Trw = cv::Mat::eye(4,4,CV_32F);
 
         while(pKF->isBad())
         {
             //  cout << "bad parent" << endl;
             Trw = Trw*pKF->mTcp;
-            pKF = pKF->GetParent();
+            pKF = pKF->GetParent().get();
         }
 
         Trw = Trw*pKF->GetPose()*Two;
