@@ -179,6 +179,9 @@ private:
     //Current matches in frame
     int mnMatchesInliers = {};
 
+    //Box within which keyframes are removed
+    std::array<float, 4> mBoundingBox = {};
+
     //Last Frame, KeyFrame and Relocalisation Info
     std::shared_ptr<OrbKeyFrame> mpLastKeyFrame = {};
     std::shared_ptr<OrbFrame> mLastFrame = {};

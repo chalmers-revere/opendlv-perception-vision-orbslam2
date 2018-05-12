@@ -37,7 +37,7 @@ OrbFrame::OrbFrame(const std::shared_ptr<OrbFrame>&frame)
          mpReferenceKF(frame->mpReferenceKF), mnScaleLevels(frame->mnScaleLevels),
          mfScaleFactor(frame->mfScaleFactor), mfLogScaleFactor(frame->mfLogScaleFactor),
          mvScaleFactors(frame->mvScaleFactors), mvInvScaleFactors(frame->mvInvScaleFactors),
-         mvLevelSigma2(frame->mvLevelSigma2), mvInvLevelSigma2(frame->mvInvLevelSigma2)
+         mvLevelSigma2(frame->mvLevelSigma2), mvInvLevelSigma2(frame->mvInvLevelSigma2), mBoundingBox(frame->mBoundingBox)
 {
     for(int i=0;i<FRAME_GRID_COLS;i++)
     {
@@ -55,9 +55,11 @@ OrbFrame::OrbFrame(const std::shared_ptr<OrbFrame>&frame)
 
 OrbFrame::OrbFrame(const cv::Mat &leftImage, const cv::Mat &rightImage, const double &timeStamp,
                    std::shared_ptr<OrbExtractor> leftExtractor, std::shared_ptr<OrbExtractor> rightExtractor,
-                   std::shared_ptr<OrbVocabulary> orbVocabulary, cv::Mat &calibrationMatrix, cv::Mat &distanceCoefficient, const float &stereoBaseline, const float &depthThreshold)
+                   std::shared_ptr<OrbVocabulary> orbVocabulary, cv::Mat &calibrationMatrix, cv::Mat &distanceCoefficient, const float &stereoBaseline,
+                   const float &depthThreshold,std::array<float, 4> boundingBox)
         :mpORBvocabulary(orbVocabulary),mpORBextractorLeft(leftExtractor),mpORBextractorRight(rightExtractor), mTimeStamp(timeStamp),
-         mK(calibrationMatrix.clone()),mDistCoef(distanceCoefficient.clone()), mbf(stereoBaseline), mThDepth(depthThreshold), mpReferenceKF(static_cast<std::shared_ptr<OrbKeyFrame>>(NULL))
+         mK(calibrationMatrix.clone()),mDistCoef(distanceCoefficient.clone()), mbf(stereoBaseline), mThDepth(depthThreshold), 
+         mpReferenceKF(static_cast<std::shared_ptr<OrbKeyFrame>>(NULL)),mBoundingBox(boundingBox)
 {
     // Frame ID
     mnId = nNextId++;
@@ -112,10 +114,10 @@ OrbFrame::OrbFrame(const cv::Mat &greyImage, const cv::Mat &imageDepth, const do
 
 OrbFrame::OrbFrame(const cv::Mat &greyImage, const double &timeStamp, std::shared_ptr<OrbExtractor> extractor,
                    std::shared_ptr<OrbVocabulary> orbVocabulary, cv::Mat &calibrationMatrix, cv::Mat &distanceCoefficient,
-                   const float &stereoBaseline, const float &depthThreshold)
+                   const float &stereoBaseline, const float &depthThreshold, std::array<float, 4> boundingBox)
         :mpORBvocabulary(orbVocabulary), mpORBextractorLeft(extractor),
          mpORBextractorRight(static_cast<std::shared_ptr<OrbExtractor>>(NULL)), mTimeStamp(timeStamp),
-         mK(calibrationMatrix.clone()), mDistCoef(distanceCoefficient.clone()), mbf(stereoBaseline), mThDepth(depthThreshold)
+         mK(calibrationMatrix.clone()), mDistCoef(distanceCoefficient.clone()), mbf(stereoBaseline), mThDepth(depthThreshold), mBoundingBox(boundingBox)
 {
     // Frame ID
     mnId = nNextId++;
@@ -393,9 +395,50 @@ void OrbFrame::ComputeBoW()
         mpORBvocabulary->transform4(currentDescriptors, mBowVec, mFeatVec, 4);
     }
 }
+void OrbFrame::FilterKeyPoints(){
+    if(mBoundingBox[1]>2){
+        std::vector<cv::KeyPoint> newKeys;
+        cv::Mat newDescriptor = mDescriptors.clone();
+        int validKeys=0;
+        for(unsigned int i=0; i<mvKeys.size(); i++){
+            cv::KeyPoint keyPoint = mvKeys[i];
+            bool inBounds = keyPoint.pt.x > mBoundingBox[0] && keyPoint.pt.x<mBoundingBox[1];
+            inBounds &= keyPoint.pt.y > mBoundingBox[2] && keyPoint.pt.y<mBoundingBox[3];
+            if(!inBounds){
+                newKeys.push_back(keyPoint);
+                mDescriptors.row(i).copyTo(newDescriptor.row(validKeys));
+                validKeys++;
+            }
+
+        }
+        //std::cout << mDescriptors << std::endl;
+        newDescriptor.rowRange(0,validKeys).copyTo(mDescriptors);
+        //std::cout << "new" << newDescriptor << std::endl;
+        mvKeys = newKeys;
+        std::vector<cv::KeyPoint> newKeysRight;
+        cv::Mat newDescriptorRight = mDescriptorsRight.clone();
+        int validKeysRight=0;
+        for(unsigned int i=0; i<mvKeysRight.size(); i++){
+            cv::KeyPoint keyPoint = mvKeysRight[i];
+            bool inBounds = keyPoint.pt.x > mBoundingBox[0] && keyPoint.pt.x<mBoundingBox[1];
+            inBounds &= keyPoint.pt.y > mBoundingBox[2] && keyPoint.pt.y<mBoundingBox[3];
+            if(!inBounds){
+                newKeysRight.push_back(keyPoint);
+                 mDescriptorsRight.row(i).copyTo(newDescriptorRight.row(validKeysRight));
+                validKeysRight++;
+            }
+
+        }
+        mvKeysRight = newKeysRight;
+        newDescriptorRight.rowRange(0,validKeysRight).copyTo(mDescriptorsRight);
+        N=mvKeys.size();
+    }
+}
+
 
 void OrbFrame::UndistortKeyPoints()
 {
+    FilterKeyPoints();
     if(std::abs(mDistCoef.at<float>(0))<0.0001)
     {
         mvKeysUn = mvKeys;

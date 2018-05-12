@@ -32,7 +32,7 @@
 class KittiRunner
 {
 public:
-    KittiRunner(const std::string &path, bool isStereo, std::shared_ptr<Selflocalization> slammer);
+    KittiRunner(const std::string &path, bool isStereo, std::shared_ptr<Selflocalization> slammer,cv::Mat a_rMap[2][2]);
     KittiRunner(KittiRunner const &) = delete;
     KittiRunner &operator=(KittiRunner const &) = delete;
     ~KittiRunner();
@@ -52,23 +52,7 @@ private:
     std::vector<double> m_timeTrackingStatistics;
 
     //Rectification parameters
-        cv::Mat mtxLeft = {}; 
-        cv::Mat distLeft = {};
-        cv::Mat mtxRight = {};
-        cv::Mat distRight = {};
-        cv::Mat R = {};
-        cv::Mat rodrigues = {};
-        cv::Mat Q = {};
-        cv::Mat T = {};
-        cv::Mat rmap[2][2];
-        cv::Mat imgL = {};
-        cv::Mat imgR = {};
-        cv::Size stdSize = {}; 
-
-        cv::Mat R1 = {};
-        cv::Mat R2 = {};
-        cv::Mat P1 = {};
-        cv::Mat P2 = {};
-        cv::Rect validRoI[2] = {};
+        cv::Mat m_rmap[2][2];
+        
 };
 #endif

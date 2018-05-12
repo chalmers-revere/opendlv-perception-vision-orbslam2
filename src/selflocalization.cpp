@@ -65,7 +65,7 @@ Selflocalization::~Selflocalization()
 void Selflocalization::runKitti(std::string kittiPath){
 	std::cout << "Starting Kittirunner" << std::endl;
 	std::cout << kittiPath << std::endl;
-	KittiRunner kittiRunner(kittiPath,!m_isMonocular,std::shared_ptr<Selflocalization>(this));
+	KittiRunner kittiRunner(kittiPath,!m_isMonocular,std::shared_ptr<Selflocalization>(this),rmap);
    	cluon::OD4Session od4{static_cast<uint16_t>(m_cid), [](auto){}};
 
 	size_t lastMapPoint = 0;
@@ -164,17 +164,16 @@ std::pair<bool,opendlv::logic::sensation::Geolocation> Selflocalization::sendPos
 	cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
     cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).col(3);
     cv::Mat cameraPosition = -R*T;
-	double x = static_cast<double>(cameraPosition.at<float>(0,0));
-	double y = static_cast<double>(cameraPosition.at<float>(0,1));
-	double z = static_cast<double>(cameraPosition.at<float>(0,2));
+	std::cout << cameraPosition << std::endl;
+	double x = static_cast<double>(cameraPosition.at<float>(0,2));
+	double y = -static_cast<double>(cameraPosition.at<float>(0,0));
+	//double z = -static_cast<double>(cameraPosition.at<float>(0,1));
 	//Convert to ENU frame
-	x=z;
-	y=-x;
-	z=-y;
 	//Rotate to ENU frame
 	x=x*cos(m_referenceHeading)+y*sin(m_referenceHeading);
 	y=y*cos(m_referenceHeading)+x*sin(m_referenceHeading);
 	std::array<double,2> cartesianPos;
+	std::cout << "x: " << x << "y: " << y << std::endl; 
   	cartesianPos[0] = x;
   	cartesianPos[1] = y;
   	std::array<double,2> sendGPS = wgs84::fromCartesian(m_gpsReference, cartesianPos);
@@ -213,8 +212,9 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
     m_pExtractOrb = std::shared_ptr<OrbExtractor>(new OrbExtractor(nFeatures, scaleFactor, nLevels, initialFastTh, minFastTh));
     */
 	const int sensor = std::stoi(commandlineArgs["cameraType"]);
+	bool rectify = std::stoi(commandlineArgs["rectify"])==1;
 
-	if(sensor){
+	if(sensor && rectify){
 		//Declare variables
 		cv::Mat mtxLeft; 
         cv::Mat distLeft;

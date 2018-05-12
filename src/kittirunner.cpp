@@ -19,7 +19,7 @@
 
 #include "kittirunner.hpp"
 
-KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_ptr<Selflocalization> slammer):
+KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_ptr<Selflocalization> slammer, cv::Mat a_rMap[2][2]):
         m_imagesCount(0), m_isStereo(isStereo), m_slammer(slammer), m_leftImages(), m_rightImages(), m_timeStamps(), m_timeTrackingStatistics(){
 //    std::vector<std::string> vstrImageLeft;
 //    std::vector<std::string> vstrImageRight;
@@ -31,29 +31,10 @@ KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_
     std::cout << std::endl << "-------" << std::endl;
     std::cout << "Start processing sequence ..." << std::endl;
     std::cout << "Images in the sequence: " << this->m_imagesCount << std::endl;
-
-    //Rectification
-    mtxLeft = (cv::Mat_<double>(3, 3) <<
-        699.783, 0, 637.704,
-        0, 699.783, 360.875,
-        0, 0, 1);
-    distLeft = (cv::Mat_<double>(5, 1) << -0.173042, 0.0258831, 0, 0, 0);
-    mtxRight = (cv::Mat_<double>(3, 3) <<
-       700.225, 0, 660.759,
-       0, 700.225, 364.782,
-       0, 0, 1);
-    //mtxRight = mtxLeft;
-    distRight = (cv::Mat_<double>(5, 1) << -0.174209, 0.026726, 0, 0, 0);
-    T = (cv::Mat_<double>(3, 1) << -0.12, 0, 0);
-    rodrigues = (cv::Mat_<double>(3, 1) << -0.0132397, 0.021005, -0.00121284);
-        cv::Rodrigues(rodrigues, R);
-        stdSize = cv::Size(1280, 480);
-
-        cv::stereoRectify(mtxLeft, distLeft, mtxRight, distRight, stdSize, R, T, R1, R2, P1, P2, Q, cv::CALIB_ZERO_DISPARITY, 0.0, stdSize, &validRoI[0], &validRoI[1]);
-        cv::initUndistortRectifyMap(mtxLeft, distLeft, R1, P1, stdSize, CV_16SC2, rmap[0][0], rmap[0][1]);
-        cv::initUndistortRectifyMap(mtxRight, distRight, R2, P2, stdSize, CV_16SC2, rmap[1][0], rmap[1][1]);
-        std::cout << P1 << std::endl;
-        std::cout << P2 << std::endl;
+    m_rmap[0][0] = a_rMap[0][0];
+    m_rmap[0][1] = a_rMap[0][1];
+    m_rmap[1][0] = a_rMap[1][0];
+    m_rmap[1][1] = a_rMap[1][1];
 }
 
 KittiRunner::~KittiRunner(){
@@ -87,12 +68,12 @@ void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &
     vstrImageLeft.resize(timeStamps.size());
     vstrImageRight.resize(timeStamps.size());
 
-    for(unsigned long i=5000; i<timeStamps.size(); i++)
+    for(unsigned long i=10; i<timeStamps.size(); i++)
     {
         std::stringstream ss;
         ss << std::setfill('0') << std::setw(6) << i;
-        vstrImageLeft[i-5000] = strPrefixLeft + ss.str() + ".png";
-        vstrImageRight[i-5000] = strPrefixRight + ss.str() + ".png";
+        vstrImageLeft[i-10] = strPrefixLeft + ss.str() + ".png";
+        vstrImageRight[i-10] = strPrefixRight + ss.str() + ".png";
     }
 }
 
@@ -122,29 +103,24 @@ void KittiRunner::ShutDown() {
 void KittiRunner::ProcessImage(size_t imageNumber) {
     cv::Mat imLeft;
     cv::Mat imRight;
-    cv::Mat imgLcrop;
-    cv::Mat imgRcrop;
 
-    //CAMERA PARAMETER
-
-        
-
-         
-
-        
+    //CAMERA PARAMETE  
 
     // Read left and right images from file
     std::cout << "reading image: " << this->m_leftImages[imageNumber] << std::endl;
-    imgL = cv::imread(this->m_leftImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
-    imgLcrop = imgL.rowRange(0,479);
+    cv::Mat imgL = cv::imread(this->m_leftImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
     
     if(this->m_isStereo){
         std::cout << "reading image: " << this->m_rightImages[imageNumber] << std::endl;
-        imgR = cv::imread(this->m_rightImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
-        imgRcrop = imgR.rowRange(0,479);
-
-        cv::remap(imgLcrop,imLeft, rmap[0][0], rmap[0][1], cv::INTER_LINEAR);
-        cv::remap( imgRcrop,imRight, rmap[1][0], rmap[1][1], cv::INTER_LINEAR);
+        cv::Mat imgR = cv::imread(this->m_rightImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
+        if(m_rmap[0][0].cols==0){
+            imLeft=imgL;
+            imRight=imgR;
+        }
+        else{
+            cv::remap(imgL,imLeft, m_rmap[0][0], m_rmap[0][1], cv::INTER_LINEAR);
+            cv::remap(imgR,imRight, m_rmap[1][0], m_rmap[1][1], cv::INTER_LINEAR);
+        }
         /*int wL = imLeft.cols;
         int hL = imLeft.rows;
 
@@ -165,7 +141,7 @@ void KittiRunner::ProcessImage(size_t imageNumber) {
     //std::cout << "loaded images " << std::endl;
     double tframe = this->m_timeStamps[imageNumber];
 
-    if(imLeft.empty())
+    if(imgL.empty())
     {
         std::cerr << std::endl << "Failed to load image at: "
                   << std::string(this->m_leftImages[imageNumber]) << std::endl;
@@ -177,7 +153,7 @@ void KittiRunner::ProcessImage(size_t imageNumber) {
         m_slammer->Track(imLeft,imRight,tframe);
     }
     else {
-        m_slammer->Track(imLeft,tframe);
+        m_slammer->Track(imgL,tframe);
     }
 
 

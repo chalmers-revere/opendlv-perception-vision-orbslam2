@@ -64,6 +64,7 @@ void Tracking::Calibrate(std::map<std::string, std::string> commandlineArgs) {
     DistCoef.copyTo(mDistCoef);
 
     mbf = std::stof(commandlineArgs["Camera.bf"]);
+    std::cout << "- bf: " << mbf << std::endl;
 
     float fps = std::stof(commandlineArgs["Camera.fps"]);
     if(std::abs(fps-0)<0.0001f)
@@ -100,6 +101,17 @@ void Tracking::Calibrate(std::map<std::string, std::string> commandlineArgs) {
     int nLevels = std::stoi(commandlineArgs["ORBextractor.nLevels"]);
     int fIniThFAST = std::stoi(commandlineArgs["ORBextractor.iniThFAST"]);
     int fMinThFAST = std::stoi(commandlineArgs["ORBextractor.minThFAST"]);
+
+    //Read in bounding box in which keypoints are ignored
+    if(commandlineArgs.count("BoundingBox.MaxX")>0){
+        std::array<float, 4> boundingBox;
+        boundingBox[0] = std::stoi(commandlineArgs["BoundingBox.MinX"]);
+        boundingBox[1] = std::stoi(commandlineArgs["BoundingBox.MaxX"]);
+        boundingBox[2] = std::stoi(commandlineArgs["BoundingBox.MinY"]);
+        boundingBox[3] = std::stoi(commandlineArgs["BoundingBox.MaxY"]);
+        std::cout << "BoundingBox: " << boundingBox[0] << boundingBox[1] << boundingBox[2] << boundingBox[3] << std::endl;
+        mBoundingBox = boundingBox;
+    }
 
     mpORBextractorLeft = std::shared_ptr<OrbExtractor>(new OrbExtractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST));
 
@@ -174,7 +186,7 @@ cv::Mat Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRe
         }
     }
    
-    mCurrentFrame = std::shared_ptr<OrbFrame>(new OrbFrame(mImGray,imGrayRight,timestamp,mpORBextractorLeft,mpORBextractorRight,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth));
+    mCurrentFrame = std::shared_ptr<OrbFrame>(new OrbFrame(mImGray,imGrayRight,timestamp,mpORBextractorLeft,mpORBextractorRight,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mBoundingBox));
 
     Track();
 
@@ -233,9 +245,9 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
     }
 
     if(m_trackingState==NOT_INITIALIZED || m_trackingState==NO_IMAGES_YET)
-        mCurrentFrame = std::shared_ptr<OrbFrame>(new OrbFrame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth));
+        mCurrentFrame = std::shared_ptr<OrbFrame>(new OrbFrame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mBoundingBox));
     else
-        mCurrentFrame = std::shared_ptr<OrbFrame>(new OrbFrame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth));
+        mCurrentFrame = std::shared_ptr<OrbFrame>(new OrbFrame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,mBoundingBox));
 
     Track();
 
