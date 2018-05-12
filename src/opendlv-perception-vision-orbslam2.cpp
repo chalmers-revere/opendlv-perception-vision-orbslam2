@@ -21,7 +21,6 @@
 
 int32_t main(int32_t argc, char **argv)
 {
-    std::cout << "Making slammer" << std::endl;
     int32_t retCode{0};
     auto commandlineArguments = cluon::getCommandlineArguments(argc, argv);
     if (0 == commandlineArguments.count("cid"))
