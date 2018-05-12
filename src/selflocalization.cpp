@@ -170,7 +170,7 @@ std::pair<bool,opendlv::logic::sensation::Geolocation> Selflocalization::sendPos
 	//double z = -static_cast<double>(cameraPosition.at<float>(0,1));
 	//Convert to ENU frame
 	//Rotate to ENU frame
-	x=x*cos(m_referenceHeading)+y*sin(m_referenceHeading);
+	x=x*cos(m_referenceHeading)-y*sin(m_referenceHeading);
 	y=y*cos(m_referenceHeading)+x*sin(m_referenceHeading);
 	std::array<double,2> cartesianPos;
 	std::cout << "x: " << x << "y: " << y << std::endl; 
@@ -192,6 +192,12 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
 	m_referenceHeading = static_cast<double>(std::stod(commandlineArgs["startHeading"]));
 	m_referenceHeading = m_referenceHeading*DEG2RAD;
 	m_referenceHeading = -m_referenceHeading+PI/2;
+
+	m_referenceHeading = (m_referenceHeading > PI)?(m_referenceHeading-2*PI):(m_referenceHeading);
+
+	m_referenceHeading = (m_referenceHeading < -PI)?(m_referenceHeading+2*PI):(m_referenceHeading);
+
+
 	m_cid = std::stoi(commandlineArgs["cid"]);
 	m_isMonocular = std::stoi(commandlineArgs["cameraType"]) == 0;
 	std::string vocFilePath = commandlineArgs["vocFilePath"]; //Create mount
@@ -264,7 +270,7 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
     		distRight = (cv::Mat_<double>(5, 1) << -0.174209, 0.026726, 0, 0, 0);
 
     	T = (cv::Mat_<double>(3, 1) << -bs, 0, 0);
-    	rodrigues = (cv::Mat_<double>(3, 1) << -rx, cv, rz);
+    	rodrigues = (cv::Mat_<double>(3, 1) << rx, cv, rz);
         cv::Rodrigues(rodrigues, R);
         stdSize = cv::Size(width/2, height);
 
