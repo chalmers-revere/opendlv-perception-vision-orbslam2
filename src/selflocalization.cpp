@@ -170,15 +170,15 @@ std::pair<bool,opendlv::logic::sensation::Geolocation> Selflocalization::sendPos
 	//double z = -static_cast<double>(cameraPosition.at<float>(0,1));
 	//Convert to ENU frame
 	//Rotate to ENU frame
-	x=x*cos(m_referenceHeading)-y*sin(m_referenceHeading);
-	y=y*cos(m_referenceHeading)+x*sin(m_referenceHeading);
+	double newX=x*cos(m_referenceHeading)-y*sin(m_referenceHeading);
+	double newY=y*cos(m_referenceHeading)+x*sin(m_referenceHeading);
 	std::array<double,2> cartesianPos;
-	std::cout << "x: " << x << "y: " << y << std::endl; 
-  	cartesianPos[0] = x;
-  	cartesianPos[1] = y;
+	std::cout << "x: " << newX << "y: " << newY << std::endl; 
+  	cartesianPos[0] = newX;
+  	cartesianPos[1] = newY;
   	std::array<double,2> sendGPS = wgs84::fromCartesian(m_gpsReference, cartesianPos);
-  	poseMessage.longitude(static_cast<float>(sendGPS[0]));
-  	poseMessage.latitude(static_cast<float>(sendGPS[1]));
+  	poseMessage.longitude(static_cast<float>(sendGPS[1]));
+  	poseMessage.latitude(static_cast<float>(sendGPS[0]));
 	return std::pair<bool,opendlv::logic::sensation::Geolocation>(true,poseMessage);
 	//Heading shift using a 2D rotation matrix
 	//Then use the wgs84 reference to convert to geodetic coordinates and send
