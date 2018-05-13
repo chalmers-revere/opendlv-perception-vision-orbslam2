@@ -65,9 +65,10 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 	std::stringstream cameraCoordinates;
     std::stringstream cameraRotation;
 
-//	size_t lastMapPoint = 0;
+	size_t lastMapPoint = 0;
 //    size_t lastLoopClosingId = 0;
 
+    uint32_t lastSentIndex = 0;
 	for(size_t i = 0; i < kittiRunner.GetImagesCount(); i++ )
 	{
 		kittiRunner.ProcessImage(i);
@@ -95,59 +96,61 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
             cameraRotation << std::fixed << std::setprecision(4) << R.at<float>(2, 2) << ':';
 
 
-            uint32_t lastSentIndex = 0;
-            int mapPointCount = 0;
-
-			auto mapPoints = map->GetAllMapPoints();
-			for(size_t j = 0; j < mapPoints.size(); j++)
-			{
-				OrbMapPoint* mp = mapPoints[j].get();
-				cv::Mat worldPosition = mp->GetWorldPosition();
-
-                cv::Mat mapPointCameraPosition = Tcw.rowRange(0,3).colRange(0,3) * worldPosition + Tcw.rowRange(0,3).col(3);
-				auto x = worldPosition.at<float>(0, 0);
-				auto y = worldPosition.at<float>(1, 0);
-				auto z = worldPosition.at<float>(2, 0);
-
-				mappointCoordinates << std::fixed <<  std::setprecision(4) << x << ':';
-				mappointCoordinates << std::fixed <<  std::setprecision(4) << y << ':';
-				mappointCoordinates << std::fixed <<  std::setprecision(4) << z << ':';
-
-                mapPointCount++;
-                if(mapPointCount > 1000)
+            if(i%20 == 0)
+            {
+                int mapPointCount = 0;
+                auto mapPoints = map->GetAllMapPoints();
+                std::cout << "Size of map is: " << mapPoints.size() << "." << std::endl;
+                for(; lastMapPoint < mapPoints.size(); lastMapPoint++)
                 {
-                    opendlv::proxy::OrbslamMap orbSlamMap;
-                    orbSlamMap.mapCoordinateIndex(lastSentIndex);
-                    orbSlamMap.mapCoordinates(mappointCoordinates.str());
-                    orbSlamMap.cameraCoordinates(cameraCoordinates.str());
-                    orbSlamMap.cameraRotation(cameraRotation.str());
+                    OrbMapPoint* mp = mapPoints[lastMapPoint].get();
+                    if(mp->IsCorrupt())
+                    {
+                        continue;
+                    }
 
-                    std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
-                    od4.send(orbSlamMap, cluon::time::convert(timePoint), i);
+                    cv::Mat worldPosition = mp->GetWorldPosition();
 
-                    mappointCoordinates.str(std::string());
-                    lastSentIndex = static_cast<uint32_t>(mapPointCount) - 1;
-                    mapPointCount = 0;
+                    cv::Mat mapPointCameraPosition = Tcw.rowRange(0,3).colRange(0,3) * worldPosition + Tcw.rowRange(0,3).col(3);
+                    auto x = worldPosition.at<float>(0, 0);
+                    auto y = worldPosition.at<float>(1, 0);
+                    auto z = worldPosition.at<float>(2, 0);
+
+                    mappointCoordinates << std::fixed <<  std::setprecision(4) << x << ':';
+                    mappointCoordinates << std::fixed <<  std::setprecision(4) << y << ':';
+                    mappointCoordinates << std::fixed <<  std::setprecision(4) << z << ':';
+
+                    mapPointCount++;
+                    if(mapPointCount > 1000)
+                    {
+                        opendlv::proxy::OrbslamMap orbSlamMap;
+                        orbSlamMap.mapCoordinateIndex(lastSentIndex);
+                        orbSlamMap.mapCoordinates(mappointCoordinates.str());
+                        orbSlamMap.cameraCoordinates(cameraCoordinates.str());
+                        orbSlamMap.cameraRotation(cameraRotation.str());
+
+                        std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
+                        od4.send(orbSlamMap, cluon::time::convert(timePoint), i);
+
+                        mappointCoordinates.str(std::string());
+                        lastSentIndex = (uint32_t)lastMapPoint - 1;
+                        mapPointCount = 0;
+                    }
                 }
-			}
+            }
 
             opendlv::proxy::OrbslamMap orbSlamMap;
             orbSlamMap.mapCoordinateIndex(lastSentIndex);
             orbSlamMap.mapCoordinates(mappointCoordinates.str());
             orbSlamMap.cameraCoordinates(cameraCoordinates.str());
             orbSlamMap.cameraRotation(cameraRotation.str());
-
+            lastSentIndex = (uint32_t)lastMapPoint - 1;
             std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
             od4.send(orbSlamMap, cluon::time::convert(timePoint), i);
-
-            if(i == 3)
-            {
-                this->m_pTracker->WriteToPoseFile("poses.txt");
-            }
             mappointCoordinates.str(std::string());
 		}
 	}
-	this->m_pTracker->WriteToPoseFile("poses.txt");
+	this->m_pTracker->WriteToPoseFile(commandlineArgs["kittiPath"] + "/poses.txt");
 	kittiRunner.ShutDown();
 }
 
