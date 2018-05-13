@@ -75,12 +75,6 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 		OrbMap* map = m_map.get();
 		if(map)
 		{
-            std::vector< std::pair<cv::Mat, cv::Mat>> trajectory;
-            this->m_pTracker->GetTrajectory(trajectory);
-            for(const std::pair<cv::Mat, cv::Mat> & frame: trajectory) {
-                std::cout << "rotation Mat: " << frame.first.at<float>(0,1) << std::endl;
-                std::cout << "translation Mat: " << frame.second.at<float>(0) << std::endl;
-            }
             mappointCoordinates.str(std::string());
             cameraCoordinates.str(std::string());
             cameraRotation.str(std::string());
