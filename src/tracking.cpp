@@ -1593,16 +1593,20 @@ void Tracking::WriteToPoseFile(const std::string &filename)
         return;
     }
 
+    std::ofstream f;
+    f.open(filename.c_str());
+    this->GetTrajectory(f);
+    f.close();
+    std::cout << std::endl << "trajectory saved!" << std::endl;
+}
+
+void Tracking::GetTrajectory(std::vector< std::pair<cv::Mat, cv::Mat>> & trajectory) {
     std::vector<std::shared_ptr<OrbKeyFrame>> keyFrames = mpMap->GetAllKeyFrames();
     std::sort(keyFrames.begin(),keyFrames.end(),OrbKeyFrame::FrameIDCompare);
 
     // Transform all keyframes so that the first keyframe is at the origin.
     // After a loop closure the first keyframe might not be at the origin.
     cv::Mat Two = keyFrames[0]->GetPoseInverse();
-
-    std::ofstream f;
-    f.open(filename.c_str());
-    f << std::fixed;
 
     // Frame pose is stored relative to its reference keyframe (which is optimized by BA and pose graph).
     // We need to get first the keyframe pose and then concatenate the relative transformation.
@@ -1611,8 +1615,7 @@ void Tracking::WriteToPoseFile(const std::string &filename)
     // For each frame we have a reference keyframe (lRit), the timestamp (lT) and a flag
     // which is true when tracking failed (lbL).
     std::list<std::shared_ptr<OrbKeyFrame>>::iterator lRit = this->mlpReferences.begin();
-    std::list<double>::iterator lT = mlFrameTimes.begin();
-    for(std::list<cv::Mat>::iterator lit = mlRelativeFramePoses.begin(), lend = mlRelativeFramePoses.end();lit!=lend;lit++, lRit++, lT++)
+    for(std::list<cv::Mat>::iterator lit = mlRelativeFramePoses.begin(), lend = mlRelativeFramePoses.end();lit!=lend;lit++, lRit++)
     {
         OrbKeyFrame * pKF = lRit->get();
 
@@ -1627,14 +1630,51 @@ void Tracking::WriteToPoseFile(const std::string &filename)
 
         Trw = Trw*pKF->GetPose()*Two;
 
-        cv::Mat Tcw = (*lit)*Trw;
-        cv::Mat Rwc = Tcw.rowRange(0,3).colRange(0,3).t();
-        cv::Mat twc = -Rwc*Tcw.rowRange(0,3).col(3);
-
-        f << std::setprecision(9) << Rwc.at<float>(0,0) << " " << Rwc.at<float>(0,1)  << " " << Rwc.at<float>(0,2) << " "  << twc.at<float>(0) << " " <<
-          Rwc.at<float>(1,0) << " " << Rwc.at<float>(1,1)  << " " << Rwc.at<float>(1,2) << " "  << twc.at<float>(1) << " " <<
-          Rwc.at<float>(2,0) << " " << Rwc.at<float>(2,1)  << " " << Rwc.at<float>(2,2) << " "  << twc.at<float>(2) << std::endl;
+        cv::Mat translationCameraWorld = (*lit)*Trw;
+        cv::Mat rotationWorldCamera = translationCameraWorld.rowRange(0,3).colRange(0,3).t();
+        cv::Mat translationWorldCamera = -rotationWorldCamera*translationCameraWorld.rowRange(0,3).col(3);
+        trajectory.push_back(std::pair<cv::Mat, cv::Mat>(rotationWorldCamera, translationWorldCamera));
     }
-    f.close();
-    std::cout << std::endl << "trajectory saved!" << std::endl;
+}
+
+void Tracking::GetTrajectory(std::ofstream &stream) {
+    std::vector<std::shared_ptr<OrbKeyFrame>> keyFrames = mpMap->GetAllKeyFrames();
+    std::sort(keyFrames.begin(),keyFrames.end(),OrbKeyFrame::FrameIDCompare);
+
+    // Transform all keyframes so that the first keyframe is at the origin.
+    // After a loop closure the first keyframe might not be at the origin.
+    cv::Mat Two = keyFrames[0]->GetPoseInverse();
+
+    stream << std::fixed;
+
+    // Frame pose is stored relative to its reference keyframe (which is optimized by BA and pose graph).
+    // We need to get first the keyframe pose and then concatenate the relative transformation.
+    // Frames not localized (tracking failure) are not saved.
+
+    // For each frame we have a reference keyframe (lRit), the timestamp (lT) and a flag
+    // which is true when tracking failed (lbL).
+    std::list<std::shared_ptr<OrbKeyFrame>>::iterator lRit = this->mlpReferences.begin();
+    for(std::list<cv::Mat>::iterator lit = mlRelativeFramePoses.begin(), lend = mlRelativeFramePoses.end();lit!=lend;lit++, lRit++)
+    {
+        OrbKeyFrame * pKF = lRit->get();
+
+        cv::Mat Trw = cv::Mat::eye(4,4,CV_32F);
+
+        while(pKF->isBad())
+        {
+            //  cout << "bad parent" << endl;
+            Trw = Trw*pKF->mTcp;
+            pKF = pKF->GetParent().get();
+        }
+
+        Trw = Trw*pKF->GetPose()*Two;
+
+        cv::Mat translationCameraWorld = (*lit)*Trw;
+        cv::Mat rotationWorldCamera = translationCameraWorld.rowRange(0,3).colRange(0,3).t();
+        cv::Mat translationWorldCamera = -rotationWorldCamera*translationCameraWorld.rowRange(0,3).col(3);
+
+        stream << std::setprecision(9) << rotationWorldCamera.at<float>(0,0) << " " << rotationWorldCamera.at<float>(0,1)  << " " << rotationWorldCamera.at<float>(0,2) << " "  << translationWorldCamera.at<float>(0) << " " <<
+          rotationWorldCamera.at<float>(1,0) << " " << rotationWorldCamera.at<float>(1,1)  << " " << rotationWorldCamera.at<float>(1,2) << " "  << translationWorldCamera.at<float>(1) << " " <<
+          rotationWorldCamera.at<float>(2,0) << " " << rotationWorldCamera.at<float>(2,1)  << " " << rotationWorldCamera.at<float>(2,2) << " "  << translationWorldCamera.at<float>(2) << std::endl;
+    }
 }
