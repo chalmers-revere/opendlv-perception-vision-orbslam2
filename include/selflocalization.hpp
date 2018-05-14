@@ -75,7 +75,7 @@ public:
     void nextContainer(cv::Mat &img);
     void runKitti(std::string kittiPath);
     std::pair<bool,opendlv::logic::sensation::Geolocation> sendPose();
-    std::pair<bool,opendlv::proxy::OrbslamMap> extractMap(size_t &lastMapPoint);
+    void sendMap(size_t &lastMapPoint,uint32_t &lastSentIndex, size_t i, cluon::OD4Session &od4);
     void Shutdown();
     void Track(cv::Mat &imLeft, cv::Mat &imRight, double &timestamp);
     void Track(cv::Mat &imLeft, double &timestamp);

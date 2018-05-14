@@ -1599,12 +1599,6 @@ bool Tracking::InitalizeTracking() {
 void Tracking::WriteToPoseFile(const std::string &filename)
 {
     std::cout << std::endl << "Saving camera trajectory to " << filename << " ..." << std::endl;
-    if(mSensor==Selflocalization::MONOCULAR)
-    {
-        std::cerr << "ERROR: SaveTrajectoryKITTI cannot be used for monocular." << std::endl;
-        return;
-    }
-
     std::ofstream f;
     f.open(filename.c_str());
     this->GetTrajectory(f);
