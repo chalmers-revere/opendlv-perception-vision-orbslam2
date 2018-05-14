@@ -21,12 +21,6 @@ version: '2'
 
 services:
 
-    odsupercomponent:
-        image: ${IMAGE}
-        network_mode: host
-        volumes:
-        - .:/opt/opendlv.data
-        command: "/opt/od4/bin/odsupercomponent --cid=${CID} --verbose=1 --configuration=/opt/opendlv.data/configuration"
 
     selflocalization:
        image: orbubuntu:orbubuntuv0 #orbamd:orbamdv0
@@ -39,10 +33,11 @@ services:
            soft: 44236800
            hard: 44236800
        volumes:
-           - ../kitti:/kitti
-           - ../images:/media  #Needs folder with images and an ORBvoc.txt "--Camera.rx=-0.0132397","--Camera.cv=0.021005","--Camera.rz=-0.00121284"
+           - /home/somliga/MasterThesis/real-time-imp/kitti:/kitti
+           - /home/somliga/MasterThesis/real-time-imp/images:/media  #Needs folder with images and an ORBvoc.txt "--Camera.rx=-0.0132397","--Camera.cv=0.021005","--Camera.rz=-0.00121284"
            - /tmp/.X11-unix:/tmp/.X11-unix
-       command: "/tmp/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2 --name=cam0 --width=2560 --height=720 --bpp=24 --cid=${CID} --cameraType=1 --vocFilePath=/media/ORBvoc.txt --Camera.fx=699.783 --Camera.fy=699.783 --Camera.cx=637.704 --Camera.cy=360.875 --Camera.k1=-0.173042 --Camera.k2=0.0258831 --Camera.k3=0 --Camera.p1=0 --Camera.p2=0 --rectify=1 --Camera.rx=-0.0132397 --Camera.cv=0.021005 --Camera.rz=-0.00121284 --Camera.baseline=0.12 --Camera.fps=20 --Camera.bf=84.027 --Camera.RGB=1 --ThDepth=60 --ORBextractor.nFeatures=2000 --ORBextractor.scaleFactor=1.2 --ORBextractor.nLevels=8 --ORBextractor.iniThFAST=15 --ORBextractor.minThFAST=5 --refLatitude=57.713737 --refLongitude=11.9482177 --startHeading=215 --BoundingBox.MinX=0 --BoundingBox.MaxX=0 --BoundingBox.MinY=0 --BoundingBox.MaxY=0 --kittiPath=/kitti/dataset/sequences/lindholmenhood"
+       command: "/tmp/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2 --name=cam0 --width=2560 --height=720 --bpp=24 --cid=${CID} --cameraType=1 --vocFilePath=/media/ORBvoc.txt --Camera.fx=699.783 --Camera.fy=699.783 --Camera.cx=637.704 --Camera.cy=360.875 --Camera.k1=-0.173042 --Camera.k2=0.0258831 --Camera.k3=0 --Camera.p1=0 --Camera.p2=0 --CameraR.fx=700.225 --CameraR.fy=700.225 --CameraR.cx=660.759 --CameraR.cy=364.782 --CameraR.k1=-0.174209 --CameraR.k2=0.026726 --CameraR.k3=0 --CameraR.p1=0 --CameraR.p2=0 --resize=0.5 --rectify=1 --Camera.rx=-0.0132397 --Camera.cv=0.021005 --Camera.rz=-0.00121284 --Camera.baseline=0.12 --Camera.fps=20 --Camera.bf=41.98698 --Camera.RGB=1 --ThDepth=60 --ORBextractor.nFeatures=2000 --ORBextractor.scaleFactor=1.2 --ORBextractor.nLevels=8 --ORBextractor.iniThFAST=15 --ORBextractor.minThFAST=5 --refLatitude=57.713737 --refLongitude=11.9482177 --startHeading=215 --BoundingBox.MinX=0 --BoundingBox.MaxX=0 --BoundingBox.MinY=0 --BoundingBox.MaxY=0 --kittiPath=/kitti/dataset/sequences/lindholmenhood"
+
        #       vehicle_viewer
 #           image: testviewer
 #           network_mode: host
@@ -51,14 +46,14 @@ services:
 #           command: "--cid=${CID}"
 
     #recorder
-    odrecorderh264:
-        image: ${IMAGE}
-        depends_on:
-            - odsupercomponent
-        volumes:
-            - ~/recordings:/opt/recordings
-        user: odv
-        network_mode: host
-        ipc: host
-        working_dir: "/opt/recordings"
-        command: "/opt/od4/bin/odrecorderh264 --cid=${CID}"
+#    odrecorderh264:
+#        image: ${IMAGE}
+#        depends_on:
+#            - odsupercomponent
+#        volumes:
+#            - ~/recordings:/opt/recordings
+#        user: odv
+#        network_mode: host
+#        ipc: host
+#        working_dir: "/opt/recordings"
+#        command: "/opt/od4/bin/odrecorderh264 --cid=${CID}"

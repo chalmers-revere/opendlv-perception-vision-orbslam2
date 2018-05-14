@@ -115,6 +115,7 @@ private:
     const double PI = 3.14159265f;
     //Rectification parameters
     cv::Mat rmap[2][2];
+    float m_resizeScale;
 };
 
 
