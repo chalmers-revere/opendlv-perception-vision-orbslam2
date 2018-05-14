@@ -51,6 +51,7 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 		, m_pKeyFrameDatabase()
 		, m_map()
 		, m_last_envelope_ts()
+		, m_resizeScale()
 
 {
 	setUp(commandlineArgs);
@@ -73,8 +74,10 @@ void Selflocalization::runKitti(std::string kittiPath){
 	uint32_t lastSentIndex = 0;
 	for(size_t i = 0; i < kittiRunner.GetImagesCount(); i++ )
 	{
-		std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
-		kittiRunner.ProcessImage(i);
+
+        std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
+		kittiRunner.ProcessImage(i,m_resizeScale);
+
         std::cout << "Sending OD4" << std::endl;
 		if(!m_isMonocular){
 			std::pair<bool,opendlv::logic::sensation::Geolocation> posePacket = sendPose();
@@ -213,11 +216,24 @@ void Selflocalization::nextContainer(cv::Mat &img)
 		int height = img.rows;
 		cv::Mat imgL(img, cv::Rect(0, 0, width/2, height));
 		cv::Mat imgR(img, cv::Rect(width/2, 0, width/2, height));
+
+		if(m_resizeScale < 1){
+
+                cv::resize(imgL, imgL, cv::Size(static_cast<int>(imgL.cols*m_resizeScale),static_cast<int>(imgL.rows*m_resizeScale)));
+                cv::resize(imgR, imgR, cv::Size(static_cast<int>(imgR.cols*m_resizeScale),static_cast<int>(imgR.rows*m_resizeScale)));
+        }
+
 		cv::remap(imgL,imgL, rmap[0][0], rmap[0][1], cv::INTER_LINEAR);
         cv::remap( imgR,imgR, rmap[1][0], rmap[1][1], cv::INTER_LINEAR);
 		//GO TO TRACKING
 		Track(imgL,imgR, currTime);
 	}else{
+
+		if(m_resizeScale < 1){
+
+                cv::resize(img, img, cv::Size(static_cast<int>(img.cols*m_resizeScale),static_cast<int>(img.rows*m_resizeScale)));
+        }
+
 		Track(img,currTime);
 	}
 	sendPose();
@@ -308,7 +324,12 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
         cv::Mat P1;
         cv::Mat P2;
         cv::Rect validRoI[2];
-		//Grab parameters
+
+
+		m_resizeScale= std::stof(commandlineArgs["resize"]);
+		double resizeScale = static_cast<double>(m_resizeScale);
+			//LEFT CAMERA PARAMETERS
+		//m_resizeScale = static_cast<int>(resizeFloat);
 		    float fx = std::stof(commandlineArgs["Camera.fx"]);
     		float fy = std::stof(commandlineArgs["Camera.fy"]);
     		float cx = std::stof(commandlineArgs["Camera.cx"]);
@@ -318,29 +339,48 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
     		float k3 = std::stof(commandlineArgs["Camera.k3"]);
     		float p1 = std::stof(commandlineArgs["Camera.p1"]);
     		float p2 = std::stof(commandlineArgs["Camera.p2"]);
-    		float rx = std::stof(commandlineArgs["Camera.rx"]);
-    		float cv = std::stof(commandlineArgs["Camera.cv"]);
-    		float rz = std::stof(commandlineArgs["Camera.rz"]); 
-			float bs = std::stof(commandlineArgs["Camera.baseline"]);
-			int width = std::stoi(commandlineArgs["width"]);
-			int height = std::stoi(commandlineArgs["height"]);
+
 			//Left Camera
 		    mtxLeft = (cv::Mat_<double>(3, 3) <<
-        		fx, 0, cx,
-        		0, fy, cy,
+        		fx*resizeScale, 0, cx*resizeScale,
+        		0, fy*resizeScale, cy*resizeScale,
         		0, 0, 1);
-    		distLeft = (cv::Mat_<double>(5, 1) << k1, k2, p1, p2, k3);
-			//Right Camera
-    		mtxRight = (cv::Mat_<double>(3, 3) <<
-       			700.225, 0, 660.759,
-       			0, 700.225, 364.782,
-       			0, 0, 1);
-    		distRight = (cv::Mat_<double>(5, 1) << -0.174209, 0.026726, 0, 0, 0);
+    		distLeft = (cv::Mat_<double>(5, 1) << k1*resizeScale, k2*resizeScale, p1*resizeScale, p2*resizeScale, k3*resizeScale);
 
+		//RIGHT CAMERA PARAMETERS
+   			float fxr = std::stof(commandlineArgs["CameraR.fx"]);
+    		float fyr = std::stof(commandlineArgs["CameraR.fy"]);
+    		float cxr = std::stof(commandlineArgs["CameraR.cx"]);
+    		float cyr = std::stof(commandlineArgs["CameraR.cy"]);
+			float k1r = std::stof(commandlineArgs["CameraR.k1"]);
+    		float k2r = std::stof(commandlineArgs["CameraR.k2"]);
+    		float k3r = std::stof(commandlineArgs["CameraR.k3"]);
+    		float p1r = std::stof(commandlineArgs["CameraR.p1"]);
+    		float p2r = std::stof(commandlineArgs["CameraR.p2"]);
+    		mtxRight = (cv::Mat_<double>(3, 3) <<
+       			fxr*resizeScale, 0, cxr*resizeScale,
+       			0, fyr*resizeScale, cyr*resizeScale,
+       			0, 0, 1);
+    		distRight = (cv::Mat_<double>(5, 1) << k1r*resizeScale, k2r*resizeScale, p1r*resizeScale, p2r*resizeScale, k3r*resizeScale);
+		
+
+		//COMMON PARAMETERS
+
+		float rx = std::stof(commandlineArgs["Camera.rx"]);
+    	float cv = std::stof(commandlineArgs["Camera.cv"]);
+    	float rz = std::stof(commandlineArgs["Camera.rz"]); 
+		float bs = std::stof(commandlineArgs["Camera.baseline"]);
+		int width = std::stoi(commandlineArgs["width"]);
+		int height = std::stoi(commandlineArgs["height"]);
+
+		//RECTIFY IMAGES
     	T = (cv::Mat_<double>(3, 1) << -bs, 0, 0);
     	rodrigues = (cv::Mat_<double>(3, 1) << rx, cv, rz);
         cv::Rodrigues(rodrigues, R);
-        stdSize = cv::Size(width/2, height);
+        stdSize = cv::Size(static_cast<int>(m_resizeScale*width/2), static_cast<int>(m_resizeScale*height));
+        //stdSize = cv::Size((width/2), height);
+
+        
 
         cv::stereoRectify(mtxLeft, distLeft, mtxRight, distRight, stdSize, R, T, R1, R2, P1, P2, Q, cv::CALIB_ZERO_DISPARITY, 0.0, stdSize, &validRoI[0], &validRoI[1]);
         cv::initUndistortRectifyMap(mtxLeft, distLeft, R1, P1, stdSize, CV_16SC2, rmap[0][0], rmap[0][1]);

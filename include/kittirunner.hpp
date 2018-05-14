@@ -36,7 +36,7 @@ public:
     KittiRunner(KittiRunner const &) = delete;
     KittiRunner &operator=(KittiRunner const &) = delete;
     ~KittiRunner();
-    void ProcessImage(size_t imageNumber);
+    void ProcessImage(size_t imageNumber,float);
     void ShutDown();
     size_t GetImagesCount();
 

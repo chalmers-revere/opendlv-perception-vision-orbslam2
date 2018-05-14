@@ -108,7 +108,7 @@ void KittiRunner::ShutDown() {
     //SLAM.SaveTrajectoryKITTI("CameraTrajectory.txt");
 }
 
-void KittiRunner::ProcessImage(size_t imageNumber) {
+void KittiRunner::ProcessImage(size_t imageNumber,float resizeScale) {
     cv::Mat imLeft;
     cv::Mat imRight;
 
@@ -132,6 +132,12 @@ void KittiRunner::ProcessImage(size_t imageNumber) {
             //imRight=imgR;
         //}
         //else{
+
+            if(resizeScale < 1){
+
+                cv::resize(imgL, imgL, cv::Size(static_cast<int>(imgL.cols*resizeScale),static_cast<int>(imgL.rows*resizeScale)));
+                cv::resize(imgR, imgR, cv::Size(static_cast<int>(imgR.cols*resizeScale),static_cast<int>(imgR.rows*resizeScale)));
+            }
             cv::remap(imgL,imLeft, m_rmap[0][0], m_rmap[0][1], cv::INTER_LINEAR);
             cv::remap(imgR,imRight, m_rmap[1][0], m_rmap[1][1], cv::INTER_LINEAR);
         //}
@@ -151,6 +157,12 @@ void KittiRunner::ProcessImage(size_t imageNumber) {
             cv::imshow( "Display window 2", imLeft );   
             cv::waitKey(0);*/
 
+    }else{
+
+        if(resizeScale < 1){
+
+                cv::resize(imgL, imgL, cv::Size(static_cast<int>(imgL.cols*resizeScale),static_cast<int>(imgL.rows*resizeScale)));
+        }
     }
     //std::cout << "loaded images " << std::endl;
     double tframe = this->m_timeStamps[imageNumber];
