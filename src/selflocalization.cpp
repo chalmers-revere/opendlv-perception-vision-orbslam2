@@ -86,7 +86,31 @@ void Selflocalization::runKitti(std::string kittiPath){
         // send results to conference.
 	}
 	this->m_pTracker->WriteToPoseFile(kittiPath + "/poses.txt");
+	writeToMapFile(kittiPath + "/map.txt");
 	kittiRunner.ShutDown();
+
+}
+
+void Selflocalization::writeToMapFile(std::string filepath){
+	if(m_map.get()){
+		std::ofstream f;
+    	f.open(filepath.c_str());
+		auto mapPoints = m_map->GetAllMapPoints();
+		for(unsigned int i = 0; i<mapPoints.size(); i++){
+			OrbMapPoint* mp = mapPoints[i].get();
+                if(mp->IsCorrupt())
+                {
+                    continue;
+                }
+                cv::Mat worldPosition = mp->GetWorldPosition();
+                auto x = worldPosition.at<float>(0, 0);
+                auto y = worldPosition.at<float>(1, 0);
+                auto z = worldPosition.at<float>(2, 0);
+				f << std::setprecision(9) << x << "\t" << y << "\t" << z << "\t" << std::endl;
+		}
+		f.close();
+		std::cout << "map with " << m_map->OrbMapPointsCount() << " points saved" << std::endl;
+	}
 
 }
 
