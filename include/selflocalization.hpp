@@ -77,6 +77,7 @@ public:
     std::pair<bool,opendlv::logic::sensation::Geolocation> sendPose();
     void sendMap(size_t &lastMapPoint,uint32_t &lastSentIndex, size_t i, cluon::OD4Session &od4);
     void writeToMapFile(std::string filepath);
+    void writeToFpsFile(std::string filepath, std::vector<long unsigned int> mapSizeVector, std::vector<double> fpsVector);
     void Shutdown();
     void Track(cv::Mat &imLeft, cv::Mat &imRight, double &timestamp);
     void Track(cv::Mat &imLeft, double &timestamp);

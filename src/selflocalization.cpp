@@ -67,13 +67,13 @@ void Selflocalization::runKitti(std::string kittiPath){
 	std::cout << kittiPath << std::endl;
 	KittiRunner kittiRunner(kittiPath,!m_isMonocular,std::shared_ptr<Selflocalization>(this),rmap);
    	cluon::OD4Session od4{static_cast<uint16_t>(m_cid), [](auto){}};
-
+   	std::vector<long unsigned int> mapSizeVector;
+   	std::vector<double> fpsVector;
 	size_t lastMapPoint = 0;
 	uint32_t lastSentIndex = 0;
 	for(size_t i = 0; i < kittiRunner.GetImagesCount(); i++ )
 	{
 		kittiRunner.ProcessImage(i);
-
         std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
         std::cout << "Sending OD4" << std::endl;
 		if(!m_isMonocular){
@@ -84,11 +84,25 @@ void Selflocalization::runKitti(std::string kittiPath){
 		}
 		sendMap(lastMapPoint,lastSentIndex,i,od4);
         // send results to conference.
+        std::chrono::system_clock::time_point t2 = std::chrono::system_clock::now();
+        double ttrack= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - timePoint).count();
+        fpsVector.push_back(ttrack);
+        mapSizeVector.push_back(m_map->OrbMapPointsCount());
 	}
 	this->m_pTracker->WriteToPoseFile(kittiPath + "/poses.txt");
 	writeToMapFile(kittiPath + "/map.txt");
+	writeToFpsFile(kittiPath + "/fps.txt",mapSizeVector,fpsVector);
 	kittiRunner.ShutDown();
+}
 
+void Selflocalization::writeToFpsFile(std::string filepath, std::vector<long unsigned int> mapSizeVector, std::vector<double> fpsVector){
+	std::ofstream f;
+    f.open(filepath.c_str());
+    for(unsigned int i= 0; i<fpsVector.size(); i++){
+    	f << fpsVector[i] << "\t" << mapSizeVector[i] << std::endl; 
+    }
+    f.close();
+    std::cout << "Printed fps to file" << std::endl;
 }
 
 void Selflocalization::writeToMapFile(std::string filepath){
