@@ -85,7 +85,7 @@ void Selflocalization::runKitti(std::string kittiPath){
 		}
         // send results to conference.
 	}
-
+	this->m_pTracker->WriteToPoseFile(commandlineArgs["kittiPath"] + "/poses.txt");
 	kittiRunner.ShutDown();
 
 }
