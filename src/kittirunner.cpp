@@ -179,7 +179,7 @@ void KittiRunner::ProcessImage(size_t imageNumber) {
         Ti = tframe-this->m_timeStamps[imageNumber-1];
 
     if(ttrack<Ti)
-        usleep(static_cast<int>((Ti-ttrack)*1e6));
+        //usleep(static_cast<int>((Ti-ttrack)*1e6));
 
     //std::cout << "Image " << imageNumber << " processed" << std::endl;
 }
