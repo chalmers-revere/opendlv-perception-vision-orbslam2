@@ -76,12 +76,12 @@ void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &
     vstrImageLeft.resize(timeStamps.size());
     vstrImageRight.resize(timeStamps.size());
 
-    for(unsigned long i=10; i<timeStamps.size(); i++)
+    for(unsigned long i=0; i<timeStamps.size(); i++)
     {
         std::stringstream ss;
         ss << std::setfill('0') << std::setw(6) << i;
-        vstrImageLeft[i-10] = strPrefixLeft + ss.str() + ".png";
-        vstrImageRight[i-10] = strPrefixRight + ss.str() + ".png";
+        vstrImageLeft[i] = strPrefixLeft + ss.str() + ".png";
+        vstrImageRight[i] = strPrefixRight + ss.str() + ".png";
     }
 }
 
@@ -117,6 +117,12 @@ void KittiRunner::ProcessImage(size_t imageNumber,float resizeScale) {
     // Read left and right images from file
     std::cout << "reading image: " << this->m_leftImages[imageNumber] << std::endl;
     cv::Mat imgL = cv::imread(this->m_leftImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
+    if(imgL.empty())
+    {
+        std::cerr << std::endl << "Failed to load image at: "
+                  << std::string(this->m_leftImages[imageNumber]) << std::endl;
+                  return;
+    }
     
     if(this->m_isStereo){
         std::cout << "reading image: " << this->m_rightImages[imageNumber] << std::endl;
@@ -160,12 +166,6 @@ void KittiRunner::ProcessImage(size_t imageNumber,float resizeScale) {
     }
     //std::cout << "loaded images " << std::endl;
     double tframe = this->m_timeStamps[imageNumber];
-
-    if(imgL.empty())
-    {
-        std::cerr << std::endl << "Failed to load image at: "
-                  << std::string(this->m_leftImages[imageNumber]) << std::endl;
-    }
     std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
     //std::cout << "calling track " << std::endl;
     // Pass the images to the SLAM system
