@@ -73,8 +73,8 @@ void Selflocalization::runKitti(std::string kittiPath){
 	uint32_t lastSentIndex = 0;
 	for(size_t i = 0; i < kittiRunner.GetImagesCount(); i++ )
 	{
+		std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
 		kittiRunner.ProcessImage(i);
-        std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
         std::cout << "Sending OD4" << std::endl;
 		if(!m_isMonocular){
 			std::pair<bool,opendlv::logic::sensation::Geolocation> posePacket = sendPose();
