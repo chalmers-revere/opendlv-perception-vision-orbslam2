@@ -1,0 +1,4 @@
+FROM alpine:3.7
+ADD . /opt/kitty
+VOLUME /opt/kitty
+ENTRYPOINT /usr/bin/tail -f /dev/null
