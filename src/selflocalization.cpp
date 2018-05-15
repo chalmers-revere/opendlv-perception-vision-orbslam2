@@ -303,6 +303,7 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
     */
 	const int sensor = std::stoi(commandlineArgs["cameraType"]);
 	bool rectify = std::stoi(commandlineArgs["rectify"])==1;
+	m_resizeScale= std::stof(commandlineArgs["resize"]);
 
 	if(sensor && rectify){
 		//Declare variables
@@ -325,8 +326,6 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
         cv::Mat P2;
         cv::Rect validRoI[2];
 
-
-		m_resizeScale= std::stof(commandlineArgs["resize"]);
 		double resizeScale = static_cast<double>(m_resizeScale);
 			//LEFT CAMERA PARAMETERS
 		//m_resizeScale = static_cast<int>(resizeFloat);

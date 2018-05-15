@@ -75,13 +75,13 @@ void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &
 
     vstrImageLeft.resize(timeStamps.size());
     vstrImageRight.resize(timeStamps.size());
-
-    for(unsigned long i=0; i<timeStamps.size(); i++)
+    int offset = 3500;
+    for(unsigned long i=offset; i<timeStamps.size(); i++)
     {
         std::stringstream ss;
         ss << std::setfill('0') << std::setw(6) << i;
-        vstrImageLeft[i] = strPrefixLeft + ss.str() + ".png";
-        vstrImageRight[i] = strPrefixRight + ss.str() + ".png";
+        vstrImageLeft[i-offset] = strPrefixLeft + ss.str() + ".png";
+        vstrImageRight[i-offset] = strPrefixRight + ss.str() + ".png";
     }
 }
 
@@ -160,14 +160,13 @@ void KittiRunner::ProcessImage(size_t imageNumber,float resizeScale) {
     }else{
 
         if(resizeScale < 1){
-
-                cv::resize(imgL, imgL, cv::Size(static_cast<int>(imgL.cols*resizeScale),static_cast<int>(imgL.rows*resizeScale)));
+            cv::resize(imgL, imgL, cv::Size(static_cast<int>(imgL.cols*resizeScale),static_cast<int>(imgL.rows*resizeScale)));
         }
     }
     //std::cout << "loaded images " << std::endl;
     double tframe = this->m_timeStamps[imageNumber];
     std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-    //std::cout << "calling track " << std::endl;
+    std::cout << "calling track " << std::endl;
     // Pass the images to the SLAM system
     if(this->m_isStereo){
         m_slammer->Track(imLeft,imRight,tframe);
