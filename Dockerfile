@@ -13,8 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Part to build opendlv-perception-vision-orbslam2. 
-FROM ubuntu:16.04
+# Part to build opendlv-perception-vision-orbslam2.
+FROM ubuntu:16.04 as builder
 MAINTAINER Christian Berger "christian.berger@gu.se"
 
 #Get OS stuff
@@ -32,7 +32,7 @@ libfaac-dev libmp3lame-dev libtheora-dev \
 libvorbis-dev libxvidcore-dev \
 libopencore-amrnb-dev libopencore-amrwb-dev \
 x264 v4l-utils \
-python-dev python-pip python3-dev python3-pip 
+python-dev python-pip python3-dev python3-pip
 
 RUN pip2 install -U pip numpy
 RUN pip3 install -U pip numpy
@@ -84,24 +84,23 @@ RUN mkdir -p /opt/sources/build
 
 WORKDIR /opt/sources/build
 
-RUN cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/opt/opendlv-perception-vision-orbslam2-dest ..
+RUN cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr ..
 RUN make -j6
 RUN make test
 RUN make install
 RUN ldconfig && rm -rf /opt/sources
 
-CMD ["/opt/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2"]
-
-## Part to deploy opendlv-perception-vision-orbslam2
-#FROM ubuntu:16.04
+FROM ubuntu:16.04
 #MAINTAINER Christian Berger "christian.berger@gu.se"
 #
 ##Start microservice
-#WORKDIR /usr/bin
-#COPY --from=builder /usr/local/include/ /usr/include/
-#COPY --from=builder /usr/local/lib/ /usr/lib/
-#COPY --from=builder /usr/lib/ /usr/lib/
-#COPY --from=builder /tmp/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2 .
+RUN apt-get update && apt-get -y install libglu1-mesa libpng12-dev 
+WORKDIR /usr/bin
+COPY --from=builder /usr/local/include/ /usr/local/include/
+COPY --from=builder /usr/local/lib/ /usr/local/lib/
+COPY --from=builder /usr/lib/ /usr/lib/
+COPY --from=builder /usr/include/ /usr/include/
+COPY --from=builder /usr/bin/opendlv-perception-vision-orbslam2 .
+RUN ldconfig
+CMD ["/usr/bin/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2"]
 ##RUN apk update && apk add g++ #This is extremely ugly and needs to be fixed
-
-
