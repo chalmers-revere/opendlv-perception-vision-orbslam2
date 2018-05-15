@@ -28,7 +28,7 @@ if [ "$1" == "gallery" ]; then
     IMAGE_NAME=opendlv-gallery-orb2-slam
     TAG=selflocalization
 else
-   DOCKERFILE=dockerfile.amd64
+   DOCKERFILE=Dockerfile
    ORG_NAME=seresearch
    IMAGE_NAME=opendlv-perception-vision-orbslam2-amd64
    TAG=latest
