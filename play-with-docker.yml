@@ -19,35 +19,38 @@
 
 version: '3'
 
-volumes:
-  assets:
-
 services:
     data:
-      image: corroleaus/opendlv-orb2slam-assets
-      volumes:
-      - assets:/opt
+       image: seresearch/opendlv-gallery-orb2-slam:data
+       volumes:
+          - data:/data
     odsupercomponent:
         image: seresearch/opendlv-on-opendlv-core-on-opendavinci-on-base-dev:latest
-        network_mode: host
         volumes:
-        - assets/opendlv.data:/opt/opendlv.data
-        command: "/opt/od4/bin/odsupercomponent --cid=120 --verbose=1 --configuration=/opt/opendlv.data/configuration"
+            - data:/data
+        command: "/opt/od4/bin/odsupercomponent --cid=120 --verbose=1 --configuration=/data/opendlv.data/configuration"
+        depends_on:
+            - data
 
     selflocalization:
-       image: corroleaus/opendlv-perception-vision-orbslam2-amd64:latest
-       network_mode: "host"
-       ipc: host
+       image: seresearch/opendlv-gallery-orb2-slam:selflocalization
        environment:
            - DISPLAY=$DISPLAY
        volumes:
-           - assets/kitty:/kitty
-           - assets/media:/media 
+           - data:/data
            - /tmp/.X11-unix:/tmp/.X11-unix
-       command: "/tmp/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2 --cid=120 --cameraType=1 --vocFilePath=/media/ORBvoc.txt --Camera.fx=435.2046959714599 --Camera.fy=435.2046959714599 --Camera.cx=367.4517211914062 --Camera.cy=252.2008514404297 --Camera.k1=0 --Camera.k2=0 --Camera.k3=0 --Camera.p1=0 --Camera.p2=0 --Camera.fps=15 --Camera.bf=47.90639384423901 --Camera.RGB=1 --ThDepth=35 --ORBextractor.nFeatures=2000 --ORBextractor.scaleFactor=1.2 --ORBextractor.nLevels=8 --ORBextractor.iniThFAST=20 --ORBextractor.minThFAST=7 --kittiPath=/kitty/00"
+       command: "/opt/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2 --cid=120 --cameraType=1 --vocFilePath=/data/media/ORBvoc.txt --Camera.fx=435.2046959714599 --Camera.fy=435.2046959714599 --Camera.cx=367.4517211914062 --Camera.cy=252.2008514404297 --Camera.k1=0 --Camera.k2=0 --Camera.k3=0 --Camera.p1=0 --Camera.p2=0 --Camera.fps=15 --Camera.bf=47.90639384423901 --Camera.RGB=1 --ThDepth=35 --ORBextractor.nFeatures=2000 --ORBextractor.scaleFactor=1.2 --ORBextractor.nLevels=8 --ORBextractor.iniThFAST=20 --ORBextractor.minThFAST=7 --kittiPath=/data/kitty/00"
+       depends_on:
+            - data
     vehicle_viewer:
-           image: corroleaus/opendlv-orbslam2-vehicle-viewer
-           network_mode: host
-           ports:
-              - 8081:8081
-           command: "--cid=120"
+        image: seresearch/opendlv-gallery-orb2-slam:visualisation
+        volumes:
+            - data:/data
+        ports:
+            - 8081:8081
+        command: "--cid=120"
+        depends_on:
+            - data
+
+volumes:
+  data:

@@ -1,4 +1,3 @@
-# docker-compose.yml - Composition of micro-services to run OpenDLV software.
 # Copyright (C) 2016 Christian Berger
 #
 # This program is free software; you can redistribute it and/or
@@ -23,14 +22,23 @@ cd $(dirname $0)
 
 PROJ_ROOT=.
 
-DOCKERFILE=Dockerfile
-IMAGE_NAME=opendlv-perception-vision-orbslam2-amd64
+if [ "$1" == "gallery" ]; then
+    DOCKERFILE=Dockerfile
+    ORG_NAME=seresearch
+    IMAGE_NAME=opendlv-gallery-orb2-slam
+    TAG=selflocalization
+else
+   DOCKERFILE=dockerfile.amd64
+   ORG_NAME=seresearch
+   IMAGE_NAME=opendlv-perception-vision-orbslam2-amd64
+   TAG=latest
+fi
 
-if docker build -f ${PROJ_ROOT}/${DOCKERFILE} -t chalmersrevere/${IMAGE_NAME}:latest ${PROJ_ROOT}; then
+if docker build -f ${PROJ_ROOT}/${DOCKERFILE} -t ${ORG_NAME}/${IMAGE_NAME}:${TAG} ${PROJ_ROOT}; then
     echo "                                                                                      "
     echo "######################################################################################"
     echo "To push the docker image to the registry, use the following command:"
-    echo "docker push chalmersrevere/${IMAGE_NAME}:latest"
+    echo "docker push ${ORG_NAME}/${IMAGE_NAME}:${TAG}"
     echo "######################################################################################"
     echo "                                                                                      "
 else

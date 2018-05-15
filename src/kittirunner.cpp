@@ -58,8 +58,8 @@ void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &
 
     std::cout << "Parsing times.txt" << std::endl;
     std::cout << "adding images to arrays" << std::endl;
-    std::string strPrefixLeft = path + "/image_2/";
-    std::string strPrefixRight = path + "/image_3/";
+    std::string strPrefixLeft = path + "/image_0/";
+    std::string strPrefixRight = path + "/image_1/";
 
     vstrImageLeft.resize(timeStamps.size());
     vstrImageRight.resize(timeStamps.size());
@@ -91,9 +91,6 @@ void KittiRunner::ShutDown() {
     std::cout << "-------" << std::endl << std::endl;
     std::cout << "median tracking time: " << this->m_timeTrackingStatistics[this->m_imagesCount/2] << std::endl;
     std::cout << "mean tracking time: " << totaltime/this->m_imagesCount << std::endl;
-
-    // Save camera trajectory
-    //SLAM.SaveTrajectoryKITTI("CameraTrajectory.txt");
 }
 
 void KittiRunner::ProcessImage(size_t imageNumber) {
