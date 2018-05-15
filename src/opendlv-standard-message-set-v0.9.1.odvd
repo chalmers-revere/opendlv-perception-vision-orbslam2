@@ -351,6 +351,7 @@ message opendlv.proxy.OrbslamMap [id = 1193] {
   bytes cameraCoordinates [id = 1];
   bytes cameraRotation [id = 2];
   uint32 mapCoordinateIndex [id = 3];
-  bytes mapCoordinates [id = 4];
+  uint32 cameraCoordinateIndex [id = 4];
+  bytes mapCoordinates [id = 5];
 }
 
