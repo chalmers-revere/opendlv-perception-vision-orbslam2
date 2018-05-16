@@ -29,6 +29,7 @@ services:
         volumes:
             - data:/data
         command: "/opt/od4/bin/odsupercomponent --cid=120 --verbose=1 --configuration=/data/opendlv.data/configuration"
+        network_mode: host
         depends_on:
             - data
 
@@ -40,6 +41,7 @@ services:
            - data:/data
            - /tmp/.X11-unix:/tmp/.X11-unix
        command: "/usr/bin/opendlv-perception-vision-orbslam2 --cid=120 --cameraType=1 --vocFilePath=/data/media/ORBvoc.txt --Camera.fx=435.2046959714599 --Camera.fy=435.2046959714599 --Camera.cx=367.4517211914062 --Camera.cy=252.2008514404297 --Camera.k1=0 --Camera.k2=0 --Camera.k3=0 --Camera.p1=0 --Camera.p2=0 --Camera.fps=15 --Camera.bf=47.90639384423901 --Camera.RGB=1 --ThDepth=35 --ORBextractor.nFeatures=2000 --ORBextractor.scaleFactor=1.2 --ORBextractor.nLevels=8 --ORBextractor.iniThFAST=20 --ORBextractor.minThFAST=7 --kittiPath=/data/kitty/00"
+       network_mode: host
        depends_on:
             - data
     vehicle_viewer:
@@ -49,6 +51,7 @@ services:
         ports:
             - 8081:8081
         command: "--cid=120"
+        network_mode: host
         depends_on:
             - data
 
