@@ -23,14 +23,14 @@ cd $(dirname $0)
 PROJ_ROOT=.
 
 if [ "$1" == "gallery" ]; then
-    DOCKERFILE=Dockerfile
+    DOCKERFILE=Dockerfile.amd64
     ORG_NAME=seresearch
     IMAGE_NAME=opendlv-gallery-orb2-slam
-    TAG=selflocalization
+    TAG=data
 else
-   DOCKERFILE=Dockerfile
+   DOCKERFILE=Dockerfile.amd64
    ORG_NAME=seresearch
-   IMAGE_NAME=opendlv-perception-vision-orbslam2-amd64
+   IMAGE_NAME=opendlv-perception-vision-example-data-amd64
    TAG=latest
 fi
 

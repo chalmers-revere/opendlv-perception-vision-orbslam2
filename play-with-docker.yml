@@ -1,0 +1,59 @@
+# docker-compose.yml - Composition of micro-services to run OpenDLV software.
+# Copyright (C) 2016 Christian Berger
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+# Date: 2016-10-16
+
+version: '3'
+
+services:
+    data:
+       image: seresearch/opendlv-gallery-orb2-slam:data
+       volumes:
+          - data:/data
+    odsupercomponent:
+        image: seresearch/opendlv-on-opendlv-core-on-opendavinci-on-base-dev:latest
+        volumes:
+            - data:/data
+        command: "/opt/od4/bin/odsupercomponent --cid=120 --verbose=1 --configuration=/data/opendlv.data/configuration"
+        network_mode: host
+        depends_on:
+            - data
+
+    selflocalization:
+       image: seresearch/opendlv-gallery-orb2-slam:selflocalization
+       environment:
+           - DISPLAY=$DISPLAY
+       volumes:
+           - data:/data
+           - /tmp/.X11-unix:/tmp/.X11-unix
+       command: "/usr/bin/opendlv-perception-vision-orbslam2 --cid=120 --cameraType=1 --vocFilePath=/data/media/ORBvoc.txt --Camera.fx=435.2046959714599 --Camera.fy=435.2046959714599 --Camera.cx=367.4517211914062 --Camera.cy=252.2008514404297 --Camera.k1=0 --Camera.k2=0 --Camera.k3=0 --Camera.p1=0 --Camera.p2=0 --Camera.fps=15 --Camera.bf=47.90639384423901 --Camera.RGB=1 --ThDepth=35 --ORBextractor.nFeatures=2000 --ORBextractor.scaleFactor=1.2 --ORBextractor.nLevels=8 --ORBextractor.iniThFAST=20 --ORBextractor.minThFAST=7 --kittiPath=/data/kitty/00"
+       network_mode: host
+       depends_on:
+            - data
+    vehicle_viewer:
+        image: seresearch/opendlv-gallery-orb2-slam:visualisation
+        volumes:
+            - data:/data
+        ports:
+            - 8081:8081
+        command: "--cid=120"
+        network_mode: host
+        depends_on:
+            - data
+
+volumes:
+  data:

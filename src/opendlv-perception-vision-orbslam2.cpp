@@ -103,6 +103,7 @@ int32_t main(int32_t argc, char **argv) {
                 image->imageDataOrigin = image->imageData;
                 sharedMemory->unlock();
                 size_t lastMapPoint = 0;
+                uint32_t lastSentCameraIndex = 0;
                 uint32_t lastSentIndex = 0;
                 while (od4.isRunning()) {
                     // The shared memory uses a pthread broadcast to notify us; just sleep to get awaken up.
@@ -124,7 +125,7 @@ int32_t main(int32_t argc, char **argv) {
                         cluon::data::TimeStamp sampleTime = cluon::time::convert(tp);
                         od4.send(posePacket.second,sampleTime,ID);
                     }
-                    selflocalization.sendMap(lastMapPoint,lastSentIndex,frameCounter,od4);
+                    selflocalization.sendMap(lastMapPoint,lastSentCameraIndex,lastSentIndex,frameCounter,od4);
                     frameCounter++;
                 }
 

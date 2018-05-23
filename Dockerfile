@@ -13,32 +13,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Part to build opendlv-perception-vision-orbslam2. 
-FROM ubuntu:16.04
+# Part to build opendlv-perception-vision-orbslam2.
+FROM ubuntu:16.04 as builder
 MAINTAINER Christian Berger "christian.berger@gu.se"
 
 #Get OS stuff
-RUN apt-get update
-RUN apt-get upgrade
+RUN apt-get update && apt-get -y install \
+build-essential checkinstall cmake pkg-config yasm \
+git gfortran mercurial \
+libjpeg8-dev libjasper-dev libpng12-dev \
+libtiff5-dev \
+libavcodec-dev libavformat-dev libswscale-dev libdc1394-22-dev \
+libxine2-dev libv4l-dev \
+libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev \
+qt5-default libgtk2.0-dev libtbb-dev \
+libatlas-base-dev \
+libfaac-dev libmp3lame-dev libtheora-dev \
+libvorbis-dev libxvidcore-dev \
+libopencore-amrnb-dev libopencore-amrwb-dev \
+x264 v4l-utils \
+python-dev python-pip python3-dev python3-pip
 
-RUN apt-get install -y build-essential checkinstall cmake pkg-config yasm
-RUN apt-get install -y git gfortran mercurial
-RUN apt-get install -y libjpeg8-dev libjasper-dev libpng12-dev
-
-# If you are using Ubuntu 16.04
-RUN apt-get install -y libtiff5-dev
-
-RUN apt-get install -y libavcodec-dev libavformat-dev libswscale-dev libdc1394-22-dev
-RUN apt-get install -y libxine2-dev libv4l-dev
-RUN apt-get install -y libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev
-RUN apt-get install -y qt5-default libgtk2.0-dev libtbb-dev
-RUN apt-get install -y libatlas-base-dev
-RUN apt-get install -y libfaac-dev libmp3lame-dev libtheora-dev
-RUN apt-get install -y libvorbis-dev libxvidcore-dev
-RUN apt-get install -y libopencore-amrnb-dev libopencore-amrwb-dev
-RUN apt-get install -y x264 v4l-utils
-
-RUN apt-get install -y python-dev python-pip python3-dev python3-pip
 RUN pip2 install -U pip numpy
 RUN pip3 install -U pip numpy
 
@@ -68,7 +63,7 @@ RUN cmake -D CMAKE_BUILD_TYPE=RELEASE \
 RUN make -j2
 RUN make install
 RUN sh -c 'echo "/usr/local/lib" >> /etc/ld.so.conf.d/opencv.conf'
-RUN ldconfig
+RUN ldconfig && rm -rf /tmp/opencv*
 
 #RUN /usr/local/lib/python2.6/dist-packages/cv2.so
 #RUN /usr/local/lib/python2.7/dist-packages/cv2.so
@@ -79,9 +74,9 @@ RUN ldconfig
 WORKDIR /tmp
 
 RUN hg clone https://bitbucket.org/eigen/eigen && cd eigen && hg pull && hg update 3.2 && mkdir build && cd build && cmake .. && make -j4 install
-RUN ldconfig
+RUN ldconfig && rm -rf /tmp/eigen
 RUN git clone https://github.com/marbae/g2o && cd g2o && mkdir build && cd build && cmake -DG2O_BUILD_APPS=OFF -DG2O_BUILD_EXAMPLES=OFF .. && make -j4 install
-RUN ldconfig
+RUN ldconfig && rm -rf /tmp/g2o
 
 #install Microservice
 ADD . /opt/sources
@@ -89,23 +84,23 @@ RUN mkdir -p /opt/sources/build
 
 WORKDIR /opt/sources/build
 
-RUN cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/tmp/opendlv-perception-vision-orbslam2-dest ..
-RUN make -j2
+RUN cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr ..
+RUN make -j6
 RUN make test
 RUN make install
-RUN ldconfig
+RUN ldconfig && rm -rf /opt/sources
 
-CMD ["/tmp/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2"]
-
-## Part to deploy opendlv-perception-vision-orbslam2
-#FROM ubuntu:16.04
+FROM ubuntu:16.04
 #MAINTAINER Christian Berger "christian.berger@gu.se"
 #
 ##Start microservice
-#WORKDIR /usr/bin
-#COPY --from=builder /usr/local/include/ /usr/include/
-#COPY --from=builder /usr/local/lib/ /usr/lib/
-#COPY --from=builder /usr/lib/ /usr/lib/
-#COPY --from=builder /tmp/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2 .
+RUN apt-get update && apt-get -y install libglu1-mesa libpng12-dev 
+WORKDIR /usr/bin
+COPY --from=builder /usr/local/include/ /usr/local/include/
+COPY --from=builder /usr/local/lib/ /usr/local/lib/
+COPY --from=builder /usr/lib/ /usr/lib/
+COPY --from=builder /usr/include/ /usr/include/
+COPY --from=builder /usr/bin/opendlv-perception-vision-orbslam2 .
+RUN ldconfig
+CMD ["/usr/bin/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2"]
 ##RUN apk update && apk add g++ #This is extremely ugly and needs to be fixed
-

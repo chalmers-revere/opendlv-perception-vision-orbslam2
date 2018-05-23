@@ -75,7 +75,7 @@ public:
     void nextContainer(cv::Mat &img);
     void runKitti(std::string kittiPath);
     std::pair<bool,opendlv::logic::sensation::Geolocation> sendPose();
-    void sendMap(size_t &lastMapPoint,uint32_t &lastSentIndex, size_t i, cluon::OD4Session &od4);
+    void sendMap(size_t &lastMapPoint,uint32_t &lastSentCameraIndex, uint32_t &lastSentIndex, size_t i, cluon::OD4Session &od4);
     void writeToMapFile(std::string filepath);
     void writeToFpsFile(std::string filepath, std::vector<long unsigned int> mapSizeVector, std::vector<double> fpsVector);
     void Shutdown();
