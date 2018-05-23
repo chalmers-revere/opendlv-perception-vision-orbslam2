@@ -54,15 +54,15 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 		, m_resizeScale()
 
 {
-	if(0 == commandlineArgs.count("kittyPath")){
-		setUpRealtime(commandlineArgs);
-	}
-	else {
+
+    if(commandlineArgs.count("kittiPath")>0)
+    {
 		setUp(commandlineArgs);
 	}
-
-
-
+	else
+    {
+		setUpRealtime(commandlineArgs);
+	}
 }
 
 Selflocalization::~Selflocalization()
