@@ -54,7 +54,6 @@ Selflocalization::Selflocalization(std::map<std::string, std::string> commandlin
 		, m_resizeScale()
 
 {
-
     if(commandlineArgs.count("kittiPath")>0)
     {
 		setUp(commandlineArgs);
