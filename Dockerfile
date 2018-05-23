@@ -94,7 +94,7 @@ FROM ubuntu:16.04
 #MAINTAINER Christian Berger "christian.berger@gu.se"
 #
 ##Start microservice
-RUN apt-get update && apt-get -y install libglu1-mesa libpng12-dev 
+RUN apt-get update && apt-get -y install libglu1-mesa libpng12-dev libglib2.0-dev
 WORKDIR /usr/bin
 COPY --from=builder /usr/local/include/ /usr/local/include/
 COPY --from=builder /usr/local/lib/ /usr/local/lib/

@@ -89,6 +89,7 @@ public:
 
 private:
     void setUp(std::map<std::string, std::string> commandlineArgs);
+    void setUpRealtime(std::map<std::string, std::string> commandlineArgs);
     void tearDown();
     opendlv::proxy::PointCloudReading CreatePointCloudFromMap();
     bool m_isMonocular;
