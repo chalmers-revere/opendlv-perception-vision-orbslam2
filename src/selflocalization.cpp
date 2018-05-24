@@ -148,8 +148,8 @@ void Selflocalization::sendMap(size_t &lastMapPoint,uint32_t &lastSentCameraInde
         cameraCoordinates.str(std::string());
         cameraRotation.str(std::string());
 
-        cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
-        cv::Mat Tcw = m_pTracker->mCurrentFrame->mTcw;
+        cv::Mat R = m_pTracker->m_currentFrame->GetRotationInverse();
+        cv::Mat Tcw = m_pTracker->m_currentFrame->mTcw;
         cv::Mat T = Tcw.rowRange(0, 3).colRange(3, 4);
 
         cv::Mat cameraPosition = -R * T;
@@ -304,8 +304,8 @@ std::pair<bool,opendlv::logic::sensation::Geolocation> Selflocalization::sendPos
 	if(!m_pTracker->GetTrackingState()){
 		return std::pair<bool,opendlv::logic::sensation::Geolocation>(false,poseMessage);
 	}
-	cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
-    cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).col(3);
+	cv::Mat R = m_pTracker->m_currentFrame->GetRotationInverse();
+    cv::Mat T = m_pTracker->m_currentFrame->mTcw.rowRange(0, 3).col(3);
     cv::Mat cameraPosition = -R*T;
 	std::cout << cameraPosition << std::endl;
 	double x = static_cast<double>(cameraPosition.at<float>(0,2));
@@ -601,9 +601,9 @@ opendlv::proxy::OrbslamMap Selflocalization::sendToWebb(){
             mappointCoordinates.str(std::string());
             cameraCoordinates.str(std::string());
 
-            cv::Mat R = m_pTracker->mCurrentFrame->GetRotationInverse();
+            cv::Mat R = m_pTracker->m_currentFrame->GetRotationInverse();
 			
-            cv::Mat T = m_pTracker->mCurrentFrame->mTcw.rowRange(0, 3).col(3);
+            cv::Mat T = m_pTracker->m_currentFrame->mTcw.rowRange(0, 3).col(3);
 
             cv::Mat cameraPosition = -R*T;
 

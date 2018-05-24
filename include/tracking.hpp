@@ -69,7 +69,7 @@ public:
     bool GetTrackingState(){ return m_trackingState == OK;};
 
     // Tracking states
-    enum eTrackingState{
+    enum trackingState{
         SYSTEM_NOT_READY=-1,
         NO_IMAGES_YET=0,
         NOT_INITIALIZED=1,
@@ -78,25 +78,25 @@ public:
     };
 
     // Input sensor
-    int mSensor;
+    int m_sensor;
 
     // Current Frame
-    std::shared_ptr<OrbFrame> mCurrentFrame = {};
-    cv::Mat mImGray = {};
+    std::shared_ptr<OrbFrame> m_currentFrame = {};
+    cv::Mat m_imageGray = {};
 
     // Initialization Variables (Monocular)
-    std::vector<int> mvIniLastMatches = {};
-    std::vector<int> mvIniMatches = {};
-    std::vector<cv::Point2f> mvbPrevMatched = {};
-    std::vector<cv::Point3f> mvIniP3D = {};
-    std::shared_ptr<OrbFrame> mInitialFrame = {};
+    std::vector<int> m_initialLastMatches = {};
+    std::vector<int> m_initialMatches = {};
+    std::vector<cv::Point2f> m_previouslyMatchedPoints = {};
+    std::vector<cv::Point3f> m_initialPoints3D = {};
+    std::shared_ptr<OrbFrame> m_initialFrame = {};
 
     // Lists used to recover the full camera trajectory at the end of the execution.
     // Basically we store the reference keyframe for each frame and its relative transformation
-    std::list<cv::Mat> mlRelativeFramePoses = {};
-    std::list<std::shared_ptr<OrbKeyFrame>> mlpReferences = {};
-    std::list<double> mlFrameTimes = {};
-    std::list<bool> mlbLost = {};
+    std::list<cv::Mat> m_relativeFramePoses = {};
+    std::list<std::shared_ptr<OrbKeyFrame>> m_ReferenceKeyFrames = {};
+    std::list<double> m_frameTimeStamps = {};
+    std::list<bool> m_Lost = {};
 
     void Reset();
 
@@ -134,75 +134,75 @@ private:
     // points in the map. Still tracking will continue if there are enough matches with temporal points.
     // In that case we are doing visual odometry. The system will try to do relocalization to recover
     // "zero-drift" localization to the map.
-    bool mbVO;
+    bool m_VO;
 
     // True if local mapping is deactivated and we are performing only localization
     bool m_onlyTracking;
-    eTrackingState m_trackingState;
-    eTrackingState mLastProcessedState = {};
+    trackingState m_trackingState;
+    trackingState m_lastProcessedState = {};
 
     //Other Thread Pointers
-    std::shared_ptr<Mapping> mpLocalMapper = {};
-    std::shared_ptr<LoopClosing> mpLoopClosing = {};
+    std::shared_ptr<Mapping> m_localMapper = {};
+    std::shared_ptr<LoopClosing> m_loopClosing = {};
 
     //ORB
-    std::shared_ptr<OrbExtractor> mpORBextractorLeft = {}, mpORBextractorRight = {};
-    std::shared_ptr<OrbExtractor> mpIniORBextractor = {};
+    std::shared_ptr<OrbExtractor> m_ORBextractorLeft = {}, m_ORBextractorRight = {};
+    std::shared_ptr<OrbExtractor> m_initialORBextractor = {};
 
     //BoW
-    std::shared_ptr<OrbVocabulary> mpORBVocabulary;
-    std::shared_ptr<OrbKeyFrameDatabase> mpKeyFrameDB;
+    std::shared_ptr<OrbVocabulary> m_ORBVocabulary;
+    std::shared_ptr<OrbKeyFrameDatabase> m_keyFrameDataBase;
 
     // Initalization (only for monocular)
-    std::shared_ptr<OrbInitializer> mpInitializer;
+    std::shared_ptr<OrbInitializer> m_initializer;
 
     //Local Map
-    std::shared_ptr<OrbKeyFrame> mpReferenceKF = {};
-    std::vector<std::shared_ptr<OrbKeyFrame>> mvpLocalKeyFrames = {};
-    std::vector<std::shared_ptr<OrbMapPoint>> mvpLocalMapPoints = {};
+    std::shared_ptr<OrbKeyFrame> m_referenceKeyFrame = {};
+    std::vector<std::shared_ptr<OrbKeyFrame>> m_localKeyFrames = {};
+    std::vector<std::shared_ptr<OrbMapPoint>> m_localMapPoints = {};
 
     // System
-    std::shared_ptr<Selflocalization> mpSystem;
+    std::shared_ptr<Selflocalization> m_selflocalization;
 
     //Map
-    std::shared_ptr<OrbMap> mpMap;
+    std::shared_ptr<OrbMap> m_orbMap;
 
     //Calibration matrix
     cv::Mat mK = {};
-    cv::Mat mDistCoef = {};
-    float mbf = {};
+    cv::Mat m_distanceCoeffecient = {};
+    float m_bf = {};
 
     //New KeyFrame rules (according to fps)
-    int mMinFrames = {};
-    int mMaxFrames = {};
+    int m_minFrames = {};
+    int m_maxFrames = {};
 
     // Threshold close/far points
     // Points seen as close by the stereo/RGBD sensor are considered reliable
     // and inserted from just one frame. Far points requiere a match in two keyframes.
-    float mThDepth = {};
+    float m_thDepth = {};
 
     // For RGB-D inputs only. For some datasets (e.g. TUM) the depthmap values are scaled.
-    float mDepthMapFactor = {};
+    float m_depthMapFactor = {};
 
     //Current matches in frame
-    int mnMatchesInliers = {};
+    int m_matchesInliers = {};
 
     //Box within which keyframes are removed
-    std::array<float, 4> mBoundingBox = {};
+    std::array<float, 4> m_boundingBox = {};
 
     //Last Frame, KeyFrame and Relocalisation Info
-    std::shared_ptr<OrbKeyFrame> mpLastKeyFrame = {};
-    std::shared_ptr<OrbFrame> mLastFrame = {};
-    unsigned int mnLastKeyFrameId = {};
-    unsigned int mnLastRelocFrameId;
+    std::shared_ptr<OrbKeyFrame> m_lastKeyFrame = {};
+    std::shared_ptr<OrbFrame> m_lastFrame = {};
+    unsigned int m_lastKeyFrameId = {};
+    unsigned int m_lastRelocationFrameId;
 
     //Motion Model
-    cv::Mat mVelocity = {};
+    cv::Mat m_velocity = {};
 
     //Color order (true RGB, false BGR, ignored if grayscale)
-    bool mbRGB = {};
+    bool m_RGB = {};
 
-    std::list<std::shared_ptr<OrbMapPoint>> mlpTemporalPoints = {};
+    std::list<std::shared_ptr<OrbMapPoint>> m_temporalPoints = {};
 };
 
 

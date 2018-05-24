@@ -674,7 +674,7 @@ void LoopClosing::RunGlobalBundleAdjustment(unsigned long nLoopKF)
             std::unique_lock<std::mutex> lock2(mpMap->m_MapUpdateMutex);
 
             // Correct keyframes starting at map first keyframe
-            //std::list<std::shared_ptr<OrbKeyFrame>> lpKFtoCheck(mpMap->GetKeyFrameOrigins().begin(),mpMap->GetKeyFrameOrigins().end());
+            //std::list<std::shared_ptr<OrbKeyFrame>> lpKFtoCheck(m_orbMap->GetKeyFrameOrigins().begin(),m_orbMap->GetKeyFrameOrigins().end());
             std::list<std::shared_ptr<OrbKeyFrame>> lpKFtoCheck;
             lpKFtoCheck.push_back(mpMap->m_OrbKeyFrameOrigins[0]);
             while(!lpKFtoCheck.empty())
