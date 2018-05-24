@@ -342,6 +342,7 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
 	int size = m_pVocabulary->getSize();
 	std::cout << "Size of Vocabulary: " << size << std::endl;
 	//int colorChannel = 1;
+	m_cid = std::stoi(commandlineArgs["cid"]);
 
 	m_map = std::shared_ptr<OrbMap>(new OrbMap());
 	std::cout << "Created map" << std::endl;
@@ -355,7 +356,7 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
     m_pExtractOrb = std::shared_ptr<OrbExtractor>(new OrbExtractor(nFeatures, scaleFactor, nLevels, initialFastTh, minFastTh));
     */
 	const int sensor = std::stoi(commandlineArgs["cameraType"]);
-
+    m_resizeScale = 1;
 
 
 	m_pKeyFrameDatabase = std::shared_ptr<OrbKeyFrameDatabase>(new OrbKeyFrameDatabase(*m_pVocabulary.get()));

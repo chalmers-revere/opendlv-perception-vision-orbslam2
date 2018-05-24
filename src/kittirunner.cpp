@@ -75,7 +75,7 @@ void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &
 
     vstrImageLeft.resize(timeStamps.size());
     vstrImageRight.resize(timeStamps.size());
-    int offset = 3500;
+    int offset = 0;
     for(unsigned long i=offset; i<timeStamps.size(); i++)
     {
         std::stringstream ss;
@@ -124,20 +124,21 @@ void KittiRunner::ProcessImage(size_t imageNumber,float resizeScale) {
     if(this->m_isStereo){
         std::cout << "reading image: " << this->m_rightImages[imageNumber] << std::endl;
         cv::Mat imgR = cv::imread(this->m_rightImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
-        //if(m_rmap[0][0].cols==0){
-          //  imLeft=imgL;
-            //imRight=imgR;
-        //}
-        //else{
-
-            if(resizeScale < 1){
-
+        if(m_rmap[0][0].cols==0)
+        {
+            imLeft=imgL;
+            imRight=imgR;
+        }
+        else
+        {
+            if(resizeScale < 1)
+            {
                 cv::resize(imgL, imgL, cv::Size(static_cast<int>(imgL.cols*resizeScale),static_cast<int>(imgL.rows*resizeScale)));
                 cv::resize(imgR, imgR, cv::Size(static_cast<int>(imgR.cols*resizeScale),static_cast<int>(imgR.rows*resizeScale)));
             }
             cv::remap(imgL,imLeft, m_rmap[0][0], m_rmap[0][1], cv::INTER_LINEAR);
             cv::remap(imgR,imRight, m_rmap[1][0], m_rmap[1][1], cv::INTER_LINEAR);
-        //}
+        }
         /*int wL = imLeft.cols;
         int hL = imLeft.rows;
 
