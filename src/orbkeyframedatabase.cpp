@@ -35,7 +35,7 @@ void OrbKeyFrameDatabase::add(std::shared_ptr<OrbKeyFrame> pKF)
 {
     std::unique_lock<std::mutex> lock(mMutex);
 
-    for(OrbBowVector::const_iterator vit= pKF->mBowVec.begin(), vend=pKF->mBowVec.end(); vit!=vend; vit++)
+    for(OrbBowVector::const_iterator vit= pKF->m_bagOfWords.begin(), vend=pKF->m_bagOfWords.end(); vit!=vend; vit++)
         mvInvertedFile[vit->first].push_back(pKF);
 }
 
@@ -44,7 +44,7 @@ void OrbKeyFrameDatabase::erase(std::shared_ptr<OrbKeyFrame> pKF)
     std::unique_lock<std::mutex> lock(mMutex);
 
     // Erase elements in the Inverse File for the entry
-    for(OrbBowVector::const_iterator vit=pKF->mBowVec.begin(), vend=pKF->mBowVec.end(); vit!=vend; vit++)
+    for(OrbBowVector::const_iterator vit=pKF->m_bagOfWords.begin(), vend=pKF->m_bagOfWords.end(); vit!=vend; vit++)
     {
         // List of keyframes that share the word
         std::list<std::shared_ptr<OrbKeyFrame>> &lKFs =   mvInvertedFile[vit->first];
@@ -77,7 +77,7 @@ std::vector<std::shared_ptr<OrbKeyFrame>> OrbKeyFrameDatabase::DetectLoopCandida
     {
         std::unique_lock<std::mutex> lock(mMutex);
 
-        for(OrbBowVector::const_iterator vit=pKF->mBowVec.begin(), vend=pKF->mBowVec.end(); vit != vend; vit++)
+        for(OrbBowVector::const_iterator vit=pKF->m_bagOfWords.begin(), vend=pKF->m_bagOfWords.end(); vit != vend; vit++)
         {
             std::list<std::shared_ptr<OrbKeyFrame>> &lKFs =   mvInvertedFile[vit->first];
 
@@ -124,7 +124,7 @@ std::vector<std::shared_ptr<OrbKeyFrame>> OrbKeyFrameDatabase::DetectLoopCandida
         {
             nscores++;
 
-            float si = static_cast<float>(mpVoc->getScore(pKF->mBowVec,pKFi->mBowVec));
+            float si = static_cast<float>(mpVoc->getScore(pKF->m_bagOfWords,pKFi->m_bagOfWords));
 
             pKFi->mLoopScore = si;
             if(si>=minScore)
@@ -240,7 +240,7 @@ std::vector<std::shared_ptr<OrbKeyFrame>> OrbKeyFrameDatabase::DetectRelocalizat
         if(pKFi->mnRelocWords>minCommonWords)
         {
             nscores++;
-            float si = static_cast<float>(mpVoc->getScore(F->mBowVec,pKFi->mBowVec));
+            float si = static_cast<float>(mpVoc->getScore(F->mBowVec,pKFi->m_bagOfWords));
             pKFi->mRelocScore=si;
             lScoreAndMatch.push_back(make_pair(si,pKFi));
         }

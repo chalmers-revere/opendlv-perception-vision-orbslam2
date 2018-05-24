@@ -89,7 +89,7 @@ public:
     void ReplaceMapPointMatch(const size_t &idx, std::shared_ptr<OrbMapPoint> mapPoint);
     std::set<std::shared_ptr<OrbMapPoint>> GetMapPoints();
     std::vector<std::shared_ptr<OrbMapPoint>> GetMapPointMatches();
-    int TrackedMapPoints(const int &minObs);
+    int TrackedMapPoints(const int &minimumObservations);
     std::shared_ptr<OrbMapPoint> GetMapPoint(const size_t &idx);
 
     // KeyPoint functions
@@ -169,8 +169,8 @@ public:
     const cv::Mat mDescriptors;
 
     //BoW
-    OrbBowVector mBowVec;
-    OrbFeatureVector mFeatVec;
+    OrbBowVector m_bagOfWords;
+    OrbFeatureVector m_features;
 
     // Pose relative to parent (this is computed when bad flag is activated)
     cv::Mat mTcp = {};

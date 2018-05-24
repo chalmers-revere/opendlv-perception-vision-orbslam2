@@ -117,14 +117,14 @@ bool LoopClosing::DetectLoop()
     // This is the lowest score to a connected keyframe in the covisibility graph
     // We will impose loop candidates to have a higher similarity than this
     const std::vector<std::shared_ptr<OrbKeyFrame>> vpConnectedKeyFrames = mpCurrentKF->GetVectorCovisibleKeyFrames();
-    const OrbBowVector &CurrentBowVec = mpCurrentKF->mBowVec;
+    const OrbBowVector &CurrentBowVec = mpCurrentKF->m_bagOfWords;
     float minScore = 1;
     for(size_t i=0; i<vpConnectedKeyFrames.size(); i++)
     {
         std::shared_ptr<OrbKeyFrame> pKF = vpConnectedKeyFrames[i];
         if(pKF->isBad())
             continue;
-        const OrbBowVector &BowVec = pKF->mBowVec;
+        const OrbBowVector &BowVec = pKF->m_bagOfWords;
 
         float score = static_cast<float>(mpORBVocabulary->getScore(CurrentBowVec, BowVec));
 

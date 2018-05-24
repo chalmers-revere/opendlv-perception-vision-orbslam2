@@ -169,7 +169,7 @@ int ORBmatcher::SearchByBoW(std::shared_ptr<OrbKeyFrame> keyFrame, std::shared_p
     vpMapPointMatches = std::vector<std::shared_ptr<OrbMapPoint>>(F->N,
                                                                   static_cast<std::shared_ptr<OrbMapPoint>>(NULL));
 
-    const OrbFeatureVector &keyFrameFeatureVector = keyFrame->mFeatVec;
+    const OrbFeatureVector &keyFrameFeatureVector = keyFrame->m_features;
 
     int nmatches = 0;
 
@@ -532,12 +532,12 @@ int ORBmatcher::SearchByBoW(std::shared_ptr<OrbKeyFrame> pKF1, std::shared_ptr<O
                             std::vector<std::shared_ptr<OrbMapPoint>> &vpMatches12)
 {
     const std::vector<cv::KeyPoint> &vKeysUn1 = pKF1->mvKeysUn;
-    const OrbFeatureVector &vFeatVec1 = pKF1->mFeatVec;
+    const OrbFeatureVector &vFeatVec1 = pKF1->m_features;
     const std::vector<std::shared_ptr<OrbMapPoint>> vpMapPoints1 = pKF1->GetMapPointMatches();
     const cv::Mat &Descriptors1 = pKF1->mDescriptors;
 
     const std::vector<cv::KeyPoint> &vKeysUn2 = pKF2->mvKeysUn;
-    const OrbFeatureVector &vFeatVec2 = pKF2->mFeatVec;
+    const OrbFeatureVector &vFeatVec2 = pKF2->m_features;
     const std::vector<std::shared_ptr<OrbMapPoint>> vpMapPoints2 = pKF2->GetMapPointMatches();
     const cv::Mat &Descriptors2 = pKF2->mDescriptors;
 
@@ -667,8 +667,8 @@ int ORBmatcher::SearchForTriangulation(std::shared_ptr<OrbKeyFrame> pKF1, std::s
                                        std::vector<std::pair<size_t, size_t> > &vMatchedPairs,
                                        const bool bOnlyStereo)
 {
-    const OrbFeatureVector &vFeatVec1 = pKF1->mFeatVec;
-    const OrbFeatureVector &vFeatVec2 = pKF2->mFeatVec;
+    const OrbFeatureVector &vFeatVec1 = pKF1->m_features;
+    const OrbFeatureVector &vFeatVec2 = pKF2->m_features;
 
     //Compute epipole in second image
     cv::Mat Cw = pKF1->GetCameraCenter();
