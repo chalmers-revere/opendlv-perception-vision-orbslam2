@@ -38,7 +38,7 @@ PnPsolver::PnPsolver(std::shared_ptr<OrbFrame> F, const std::vector<std::shared_
     m_nIterations(0), m_nbestInliers(0), m_numberOfCorrespondences(0)
 {
     //Constructor depends on Frame 
-    std::vector<float> sigmaSqLevels = F->mvInvLevelSigma2;
+    std::vector<float> sigmaSqLevels = F->m_inverseLevelSigma2;
     m_matchingMapPoints = matchingMapPoints;
     m_points2D.reserve(sigmaSqLevels.size());
     m_sigma2D.reserve(sigmaSqLevels.size());
@@ -47,7 +47,7 @@ PnPsolver::PnPsolver(std::shared_ptr<OrbFrame> F, const std::vector<std::shared_
     m_allIndices.reserve(sigmaSqLevels.size());
 
     int idx=0;
-    std::vector<cv::KeyPoint> undistortedKeyPoints = F->mvKeysUn;
+    std::vector<cv::KeyPoint> undistortedKeyPoints = F->m_undistortedKeys;
     for(size_t i=0, iend=matchingMapPoints.size(); i<iend; i++)
     {
         std::shared_ptr<OrbMapPoint> mapPointPtr = matchingMapPoints[i];

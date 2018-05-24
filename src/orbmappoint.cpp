@@ -72,14 +72,14 @@ OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> fram
 
     cv::Mat offset = position - cameraCenter;
     const float distance = (float)cv::norm(offset);
-    const int level = frame->mvKeysUn[keyPointIndex].octave;
-    const float levelScaleFactor = frame->mvScaleFactors[level];
-    const int levels = frame->mnScaleLevels;
+    const int level = frame->m_undistortedKeys[keyPointIndex].octave;
+    const float levelScaleFactor = frame->m_scaleFactors[level];
+    const int levels = frame->m_scaleLevels;
     m_constructorTag = 2;
     m_maxDistance = distance*levelScaleFactor;
-    m_minDistance = m_maxDistance/frame->mvScaleFactors[levels-1];
+    m_minDistance = m_maxDistance/frame->m_scaleFactors[levels-1];
 
-    frame->mDescriptors.row(keyPointIndex).copyTo(m_descriptor);
+    frame->m_descriptors.row(keyPointIndex).copyTo(m_descriptor);
 
     // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
     std::unique_lock<std::mutex> lock(m_constructorMutex);
@@ -466,11 +466,11 @@ int OrbMapPoint::PredictScale(const float &currentDist, std::shared_ptr<OrbFrame
         ratio = m_maxDistance/currentDist;
     }
 
-    int nScale = static_cast<int>(ceil(log(ratio) / pF->mfLogScaleFactor));
+    int nScale = static_cast<int>(ceil(log(ratio) / pF->m_logScaleFactor));
     if(nScale<0)
         nScale = 0;
-    else if(nScale>=pF->mnScaleLevels)
-        nScale = pF->mnScaleLevels-1;
+    else if(nScale>=pF->m_scaleLevels)
+        nScale = pF->m_scaleLevels-1;
 
     return nScale;
 }

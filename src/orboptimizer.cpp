@@ -280,12 +280,12 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
     //std::unique_lock<std::mutex> lock(OrbMapPoint::mGlobalMutex); //WHICH MUTEX??
 
     std::vector<float> vectorRight = pFrame->mvuRight;
-    std::vector<cv::KeyPoint> vectorUndistortedKeyPoints = pFrame->mvKeysUn;
-    std::vector<float> vectorInvLevelSigma2 = pFrame->mvInvLevelSigma2;
-    std::vector<bool> vectorBoolKeyPoints = pFrame->mvbOutlier;
+    std::vector<cv::KeyPoint> vectorUndistortedKeyPoints = pFrame->m_undistortedKeys;
+    std::vector<float> vectorInvLevelSigma2 = pFrame->m_inverseLevelSigma2;
+    std::vector<bool> vectorBoolKeyPoints = pFrame->m_outliers;
     for(int i=0; i<N; i++)
     {
-        std::shared_ptr<OrbMapPoint> pMP = pFrame->mvpMapPoints[i];
+        std::shared_ptr<OrbMapPoint> pMP = pFrame->m_mapPoints[i];
         if(pMP)
         {
             // Monocular observation
@@ -293,7 +293,7 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
             if(vectorRight[i]<0)
             {
                 nInitialCorrespondences++;
-                pFrame->mvbOutlier[i] = false;
+                pFrame->m_outliers[i] = false;
 
                 Eigen::Matrix<double,2,1> obs;
 
@@ -328,7 +328,7 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
             else  // Stereo observation
             {
                 nInitialCorrespondences++;
-                pFrame->mvbOutlier[i] = false;
+                pFrame->m_outliers[i] = false;
 
                 //SET EDGE
                 Eigen::Matrix<double,3,1> obs;
@@ -381,7 +381,7 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
     int nBad=0;
     for(size_t it=0; it<4; it++)
     {
-        std::vector<bool> vectorBoolOutliers = pFrame->mvbOutlier;
+        std::vector<bool> vectorBoolOutliers = pFrame->m_outliers;
         vSE3->setEstimate(Orbconverter::toSE3Quat(pFrame->mTcw));
         //std::cout << "input pose: " << Orbconverter::toSE3Quat(pFrame->mTcw) << std::endl; 
         optimizer.initializeOptimization(0);
@@ -404,13 +404,13 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
 
             if(chi2>chi2Mono[it])
             {                
-                pFrame->mvbOutlier[idx]=true;
+                pFrame->m_outliers[idx]=true;
                 e->setLevel(1);
                 nBad++;
             }
             else
             {
-                pFrame->mvbOutlier[idx]=false;
+                pFrame->m_outliers[idx]=false;
                 e->setLevel(0);
             }
 
@@ -433,14 +433,14 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
 
             if(chi2>chi2Stereo[it])
             {
-                pFrame->mvbOutlier[idx]=true;
+                pFrame->m_outliers[idx]=true;
                 e->setLevel(1);
                 nBad++;
             }
             else
             {                
                 e->setLevel(0);
-                pFrame->mvbOutlier[idx]=false;
+                pFrame->m_outliers[idx]=false;
             }
 
             if(it==2)

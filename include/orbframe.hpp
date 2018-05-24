@@ -103,7 +103,7 @@ public:
 
     // Check if a MapPoint is in the frustum of the camera
     // and fill variables of the MapPoint to be used by the tracking
-    bool isInFrustum(std::shared_ptr<OrbMapPoint> mapPoint, float viewingCosLimit);
+    bool IsInFrustum(std::shared_ptr<OrbMapPoint> mapPoint, float viewingCosLimit);
 
     // Compute the cell of a keypoint (return false if outside the grid)
     bool PosInGrid(const cv::KeyPoint &keyPoint, int &xPosition, int &yPosition);
@@ -122,10 +122,10 @@ public:
 
 public:
     // Vocabulary used for relocalization.
-    std::shared_ptr<OrbVocabulary> mpORBvocabulary;
+    std::shared_ptr<OrbVocabulary> m_ORBvocabulary;
 
     // Feature extractor. The right is used only in the stereo case.
-    std::shared_ptr<OrbExtractor> mpORBextractorLeft, mpORBextractorRight;
+    std::shared_ptr<OrbExtractor> m_ORBextractorLeft, m_ORBextractorRight;
 
     // Frame timestamp.
     double mTimeStamp;
@@ -156,59 +156,58 @@ public:
     // Vector of keypoints (original for visualization) and undistorted (actually used by the system).
     // In the stereo case, mvKeysUn is redundant as images must be rectified.
     // In the RGB-D case, RGB images can be distorted.
-    std::vector<cv::KeyPoint> mvKeys = {}, mvKeysRight = {};
-    std::vector<cv::KeyPoint> mvKeysUn = {};
+    std::vector<cv::KeyPoint> m_keys = {}, m_keysRight = {};
+    std::vector<cv::KeyPoint> m_undistortedKeys = {};
 
     // Corresponding stereo coordinate and depth for each keypoint.
     // "Monocular" keypoints have a negative value.
     std::vector<float> mvuRight = {};
-    std::vector<float> mvDepth = {};
+    std::vector<float> m_depths = {};
 
     // Bag of Words Vector structures.
     OrbBowVector mBowVec = {};
     OrbFeatureVector mFeatVec = {};
 
     // ORB descriptor, each row associated to a keypoint.
-    cv::Mat mDescriptors = {}, mDescriptorsRight = {};
+    cv::Mat m_descriptors = {}, m_descriptorsRight = {};
 
     // MapPoints associated to keypoints, NULL pointer if no association.
-    std::vector<std::shared_ptr<OrbMapPoint>> mvpMapPoints = {};
+    std::vector<std::shared_ptr<OrbMapPoint>> m_mapPoints = {};
 
     // Flag to identify outlier associations.
-    std::vector<bool> mvbOutlier = {};
+    std::vector<bool> m_outliers = {};
 
     // Keypoints are assigned to cells in a grid to reduce matching complexity when projecting MapPoints.
-    static float mfGridElementWidthInv;
-    static float mfGridElementHeightInv;
-    std::vector<std::size_t> mGrid[FRAME_GRID_COLS][FRAME_GRID_ROWS];
+    static float m_gridElementWidthInverse;
+    static float m_gridElementHeightInverse;
+    std::vector<std::size_t> m_grid[FRAME_GRID_COLS][FRAME_GRID_ROWS];
 
     // Camera pose.
     cv::Mat mTcw = {};
 
     // Current and Next Frame id.
-    static long unsigned int nNextId;
+    static long unsigned int m_nextId;
     long unsigned int mnId = {};
 
     // Reference Keyframe.
-    std::shared_ptr<OrbKeyFrame> mpReferenceKF = {};
+    std::shared_ptr<OrbKeyFrame> m_referenceKeyFrame = {};
 
     // Scale pyramid info.
-    int mnScaleLevels = {};
-    float mfScaleFactor = {};
-    float mfLogScaleFactor = {};
-    std::vector<float> mvScaleFactors = {};
-    std::vector<float> mvInvScaleFactors = {};
-    std::vector<float> mvLevelSigma2 = {};
-    std::vector<float> mvInvLevelSigma2 = {};
+    int m_scaleLevels = {};
+    float m_scaleFactor = {};
+    float m_logScaleFactor = {};
+    std::vector<float> m_scaleFactors = {};
+    std::vector<float> m_invScaleFactors = {};
+    std::vector<float> m_levelSigma2 = {};
+    std::vector<float> m_inverseLevelSigma2 = {};
 
     // Undistorted Image Bounds (computed once).
-    static float mnMinX;
-    static float mnMaxX;
-    static float mnMinY;
-    static float mnMaxY;
+    static float m_minX;
+    static float m_maxX;
+    static float m_minY;
+    static float m_maxY;
 
-    static bool mbInitialComputations;
-
+    static bool m_initialComputations;
 
 private:
     void CommonSetup();
@@ -228,7 +227,7 @@ private:
     // Assign keypoints to the grid for speed up feature matching (called in the constructor).
     void AssignFeaturesToGrid();
 
-    std::array<float, 4> mBoundingBox = {};
+    std::array<float, 4> m_boundingBox = {};
     // Rotation, translation and camera center
     cv::Mat m_rotation = {}; //Rcw, rotation.
     cv::Mat m_reversePose = {}; //Tcw, inverse pose.

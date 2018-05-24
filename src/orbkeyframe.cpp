@@ -29,18 +29,18 @@ long unsigned int OrbKeyFrame::nNextId=0;
 OrbKeyFrame::OrbKeyFrame(std::shared_ptr<OrbFrame> frame, std::shared_ptr<OrbMap> map,
                          std::shared_ptr<OrbKeyFrameDatabase> keyFrameDatabase):
         mnFrameId(frame->mnId), mTimeStamp(frame->mTimeStamp), mnGridCols(FRAME_GRID_COLS), mnGridRows(FRAME_GRID_ROWS),
-        mfGridElementWidthInv(frame->mfGridElementWidthInv), mfGridElementHeightInv(frame->mfGridElementHeightInv),
+        mfGridElementWidthInv(frame->m_gridElementWidthInverse), mfGridElementHeightInv(frame->m_gridElementHeightInverse),
         mnTrackReferenceForFrame(0), mnFuseTargetForKF(0), mnBALocalForKF(0), mnBAFixedForKF(0),
         mnLoopQuery(0), mnLoopWords(0), mnRelocQuery(0), mnRelocWords(0), mnBAGlobalForKF(0),
         fx(frame->fx), fy(frame->fy), cx(frame->cx), cy(frame->cy), invfx(frame->invfx), invfy(frame->invfy),
-        mbf(frame->mbf), mb(frame->mb), mThDepth(frame->mThDepth), N(frame->N), mvKeys(frame->mvKeys), mvKeysUn(frame->mvKeysUn),
-        mvuRight(frame->mvuRight), mvDepth(frame->mvDepth), mDescriptors(frame->mDescriptors.clone()),
-        mBowVec(frame->mBowVec), mFeatVec(frame->mFeatVec), mnScaleLevels(frame->mnScaleLevels), mfScaleFactor(frame->mfScaleFactor),
-        mfLogScaleFactor(frame->mfLogScaleFactor), mvScaleFactors(frame->mvScaleFactors), mvLevelSigma2(frame->mvLevelSigma2),
-        mvInvLevelSigma2(frame->mvInvLevelSigma2), mnMinX(static_cast<const int>(frame->mnMinX)), mnMinY(
-        static_cast<const int>(frame->mnMinY)), mnMaxX(static_cast<const int>(frame->mnMaxX)),
-        mnMaxY(static_cast<const int>(frame->mnMaxY)), mK(frame->mK), m_mapPoints(frame->mvpMapPoints), m_keyFrameDatabase(keyFrameDatabase),
-        m_orbVocabulary(frame->mpORBvocabulary), m_isFirstConnection(true), m_parent(NULL), m_shoulNotBeErased(false),
+        mbf(frame->mbf), mb(frame->mb), mThDepth(frame->mThDepth), N(frame->N), mvKeys(frame->m_keys), mvKeysUn(frame->m_undistortedKeys),
+        mvuRight(frame->mvuRight), mvDepth(frame->m_depths), mDescriptors(frame->m_descriptors.clone()),
+        mBowVec(frame->mBowVec), mFeatVec(frame->mFeatVec), mnScaleLevels(frame->m_scaleLevels), mfScaleFactor(frame->m_scaleFactor),
+        mfLogScaleFactor(frame->m_logScaleFactor), mvScaleFactors(frame->m_scaleFactors), mvLevelSigma2(frame->m_levelSigma2),
+        mvInvLevelSigma2(frame->m_inverseLevelSigma2), mnMinX(static_cast<const int>(frame->m_minX)), mnMinY(
+        static_cast<const int>(frame->m_minY)), mnMaxX(static_cast<const int>(frame->m_maxX)),
+        mnMaxY(static_cast<const int>(frame->m_maxY)), mK(frame->mK), m_mapPoints(frame->m_mapPoints), m_keyFrameDatabase(keyFrameDatabase),
+        m_orbVocabulary(frame->m_ORBvocabulary), m_isFirstConnection(true), m_parent(NULL), m_shoulNotBeErased(false),
         m_shouldBeErased(false), m_isBad(false), mHalfBaseline(frame->mb/2), m_map(map)
 {
     mnId = nNextId++;
@@ -51,7 +51,7 @@ OrbKeyFrame::OrbKeyFrame(std::shared_ptr<OrbFrame> frame, std::shared_ptr<OrbMap
         m_grid[i].resize((unsigned long) mnGridRows);
         for(int j=0; j<mnGridRows; j++)
         {
-            m_grid[i][j] = frame->mGrid[i][j];
+            m_grid[i][j] = frame->m_grid[i][j];
         }
     }
 

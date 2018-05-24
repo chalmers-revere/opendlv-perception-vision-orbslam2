@@ -37,7 +37,7 @@ OrbInitializer::OrbInitializer(std::shared_ptr<OrbFrame> referenceFrame, float s
 {
     m_calibration = referenceFrame->mK.clone(); //We have to come up with something uniform
 
-    m_referenceKeys = referenceFrame->mvKeysUn;
+    m_referenceKeys = referenceFrame->m_undistortedKeys;
 
     m_sigma = sigma;
     m_sigma2 = sigma * sigma;
@@ -49,7 +49,7 @@ bool OrbInitializer::Initialize(std::shared_ptr<OrbFrame> currentFrame, const st
 {
     // Fill structures with current keypoints and matches with reference frame
     // Reference Frame: 1, Current Frame: 2
-    m_currentKeys = currentFrame->mvKeysUn;
+    m_currentKeys = currentFrame->m_undistortedKeys;
 
     m_matches.clear();
     m_matches.reserve(m_currentKeys.size());
