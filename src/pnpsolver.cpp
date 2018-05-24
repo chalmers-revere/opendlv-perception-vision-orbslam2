@@ -31,14 +31,7 @@
 */
 
 #include <iostream>
-
 #include "pnpsolver.hpp"
-
-#include <vector>
-#include <cmath>
-#include <opencv2/core/core.hpp>
-//#include "Thirdparty/DBoW2/DUtils/Random.h"
-#include <algorithm>
 
 PnPsolver::PnPsolver(std::shared_ptr<OrbFrame> F, const std::vector<std::shared_ptr<OrbMapPoint>> &matchingMapPoints):
     pws(0), us(0), alphas(0), pcs(0), m_maximumNumberOfCorrespondences(0), number_of_correspondences(0), m_matchingMapPoints(),

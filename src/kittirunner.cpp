@@ -20,10 +20,8 @@
 #include "kittirunner.hpp"
 
 KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_ptr<Selflocalization> slammer, cv::Mat a_rMap[2][2]):
-        m_imagesCount(0), m_isStereo(isStereo), m_slammer(slammer), m_leftImages(), m_rightImages(), m_timeStamps(), m_timeTrackingStatistics(){
-//    std::vector<std::string> vstrImageLeft;
-//    std::vector<std::string> vstrImageRight;
-//    std::vector<double> vTimestamps;
+        m_imagesCount(0), m_isStereo(isStereo), m_slammer(slammer), m_leftImages(), m_rightImages(), m_timeStamps(), m_timeTrackingStatistics()
+{
     std::cout << "Loading Images" << std::endl;
     loadImages(kittiPath, m_leftImages, m_rightImages, m_timeStamps);
     this->m_imagesCount = m_leftImages.size();
@@ -31,17 +29,10 @@ KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_
     std::cout << std::endl << "-------" << std::endl;
     std::cout << "Start processing sequence ..." << std::endl;
     std::cout << "Images in the sequence: " << this->m_imagesCount << std::endl;
-    /*m_rmap[0][0] = a_rMap[0][0];
-    m_rmap[0][1] = a_rMap[0][1];
-    m_rmap[1][0] = a_rMap[1][0];
-    m_rmap[1][1] = a_rMap[1][1];*/
 
     a_rMap[0][0].copyTo(m_rmap[0][0]);
-
     a_rMap[0][1].copyTo(m_rmap[0][1]);
-
     a_rMap[1][0].copyTo(m_rmap[1][0]);
-
     a_rMap[1][1].copyTo(m_rmap[1][1]);
 }
 
@@ -105,7 +96,8 @@ void KittiRunner::ShutDown() {
     std::cout << "mean tracking time: " << totaltime/this->m_imagesCount << std::endl;
 }
 
-void KittiRunner::ProcessImage(size_t imageNumber,float resizeScale) {
+void KittiRunner::ProcessImage(size_t imageNumber,float resizeScale)
+{
     cv::Mat imLeft;
     cv::Mat imRight;
 
@@ -121,7 +113,8 @@ void KittiRunner::ProcessImage(size_t imageNumber,float resizeScale) {
                   return;
     }
     
-    if(this->m_isStereo){
+    if(this->m_isStereo)
+    {
         std::cout << "reading image: " << this->m_rightImages[imageNumber] << std::endl;
         cv::Mat imgR = cv::imread(this->m_rightImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
         if(m_rmap[0][0].cols==0)
@@ -139,25 +132,11 @@ void KittiRunner::ProcessImage(size_t imageNumber,float resizeScale) {
             cv::remap(imgL,imLeft, m_rmap[0][0], m_rmap[0][1], cv::INTER_LINEAR);
             cv::remap(imgR,imRight, m_rmap[1][0], m_rmap[1][1], cv::INTER_LINEAR);
         }
-        /*int wL = imLeft.cols;
-        int hL = imLeft.rows;
-
-        int wR = imRight.cols;
-        int hR = imRight.rows;
-
-        std::cout << "Size Left: " << wL << " : " << hL << std::endl;
-
-        std::cout << "Size Right: " << wR << " : " << hR << std::endl;
-            cv::namedWindow( "Display window 1", cv::WINDOW_AUTOSIZE );// Create a window for display.
-            cv::imshow( "Display window 1", imLeft );   
-
-            cv::namedWindow( "Display window 2", cv::WINDOW_AUTOSIZE );// Create a window for display.
-            cv::imshow( "Display window 2", imLeft );   
-            cv::waitKey(0);*/
-
-    }else{
-
-        if(resizeScale < 1){
+    }
+    else
+    {
+        if(resizeScale < 1)
+        {
             cv::resize(imgL, imgL, cv::Size(static_cast<int>(imgL.cols*resizeScale),static_cast<int>(imgL.rows*resizeScale)));
         }
     }

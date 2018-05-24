@@ -1,9 +1,12 @@
-
 /**
 * This file is part of ORB-SLAM2.
 *
 * Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
 * For more information see <https://github.com/raulmur/ORB_SLAM2>
+*
+* Modified for use within the OpenDLV framework by Marcus Andersson, Martin Baerveldt, Linus Eiderström Swahn and Pontus Pohl
+* Copyright (C) 2018 Chalmers Revere
+* For more information see <https://github.com/chalmers-revere/opendlv-perception-vision-orbslam2>
 *
 * ORB-SLAM2 is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -20,17 +23,8 @@
 */
 
 #include "loopclosing.hpp"
-
 #include "sim3solver.hpp"
-
-#include "orbconverter.hpp"
-
 #include "orboptimizer.hpp"
-
-#include "orbmatcher.hpp"
-
-#include <mutex>
-#include <thread>
 
 
 LoopClosing::LoopClosing(std::shared_ptr<OrbMap> pMap, std::shared_ptr<OrbKeyFrameDatabase> pDB, std::shared_ptr<OrbVocabulary> pVoc,const bool bFixScale):

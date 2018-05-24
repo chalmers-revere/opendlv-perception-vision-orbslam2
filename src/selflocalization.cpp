@@ -22,12 +22,6 @@
 #include <cmath>
 #include <iostream>
 #include <iomanip>
-
-//#include "opendavinci/odcore/data/Container.h"
-//#include "opendavinci/odcore/data/TimeStamp.h"
-
-//#include "odvdopendlvdata/GeneratedHeaders_ODVDOpenDLVData.h"
-
 #include "selflocalization.hpp"
 
 

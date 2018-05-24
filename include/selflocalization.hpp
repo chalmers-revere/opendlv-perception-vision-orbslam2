@@ -20,21 +20,6 @@
 #ifndef SELFLOCALIZATION_HPP
 #define SELFLOCALIZATION_HPP
 
-
-//#include <iostream>
-//#include <memory>
-//#include <vector>
-//#include <cmath>
-//#include <opendavinci/odcore/data/TimeStamp.h>
-//#include <opendavinci/odcore/strings/StringToolbox.h>
-//#include <opendavinci/odcore/wrapper/Eigen.h>
-//#include <opendavinci/odcore/base/module/DataTriggeredConferenceClientModule.h>
-//#include <opendavinci/odcore/data/Container.h>
-//#include "opendavinci/GeneratedHeaders_OpenDaVINCI.h"
-//#include "opendavinci/odcore/wrapper/SharedMemoryFactory.h"
-//#include "opendavinci/odcore/wrapper/SharedMemory.h"
-//#include "opendavinci/generated/odcore/data/CompactPointCloud.h"
-
 #include <thread>
 #include <iomanip>
 #include <opencv2/core/core.hpp>
@@ -43,15 +28,12 @@
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/imgcodecs/imgcodecs.hpp>
 #include <opencv2/features2d/features2d.hpp>
-//#include "opendavinci/odcore/base/KeyValueConfiguration.h"
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
 #include "WGS84toCartesian.hpp"
-
 #include "tracking.hpp"
 #include "mapping.hpp"
 #include "loopclosing.hpp"
-#include "imageextractor.hpp"
 #include "orbextractor.hpp"
 #include "orbvocabulary.hpp"
 #include "orbmap.hpp"
