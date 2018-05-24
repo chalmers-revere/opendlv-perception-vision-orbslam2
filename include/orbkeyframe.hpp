@@ -53,7 +53,7 @@ public:
     cv::Mat GetTranslation();
 
     static bool FrameIDCompare(std::shared_ptr<OrbKeyFrame> keyFrame1, std::shared_ptr<OrbKeyFrame> keyFrame2){
-        return keyFrame1->mnId < keyFrame2->mnId;
+        return keyFrame1->m_id < keyFrame2->m_id;
     }
 
     // Bag of Words Representation
@@ -117,13 +117,13 @@ public:
 
     static bool lId(std::shared_ptr<OrbKeyFrame> keyFrame1, std::shared_ptr<OrbKeyFrame> keyFrame2)
     {
-        return keyFrame1->mnId < keyFrame2->mnId;
+        return keyFrame1->m_id < keyFrame2->m_id;
     }
 
     // The following variables are accesed from only 1 thread or never change (no mutex needed).
 public:
     static long unsigned int nNextId;
-    long unsigned int mnId = {};
+    long unsigned int m_id = {};
     const long unsigned int mnFrameId;
 
     const double mTimeStamp;
@@ -143,8 +143,8 @@ public:
     long unsigned int mnBAFixedForKF;
 
     // Variables used by the keyframe database
-    long unsigned int mnLoopQuery;
-    int mnLoopWords;
+    long unsigned int m_loopQuery;
+    int m_loopWords;
     float mLoopScore = {};
     long unsigned int mnRelocQuery;
     int mnRelocWords;

@@ -528,7 +528,7 @@ void Mapping::MapPointCulling()
 {
     // Check Recent Added MapPoints
     std::list<std::shared_ptr<OrbMapPoint>>::iterator lit = mlpRecentAddedMapPoints.begin();
-    const unsigned long int nCurrentKFid = mpCurrentKeyFrame->mnId;
+    const unsigned long int nCurrentKFid = mpCurrentKeyFrame->m_id;
 
     int nThObs;
     if(mbMonocular)
@@ -572,17 +572,17 @@ void Mapping::SearchInNeighbors()
     for(std::vector<std::shared_ptr<OrbKeyFrame>>::const_iterator vit=vpNeighKFs.begin(), vend=vpNeighKFs.end(); vit!=vend; vit++)
     {
         std::shared_ptr<OrbKeyFrame> pKFi = *vit;
-        if(pKFi->isBad() || pKFi->mnFuseTargetForKF == mpCurrentKeyFrame->mnId)
+        if(pKFi->isBad() || pKFi->mnFuseTargetForKF == mpCurrentKeyFrame->m_id)
             continue;
         vpTargetKFs.push_back(pKFi);
-        pKFi->mnFuseTargetForKF = mpCurrentKeyFrame->mnId;
+        pKFi->mnFuseTargetForKF = mpCurrentKeyFrame->m_id;
 
         // Extend to some second neighbors
         const std::vector<std::shared_ptr<OrbKeyFrame>> vpSecondNeighKFs = pKFi->GetBestCovisibilityKeyFrames(5);
         for(std::vector<std::shared_ptr<OrbKeyFrame>>::const_iterator vit2=vpSecondNeighKFs.begin(), vend2=vpSecondNeighKFs.end(); vit2!=vend2; vit2++)
         {
             std::shared_ptr<OrbKeyFrame> pKFi2 = *vit2;
-            if(pKFi2->isBad() || pKFi2->mnFuseTargetForKF==mpCurrentKeyFrame->mnId || pKFi2->mnId==mpCurrentKeyFrame->mnId)
+            if(pKFi2->isBad() || pKFi2->mnFuseTargetForKF==mpCurrentKeyFrame->m_id || pKFi2->m_id==mpCurrentKeyFrame->m_id)
                 continue;
             vpTargetKFs.push_back(pKFi2);
         }
@@ -614,9 +614,9 @@ void Mapping::SearchInNeighbors()
             std::shared_ptr<OrbMapPoint> pMP = *vitMP;
             if(!pMP)
                 continue;
-            if(pMP->IsCorrupt() || pMP->GetFuseCandidateForKF() == mpCurrentKeyFrame->mnId)
+            if(pMP->IsCorrupt() || pMP->GetFuseCandidateForKF() == mpCurrentKeyFrame->m_id)
                 continue;
-            pMP->SetFuseCandidateForKF(mpCurrentKeyFrame->mnId);
+            pMP->SetFuseCandidateForKF(mpCurrentKeyFrame->m_id);
             vpFuseCandidates.push_back(pMP);
         }
     }
@@ -654,7 +654,7 @@ void Mapping::KeyFrameCulling()
     for(std::vector<std::shared_ptr<OrbKeyFrame>>::iterator vit=vpLocalKeyFrames.begin(), vend=vpLocalKeyFrames.end(); vit!=vend; vit++)
     {
         std::shared_ptr<OrbKeyFrame> pKF = *vit;
-        if(pKF->mnId==0)
+        if(pKF->m_id==0)
             continue;
         const std::vector<std::shared_ptr<OrbMapPoint>> vpMapPoints = pKF->GetMapPointMatches();
 

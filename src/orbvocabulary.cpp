@@ -118,7 +118,7 @@ bool OrbVocabulary::loadFromTextFile(const std::string &filename){
 }
 
 
-double OrbVocabulary::getScore(const OrbBowVector &bowVector1, const OrbBowVector &bowVector2) const{
+double OrbVocabulary::GetScore(const OrbBowVector &bowVector1, const OrbBowVector &bowVector2) const{
 
   
   OrbBowVector::const_iterator vector1_it, vector2_it;
@@ -160,7 +160,7 @@ double OrbVocabulary::getScore(const OrbBowVector &bowVector1, const OrbBowVecto
   return score;
 }
 
-int OrbVocabulary::getSize() const{
+int OrbVocabulary::GetSize() const{
 
   return m_words.size();
 }

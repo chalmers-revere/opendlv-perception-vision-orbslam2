@@ -85,7 +85,7 @@ void LoopClosing::Run()
 void LoopClosing::InsertKeyFrame(std::shared_ptr<OrbKeyFrame> pKF)
 {
     std::unique_lock<std::mutex> lock(mMutexLoopQueue);
-    if(pKF->mnId!=0)
+    if(pKF->m_id!=0)
         mlpLoopKeyFrameQueue.push_back(pKF);
 }
 
@@ -106,9 +106,9 @@ bool LoopClosing::DetectLoop()
     }
 
     //If the map contains less than 10 KF or less than 10 KF have passed from last loop detection
-    if(mpCurrentKF->mnId<mLastLoopKFid+10)
+    if(mpCurrentKF->m_id<mLastLoopKFid+10)
     {
-        mpKeyFrameDB->add(mpCurrentKF);
+        mpKeyFrameDB->Add(mpCurrentKF);
         mpCurrentKF->SetErase();
         return false;
     }
@@ -126,7 +126,7 @@ bool LoopClosing::DetectLoop()
             continue;
         const OrbBowVector &BowVec = pKF->m_bagOfWords;
 
-        float score = static_cast<float>(mpORBVocabulary->getScore(CurrentBowVec, BowVec));
+        float score = static_cast<float>(mpORBVocabulary->GetScore(CurrentBowVec, BowVec));
 
         if(score<minScore)
             minScore = score;
@@ -138,7 +138,7 @@ bool LoopClosing::DetectLoop()
     // If there are no loop candidates, just add new keyframe and return false
     if(vpCandidateKFs.empty())
     {
-        mpKeyFrameDB->add(mpCurrentKF);
+        mpKeyFrameDB->Add(mpCurrentKF);
         mvConsistentGroups.clear();
         mpCurrentKF->SetErase();
         return false;
@@ -207,7 +207,7 @@ bool LoopClosing::DetectLoop()
 
 
     // Add Current Keyframe to database
-    mpKeyFrameDB->add(mpCurrentKF);
+    mpKeyFrameDB->Add(mpCurrentKF);
 
     if(mvpEnoughConsistentCandidates.empty())
     {
@@ -358,12 +358,12 @@ bool LoopClosing::ComputeSim3()
             std::shared_ptr<OrbMapPoint> pMP = vpMapPoints[i];
             if(pMP)
             {
-                if(!pMP->IsCorrupt() && pMP->GetLoopPointForKF()!=mpCurrentKF->mnId)
+                if(!pMP->IsCorrupt() && pMP->GetLoopPointForKF()!=mpCurrentKF->m_id)
                 {
                     mvpLoopMapPoints.push_back(pMP);
                     //pMP->mnLoopPointForKF=mpCurrentKF->mnId;
 
-                    pMP->SetLoopPointForKF(mpCurrentKF->mnId);
+                    pMP->SetLoopPointForKF(mpCurrentKF->m_id);
                 }
             }
         }
@@ -482,7 +482,7 @@ void LoopClosing::CorrectLoop()
                     continue;
                 if(pMPi->IsCorrupt())
                     continue;
-                if(pMPi->GetCorrectedByKF()==mpCurrentKF->mnId)
+                if(pMPi->GetCorrectedByKF()==mpCurrentKF->m_id)
                     continue;
 
                 // Project with non-corrected pose and project back with corrected pose
@@ -494,8 +494,8 @@ void LoopClosing::CorrectLoop()
                 pMPi->SetWorldPosition(cvCorrectedP3Dw);
                 //pMPi->mnCorrectedByKF = mpCurrentKF->mnId;
                 //pMPi->mnCorrectedReference = pKFi->mnId;
-                pMPi->SetCorrectedByKF(mpCurrentKF->mnId);
-                pMPi->SetCorrectedReference(pKFi->mnId);
+                pMPi->SetCorrectedByKF(mpCurrentKF->m_id);
+                pMPi->SetCorrectedReference(pKFi->m_id);
 
                 pMPi->UpdateMeanAndDepthValues();
             }
@@ -576,12 +576,12 @@ void LoopClosing::CorrectLoop()
     mbRunningGBA = true;
     mbFinishedGBA = false;
     mbStopGBA = false;
-    mpThreadGBA = std::shared_ptr<std::thread>(new std::thread(&LoopClosing::RunGlobalBundleAdjustment,this,mpCurrentKF->mnId));
+    mpThreadGBA = std::shared_ptr<std::thread>(new std::thread(&LoopClosing::RunGlobalBundleAdjustment,this,mpCurrentKF->m_id));
     mpThreadGBA->detach();
     // Loop closed. Release Local Mapping.
     mpLocalMapper->Release();    
 
-    mLastLoopKFid = mpCurrentKF->mnId;   
+    mLastLoopKFid = mpCurrentKF->m_id;
 }
 
 void LoopClosing::SearchAndFuse(const KeyFrameAndPose &CorrectedPosesMap)

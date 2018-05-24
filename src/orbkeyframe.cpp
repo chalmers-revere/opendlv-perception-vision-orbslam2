@@ -31,7 +31,7 @@ OrbKeyFrame::OrbKeyFrame(std::shared_ptr<OrbFrame> frame, std::shared_ptr<OrbMap
         mnFrameId(frame->mnId), mTimeStamp(frame->mTimeStamp), mnGridCols(FRAME_GRID_COLS), mnGridRows(FRAME_GRID_ROWS),
         mfGridElementWidthInv(frame->m_gridElementWidthInverse), mfGridElementHeightInv(frame->m_gridElementHeightInverse),
         mnTrackReferenceForFrame(0), mnFuseTargetForKF(0), mnBALocalForKF(0), mnBAFixedForKF(0),
-        mnLoopQuery(0), mnLoopWords(0), mnRelocQuery(0), mnRelocWords(0), mnBAGlobalForKF(0),
+        m_loopQuery(0), m_loopWords(0), mnRelocQuery(0), mnRelocWords(0), mnBAGlobalForKF(0),
         fx(frame->fx), fy(frame->fy), cx(frame->cx), cy(frame->cy), invfx(frame->invfx), invfy(frame->invfy),
         mbf(frame->mbf), mb(frame->mb), mThDepth(frame->mThDepth), N(frame->N), mvKeys(frame->m_keys), mvKeysUn(frame->m_undistortedKeys),
         mvuRight(frame->mvuRight), mvDepth(frame->m_depths), mDescriptors(frame->m_descriptors.clone()),
@@ -43,7 +43,7 @@ OrbKeyFrame::OrbKeyFrame(std::shared_ptr<OrbFrame> frame, std::shared_ptr<OrbMap
         m_orbVocabulary(frame->m_ORBvocabulary), m_isFirstConnection(true), m_parent(NULL), m_shoulNotBeErased(false),
         m_shouldBeErased(false), m_isBad(false), mHalfBaseline(frame->mb/2), m_map(map)
 {
-    mnId = nNextId++;
+    m_id = nNextId++;
 
     m_grid.resize((unsigned long) mnGridCols);
     for(int i=0; i<mnGridCols;i++)
@@ -349,7 +349,7 @@ void OrbKeyFrame::UpdateConnections()
 
         for(auto observation : observations)
         {
-            if(observation.first->mnId==mnId)
+            if(observation.first->m_id==m_id)
             {
                 continue;
             }
@@ -408,7 +408,7 @@ void OrbKeyFrame::UpdateConnections()
         //std::cout << lWs.size() << std::endl;
         m_orderedWeights = std::vector<int>(lWs.begin(), lWs.end());
 
-        if(m_isFirstConnection && mnId!=0)
+        if(m_isFirstConnection && m_id!=0)
         {
             m_parent = m_orderedConnectedKeyFrames.front();
             m_parent->AddChild(shared_from_this());
@@ -494,7 +494,7 @@ void OrbKeyFrame::SetBadFlag()
 {
     {
         std::unique_lock<std::mutex> lock(m_connectionsMutex);
-        if(mnId==0)
+        if(m_id==0)
         {
             return;
         }
@@ -552,7 +552,7 @@ void OrbKeyFrame::SetBadFlag()
                 {
                     for (const auto &sParentCandidate : sParentCandidates)
                     {
-                        if(i->mnId == sParentCandidate->mnId)
+                        if(i->m_id == sParentCandidate->m_id)
                         {
                             int w = keyFrame->GetWeight(i);
                             if(w>max)
@@ -595,7 +595,7 @@ void OrbKeyFrame::SetBadFlag()
 
 
     m_map->DeleteOrbKeyFrame(shared_from_this());
-    m_keyFrameDatabase->erase(shared_from_this());
+    m_keyFrameDatabase->Erase(shared_from_this());
 }
 
 bool OrbKeyFrame::isBad()

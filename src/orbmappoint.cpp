@@ -27,7 +27,7 @@
 long unsigned int OrbMapPoint::nNextId=0;
 
 OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map)
-    : m_firstKeyframeId(refenceKeyFrame->mnId), m_FirstKeyFrame(refenceKeyFrame->mnId),
+    : m_firstKeyframeId(refenceKeyFrame->m_id), m_FirstKeyFrame(refenceKeyFrame->m_id),
       m_refenceKeyFrame(refenceKeyFrame), m_map(map)
 {
     position.copyTo(m_worldPosition);

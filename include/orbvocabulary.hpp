@@ -57,9 +57,9 @@ public:
 
   bool loadFromTextFile(const std::string &filename);
 
-	double getScore(const OrbBowVector &bowVector1, const OrbBowVector &bowVector2) const;
+	double GetScore(const OrbBowVector &bowVector1, const OrbBowVector &bowVector2) const;
 
-  int getSize() const;
+  int GetSize() const;
 
   void transform4(const std::vector<cv::Mat> features, OrbBowVector &bowVector, OrbFeatureVector &featureVector, int levelsUp) const;
   

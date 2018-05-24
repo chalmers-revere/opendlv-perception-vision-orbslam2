@@ -41,13 +41,13 @@ public:
 
     OrbKeyFrameDatabase(OrbVocabulary &voc);
 
-    void add(std::shared_ptr<OrbKeyFrame> pKF);
+    void Add(std::shared_ptr<OrbKeyFrame> keyFrame);
 
-    void erase(std::shared_ptr<OrbKeyFrame> pKF);
+    void Erase(std::shared_ptr<OrbKeyFrame> keyFrame);
 
-    void clear();
+    void Clear();
     // Loop Detection
-    std::vector<std::shared_ptr<OrbKeyFrame>> DetectLoopCandidates(std::shared_ptr<OrbKeyFrame> pKF, float minScore);
+    std::vector<std::shared_ptr<OrbKeyFrame>> DetectLoopCandidates(std::shared_ptr<OrbKeyFrame> keyFrame, float minScore);
 
     // Relocalization
     std::vector<std::shared_ptr<OrbKeyFrame>> DetectRelocalizationCandidates(std::shared_ptr<OrbFrame> F);
@@ -55,10 +55,10 @@ public:
 protected:
 
     // Associated vocabulary
-    std::shared_ptr<OrbVocabulary> mpVoc;
+    std::shared_ptr<OrbVocabulary> m_vocabulary;
 
     // Inverted file
-    std::vector<std::list<std::shared_ptr<OrbKeyFrame>>> mvInvertedFile = {};
+    std::vector<std::list<std::shared_ptr<OrbKeyFrame>>> m_invertedFile = {};
 
     // Mutex
     std::mutex mMutex = {};

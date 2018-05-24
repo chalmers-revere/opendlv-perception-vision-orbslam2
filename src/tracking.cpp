@@ -1515,7 +1515,7 @@ void Tracking::Reset()
 
     // Clear BoW Database
     std::cout << "Reseting Database...";
-    mpKeyFrameDB->clear();
+    mpKeyFrameDB->Clear();
     std::cout << " done" << std::endl;
 
     // Clear Map (this erase MapPoints and KeyFrames)

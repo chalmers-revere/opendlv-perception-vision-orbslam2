@@ -333,7 +333,7 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
 	m_isMonocular = std::stoi(commandlineArgs["cameraType"]) == 0;
 	std::string vocFilePath = commandlineArgs["vocFilePath"]; //Create mount
 	m_pVocabulary = std::shared_ptr<OrbVocabulary>(new OrbVocabulary(vocFilePath));
-	int size = m_pVocabulary->getSize();
+	int size = m_pVocabulary->GetSize();
 	std::cout << "Size of Vocabulary: " << size << std::endl;
 	//int colorChannel = 1;
 	m_cid = std::stoi(commandlineArgs["cid"]);
@@ -396,7 +396,7 @@ void Selflocalization::setUpRealtime(std::map<std::string, std::string> commandl
 	m_isMonocular = std::stoi(commandlineArgs["cameraType"]) == 0;
 	std::string vocFilePath = commandlineArgs["vocFilePath"]; //Create mount
 	m_pVocabulary = std::shared_ptr<OrbVocabulary>(new OrbVocabulary(vocFilePath));
-	int size = m_pVocabulary->getSize();
+	int size = m_pVocabulary->GetSize();
 	std::cout << "Size of Vocabulary: " << size << std::endl;
 	//int colorChannel = 1;
 

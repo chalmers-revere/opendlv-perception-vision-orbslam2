@@ -35,8 +35,8 @@ OrbMap::~OrbMap()
 void OrbMap::PushOrbKeyFrame(std::shared_ptr<OrbKeyFrame> orbKeyFrame) {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
     this->m_keyFrames.insert(orbKeyFrame);
-    if (orbKeyFrame->mnId > this->m_maxOrbKeyFrameId) {
-        this->m_maxOrbKeyFrameId = orbKeyFrame->mnId;
+    if (orbKeyFrame->m_id > this->m_maxOrbKeyFrameId) {
+        this->m_maxOrbKeyFrameId = orbKeyFrame->m_id;
     }
 }
 
