@@ -1,8 +1,6 @@
 # opendlv-perception-vision-orbslam2
 
-## build
-
-### Docker
+## Build with docker
 
 ```bash buildImage.sh```
 
@@ -16,7 +14,7 @@ Visualizer will now be running on
 
 [localhost:8081](http://localhost:8081)
 
-### natively
+## Build native
 
 In order to build and run natively, first install:
 
@@ -45,21 +43,25 @@ make -j4
 make install
 echo "/usr/local/lib" >> /etc/ld.so.conf.d/opencv.conf
 
+```
+
 #### g2o
 
-git clone https://github.com/marbae/g2o && cd g2o && mkdir build && cd build && cmake -DG2O_BUILD_APPS=OFF -DG2O_BUILD_EXAMPLES=OFF .. && make -j4 install
+```git clone https://github.com/marbae/g2o && cd g2o && mkdir build && cd build && cmake -DG2O_BUILD_APPS=OFF -DG2O_BUILD_EXAMPLES=OFF .. && make -j4 install```
 
 - eigen
 
-hg clone https://bitbucket.org/eigen/eigen && cd eigen && hg pull && hg update 3.2 && mkdir build && cd build && cmake .. && make -j4 install
+```hg clone https://bitbucket.org/eigen/eigen && cd eigen && hg pull && hg update 3.2 && mkdir build && cd build && cmake .. && make -j4 install```
 
 
 Now build opendlv-perception-vision-orbslam2:
 
 ```
+
 mkdir build
 cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr ..
 make -j4
 make test
 make install
+
 ```
