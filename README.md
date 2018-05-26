@@ -4,13 +4,13 @@
 
 ```bash buildImage.sh```
 
-Run with dataset from KITTI:
+#### Run with dataset from KITTI:
 
 ```docker-compose pull```
 
 ```docker-compose up```
 
-Visualizer will now be running on
+#### Visualizer will now be running on:
 
 [localhost:8081](http://localhost:8081)
 
@@ -49,7 +49,7 @@ echo "/usr/local/lib" >> /etc/ld.so.conf.d/opencv.conf
 
 ```git clone https://github.com/marbae/g2o && cd g2o && mkdir build && cd build && cmake -DG2O_BUILD_APPS=OFF -DG2O_BUILD_EXAMPLES=OFF .. && make -j4 install```
 
-- eigen
+#### eigen
 
 ```hg clone https://bitbucket.org/eigen/eigen && cd eigen && hg pull && hg update 3.2 && mkdir build && cd build && cmake .. && make -j4 install```
 
