@@ -17,43 +17,43 @@
 
 # Date: 2016-10-16
 
-version: '2'
+version: '3'
 
 services:
-
+    data:
+       image: seresearch/opendlv-gallery-orb2-slam:data
+       volumes:
+          - data:/data
+    odsupercomponent:
+        image: seresearch/opendlv-on-opendlv-core-on-opendavinci-on-base-dev:latest
+        volumes:
+            - data:/data
+        command: "/opt/od4/bin/odsupercomponent --cid=120 --verbose=1 --configuration=/data/opendlv.data/configuration"
+        network_mode: host
+        depends_on:
+            - data
 
     selflocalization:
-       image: orbubuntu:orbubuntuv0 #orbamd:orbamdv0
-       network_mode: "host"
-       ipc: host
+       image: seresearch/opendlv-perception-vision-orbslam2-amd64:latest
        environment:
            - DISPLAY=$DISPLAY
-       ulimits:
-         memlock:
-           soft: 44236800
-           hard: 44236800
        volumes:
-           - /home/somliga/MasterThesis/real-time-imp/kitti:/kitti
-           - /home/somliga/MasterThesis/real-time-imp/images:/media  #Needs folder with images and an ORBvoc.txt "--Camera.rx=-0.0132397","--Camera.cv=0.021005","--Camera.rz=-0.00121284"
+           - data:/data
            - /tmp/.X11-unix:/tmp/.X11-unix
-       command: "/tmp/opendlv-perception-vision-orbslam2-dest/bin/opendlv-perception-vision-orbslam2 --name=cam0 --width=2560 --height=720 --bpp=24 --cid=${CID} --cameraType=1 --vocFilePath=/media/ORBvoc.txt --Camera.fx=699.783 --Camera.fy=699.783 --Camera.cx=637.704 --Camera.cy=360.875 --Camera.k1=-0.173042 --Camera.k2=0.0258831 --Camera.k3=0 --Camera.p1=0 --Camera.p2=0 --CameraR.fx=700.225 --CameraR.fy=700.225 --CameraR.cx=660.759 --CameraR.cy=364.782 --CameraR.k1=-0.174209 --CameraR.k2=0.026726 --CameraR.k3=0 --CameraR.p1=0 --CameraR.p2=0 --resize=0.5 --rectify=1 --Camera.rx=-0.0132397 --Camera.cv=0.021005 --Camera.rz=-0.00121284 --Camera.baseline=0.12 --Camera.fps=20 --Camera.bf=41.98698 --Camera.RGB=1 --ThDepth=60 --ORBextractor.nFeatures=2000 --ORBextractor.scaleFactor=1.2 --ORBextractor.nLevels=8 --ORBextractor.iniThFAST=15 --ORBextractor.minThFAST=5 --refLatitude=57.713737 --refLongitude=11.9482177 --startHeading=215 --BoundingBox.MinX=0 --BoundingBox.MaxX=0 --BoundingBox.MinY=0 --BoundingBox.MaxY=0 --kittiPath=/kitti/dataset/sequences/lindholmenhood"
+       command: "/usr/bin/opendlv-perception-vision-orbslam2 --name=cam0 --width=2560 --height=720 --bpp=24  --cid=${CID} --cameraType=1 --vocFilePath=/data/media/ORBvoc.txt --Camera.fx=718.856 --Camera.fy=718.856 --Camera.cx=607.1928 --Camera.cy=185.2157 --Camera.k1=0 --Camera.k2=0 --Camera.k3=0 --Camera.p1=0 --Camera.p2=0 --Camera.fps=15 --Camera.bf=386.1448 --Camera.RGB=1 --ThDepth=35 --ORBextractor.nFeatures=2000 --ORBextractor.scaleFactor=1.2 --ORBextractor.nLevels=8 --ORBextractor.iniThFAST=20 --ORBextractor.minThFAST=7 --kittiPath=/data/kitty/00"
+       network_mode: host
+       depends_on:
+            - data
+    vehicle_viewer:
+        image: seresearch/opendlv-gallery-orb2-slam:visualisation
+        volumes:
+            - data:/data
+        ports:
+            - 8081:8081
+        command: "--cid=120"
+        network_mode: host
+        depends_on:
+            - data
 
-       #       vehicle_viewer
-#           image: testviewer
-#           network_mode: host
-#           ports:
-#              - 8081:8081
-#           command: "--cid=${CID}"
-
-    #recorder
-#    odrecorderh264:
-#        image: ${IMAGE}
-#        depends_on:
-#            - odsupercomponent
-#        volumes:
-#            - ~/recordings:/opt/recordings
-#        user: odv
-#        network_mode: host
-#        ipc: host
-#        working_dir: "/opt/recordings"
-#        command: "/opt/od4/bin/odrecorderh264 --cid=${CID}"
+volumes:
+  data:
