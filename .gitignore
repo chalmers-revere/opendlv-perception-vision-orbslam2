@@ -1,6 +1,7 @@
-
-Images/
-
-build/
-
+/Images
+/build
 \.env
+/cmake-build-debug
+/cmake-build-release
+/docker-mounts
+.idea

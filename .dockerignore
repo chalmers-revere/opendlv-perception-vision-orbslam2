@@ -1,2 +1,5 @@
 /Images
 /dockerized-dataset
+/cmake-build-debug
+/cmake-build-release
+/docker-mounts
