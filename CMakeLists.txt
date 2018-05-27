@@ -20,7 +20,7 @@ project(opendlv-perception-vision-orbslam2)
 ################################################################################
 # Defining the relevant versions of OpenDLV Standard Message Set and libcluon.
 set(OPENDLV_STANDARD_MESSAGE_SET opendlv-standard-message-set-v0.9.1.odvd)
-set(CLUON_COMPLETE cluon-complete-v0.0.55.hpp)
+set(CLUON_COMPLETE cluon-complete-v0.0.77.hpp)
 
 ################################################################################
 # This project requires C++14 or newer.
@@ -54,6 +54,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
+SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CmakeFiles")
 ################################################################################
 # Extract cluon-msc from cluon-complete.hpp.
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/cluon-msc
@@ -92,6 +94,9 @@ set(CMAKE_PREFIX_PATH "/usr/local/opt/opencv3/share/OpenCV")
 set(OpenCV_INCLUDE_DIRS "/usr/local/opt/opencv3/include")
 set(OpenCV_LIBS "/usr/local/opt/opencv3/lib")
 
+find_package(LibRT REQUIRED)
+set(LIBRARIES ${LIBRARIES} ${LIBRT_LIBRARIES})
+include_directories(SYSTEM ${LIBRT_INCLUDE_DIR})
 #include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
 
 #find_package(OpenCV REQUIRED)
@@ -105,7 +110,7 @@ set(OpenCV_LIBS "/usr/local/opt/opencv3/lib")
 
 ################################################################################
 # Link libs
-set(LIBRARIES Threads::Threads g2o_core g2o_solver_eigen g2o_types_sim3 g2o_types_sba g2o_stuff opencv_core opencv_imgcodecs opencv_features2d opencv_imgproc opencv_highgui opencv_calib3d)
+set(LIBRARIES Threads::Threads g2o_core g2o_solver_eigen g2o_types_sim3 g2o_types_sba g2o_stuff opencv_core opencv_imgcodecs opencv_features2d opencv_imgproc opencv_highgui opencv_calib3d rt)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 

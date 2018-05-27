@@ -4,6 +4,10 @@
 * Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
 * For more information see <https://github.com/raulmur/ORB_SLAM2>
 *
+* Modified for use within the OpenDLV framework by Marcus Andersson, Martin Baerveldt, Linus Eiderström Swahn and Pontus Pohl
+* Copyright (C) 2018 Chalmers Revere
+* For more information see <https://github.com/chalmers-revere/opendlv-perception-vision-orbslam2>
+*
 * ORB-SLAM2 is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
@@ -17,6 +21,7 @@
 * You should have received a copy of the GNU General Public License
 * along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef INITIALIZER_H
 #define INITIALIZER_H
 
@@ -68,6 +73,8 @@ private:
                        const cv::Mat &K, std::vector<cv::Point3f> &vP3D, float th2, std::vector<bool> &vbGood, float &parallax);
 
     void DecomposeE(const cv::Mat &E, cv::Mat &R1, cv::Mat &R2, cv::Mat &t);
+
+    int randomInt(int min, int max);
 
 
     // Keypoints from Reference Frame (Frame 1)

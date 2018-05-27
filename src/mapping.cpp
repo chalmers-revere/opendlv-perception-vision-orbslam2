@@ -1,45 +1,38 @@
 /**
- * Copyright (C) 2017 Chalmers Revere
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
- * USA.
- */
+* This file is part of ORB-SLAM2.
+*
+* Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
+* For more information see <https://github.com/raulmur/ORB_SLAM2>
+*
+* Modified for use within the OpenDLV framework by Marcus Andersson, Martin Baerveldt, Linus Eiderström Swahn and Pontus Pohl
+* Copyright (C) 2018 Chalmers Revere
+* For more information see <https://github.com/chalmers-revere/opendlv-perception-vision-orbslam2>
+*
+* ORB-SLAM2 is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* ORB-SLAM2 is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "loopclosing.hpp"
 #include "orbmatcher.hpp"
 #include "orboptimizer.hpp"
 #include "mapping.hpp"
-//#include "opendavinci/odcore/data/TimeStamp.h"
 
 
 Mapping::Mapping(std::shared_ptr<OrbMap> pMap, const bool bMonocular):
 	mbMonocular(bMonocular), mbResetRequested(false), mbFinishRequested(false), mbFinished(true), mpMap(pMap),
 mbAbortBA(false), mbStopped(false), mbStopRequested(false), mbNotStop(false), mbAcceptKeyFrames(true)
-	//,m_pMap(pMap)
 {
 	std::cout << "Mapping Calling, Stereo: " << std::endl;
-
-    /*mbMonocular = mbMonocular;
-    mbResetRequested = mbResetRequested;
-    mbFinishRequested = mbFinishRequested;
-    mbFinished = mbFinished;
-    mpMap = mpMap;
-    mbAbortBA = mbAbortBA;
-    mbStopped = mbStopped;
-    mbStopRequested = mbStopRequested;
-    mbNotStop = mbNotStop;
-    mbAcceptKeyFrames = mbAcceptKeyFrames;*/
 
 }
 void Mapping::SetLoopCloser(std::shared_ptr<LoopClosing> pLoopCloser)
@@ -65,7 +58,7 @@ void Mapping::Run()
         // Check if there are keyframes in the queue
         if(CheckNewKeyFrames())
         {
-            std::cout << "Making a new keyframe" << std::endl;
+            //std::cout << "Making a new keyframe" << std::endl;
             // BoW conversion and insertion in Map
             ProcessNewKeyFrame();
 
@@ -86,15 +79,16 @@ void Mapping::Run()
             if(!CheckNewKeyFrames() && !stopRequested())
             {
                 // Local BA
-                if(mpMap->OrbKeyFramesCount()>2)
-                   //OrbOptimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA, mpMap);
-                std::cout << "culling keyframes" << std::endl;
+                if(mpMap->OrbKeyFramesCount()>2){
+                    OrbOptimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA, mpMap);
+                }
+                //std::cout << "culling keyframes" << std::endl;
                 // Check redundant local Keyframes
                 KeyFrameCulling();
             }
 
             mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
-            std::cout << "Mapping done, amount of keyframes is "<< mpMap->OrbKeyFramesCount() << " and map points " << mpMap->OrbMapPointsCount() << std::endl;
+            //std::cout << "Mapping done, amount of keyframes is "<< mpMap->OrbKeyFramesCount() << " and map points " << mpMap->OrbMapPointsCount() << std::endl;
         }
         else if(Stop())
         {
@@ -160,7 +154,7 @@ bool Mapping::Stop()
     if(mbStopRequested && !mbNotStop)
     {
         mbStopped = true;
-        std::cout << "Local Mapping STOP" << std::endl;
+        //std::cout << "Local Mapping STOP" << std::endl;
         return true;
     }
 
@@ -179,7 +173,7 @@ void Mapping::Release()
     for(std::list<std::shared_ptr<OrbKeyFrame>>::iterator lit = mlNewKeyFrames.begin(), lend=mlNewKeyFrames.end(); lit!=lend; lit++)
     	mlNewKeyFrames.clear();
 
-    std::cout << "Local Mapping RELEASE" << std::endl;
+    //std::cout << "Local Mapping RELEASE" << std::endl;
 }
 
 bool Mapping::isStopped()
@@ -511,7 +505,7 @@ void Mapping::CreateNewMapPoints()
 
             // Triangulation is succesfull
             std::shared_ptr<OrbMapPoint> pMP = std::shared_ptr<OrbMapPoint>(new OrbMapPoint(x3D,mpCurrentKeyFrame,mpMap));
-
+            //std::cout << "Making a new mappoint" << std::endl;
             pMP->AddObservingKeyframe(mpCurrentKeyFrame,idx1);            
             pMP->AddObservingKeyframe(pKF2,idx2);
 
@@ -534,7 +528,7 @@ void Mapping::MapPointCulling()
 {
     // Check Recent Added MapPoints
     std::list<std::shared_ptr<OrbMapPoint>>::iterator lit = mlpRecentAddedMapPoints.begin();
-    const unsigned long int nCurrentKFid = mpCurrentKeyFrame->mnId;
+    const unsigned long int nCurrentKFid = mpCurrentKeyFrame->m_id;
 
     int nThObs;
     if(mbMonocular)
@@ -578,17 +572,17 @@ void Mapping::SearchInNeighbors()
     for(std::vector<std::shared_ptr<OrbKeyFrame>>::const_iterator vit=vpNeighKFs.begin(), vend=vpNeighKFs.end(); vit!=vend; vit++)
     {
         std::shared_ptr<OrbKeyFrame> pKFi = *vit;
-        if(pKFi->isBad() || pKFi->mnFuseTargetForKF == mpCurrentKeyFrame->mnId)
+        if(pKFi->isBad() || pKFi->mnFuseTargetForKF == mpCurrentKeyFrame->m_id)
             continue;
         vpTargetKFs.push_back(pKFi);
-        pKFi->mnFuseTargetForKF = mpCurrentKeyFrame->mnId;
+        pKFi->mnFuseTargetForKF = mpCurrentKeyFrame->m_id;
 
         // Extend to some second neighbors
         const std::vector<std::shared_ptr<OrbKeyFrame>> vpSecondNeighKFs = pKFi->GetBestCovisibilityKeyFrames(5);
         for(std::vector<std::shared_ptr<OrbKeyFrame>>::const_iterator vit2=vpSecondNeighKFs.begin(), vend2=vpSecondNeighKFs.end(); vit2!=vend2; vit2++)
         {
             std::shared_ptr<OrbKeyFrame> pKFi2 = *vit2;
-            if(pKFi2->isBad() || pKFi2->mnFuseTargetForKF==mpCurrentKeyFrame->mnId || pKFi2->mnId==mpCurrentKeyFrame->mnId)
+            if(pKFi2->isBad() || pKFi2->mnFuseTargetForKF==mpCurrentKeyFrame->m_id || pKFi2->m_id==mpCurrentKeyFrame->m_id)
                 continue;
             vpTargetKFs.push_back(pKFi2);
         }
@@ -620,9 +614,9 @@ void Mapping::SearchInNeighbors()
             std::shared_ptr<OrbMapPoint> pMP = *vitMP;
             if(!pMP)
                 continue;
-            if(pMP->IsCorrupt() || pMP->GetFuseCandidateForKF() == mpCurrentKeyFrame->mnId)
+            if(pMP->IsCorrupt() || pMP->GetFuseCandidateForKF() == mpCurrentKeyFrame->m_id)
                 continue;
-            pMP->SetFuseCandidateForKF(mpCurrentKeyFrame->mnId);
+            pMP->SetFuseCandidateForKF(mpCurrentKeyFrame->m_id);
             vpFuseCandidates.push_back(pMP);
         }
     }
@@ -660,7 +654,7 @@ void Mapping::KeyFrameCulling()
     for(std::vector<std::shared_ptr<OrbKeyFrame>>::iterator vit=vpLocalKeyFrames.begin(), vend=vpLocalKeyFrames.end(); vit!=vend; vit++)
     {
         std::shared_ptr<OrbKeyFrame> pKF = *vit;
-        if(pKF->mnId==0)
+        if(pKF->m_id==0)
             continue;
         const std::vector<std::shared_ptr<OrbMapPoint>> vpMapPoints = pKF->GetMapPointMatches();
 
@@ -736,9 +730,9 @@ cv::Mat Mapping::ComputeF12(std::shared_ptr<OrbKeyFrame> &pKF1, std::shared_ptr<
 
 cv::Mat Mapping::SkewSymmetricMatrix(const cv::Mat &v)
 {
-    return (cv::Mat_<float>(3,3) <<             0, -v.at<float>(2), v.at<float>(1),
-            v.at<float>(2),               0,-v.at<float>(0),
-            -v.at<float>(1),  v.at<float>(0),              0);
+    return (cv::Mat_<float>(3,3) << 0, -v.at<float>(2), v.at<float>(1),
+            v.at<float>(2), 0,-v.at<float>(0),
+            -v.at<float>(1), v.at<float>(0), 0);
 }
 
 void Mapping::ResetIfRequested()

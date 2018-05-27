@@ -1,9 +1,12 @@
-
 /**
 * This file is part of ORB-SLAM2.
 *
 * Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
 * For more information see <https://github.com/raulmur/ORB_SLAM2>
+*
+* Modified for use within the OpenDLV framework by Marcus Andersson, Martin Baerveldt, Linus Eiderström Swahn and Pontus Pohl
+* Copyright (C) 2018 Chalmers Revere
+* For more information see <https://github.com/chalmers-revere/opendlv-perception-vision-orbslam2>
 *
 * ORB-SLAM2 is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -20,17 +23,8 @@
 */
 
 #include "loopclosing.hpp"
-
 #include "sim3solver.hpp"
-
-#include "orbconverter.hpp"
-
 #include "orboptimizer.hpp"
-
-#include "orbmatcher.hpp"
-
-#include <mutex>
-#include <thread>
 
 
 LoopClosing::LoopClosing(std::shared_ptr<OrbMap> pMap, std::shared_ptr<OrbKeyFrameDatabase> pDB, std::shared_ptr<OrbVocabulary> pVoc,const bool bFixScale):
@@ -61,16 +55,16 @@ void LoopClosing::Run()
         // Check if there are keyframes in the queue
         if(CheckNewKeyFrames())
         {
-            std::cout << "Checking for loop..." << std::endl;
+            //std::cout << "Checking for loop..." << std::endl;
             // Detect loop candidates and check covisibility consistency
             if(DetectLoop())
             {
-                std::cout << "Loop found computing sim3" << std::endl;
+                //std::cout << "computing sim3" << std::endl;
                // Compute similarity transformation [sR|t]
                // In the stereo/RGBD case s=1
                if(ComputeSim3())
                {
-                   std::cout << "Correcting Loop" << std::endl;
+                   //std::cout << "Correcting Loop" << std::endl;
                    // Perform loop fusion and pose graph optimization
                    CorrectLoop();
                }
@@ -91,7 +85,7 @@ void LoopClosing::Run()
 void LoopClosing::InsertKeyFrame(std::shared_ptr<OrbKeyFrame> pKF)
 {
     std::unique_lock<std::mutex> lock(mMutexLoopQueue);
-    if(pKF->mnId!=0)
+    if(pKF->m_id!=0)
         mlpLoopKeyFrameQueue.push_back(pKF);
 }
 
@@ -112,9 +106,9 @@ bool LoopClosing::DetectLoop()
     }
 
     //If the map contains less than 10 KF or less than 10 KF have passed from last loop detection
-    if(mpCurrentKF->mnId<mLastLoopKFid+10)
+    if(mpCurrentKF->m_id<mLastLoopKFid+10)
     {
-        mpKeyFrameDB->add(mpCurrentKF);
+        mpKeyFrameDB->Add(mpCurrentKF);
         mpCurrentKF->SetErase();
         return false;
     }
@@ -123,16 +117,16 @@ bool LoopClosing::DetectLoop()
     // This is the lowest score to a connected keyframe in the covisibility graph
     // We will impose loop candidates to have a higher similarity than this
     const std::vector<std::shared_ptr<OrbKeyFrame>> vpConnectedKeyFrames = mpCurrentKF->GetVectorCovisibleKeyFrames();
-    const OrbBowVector &CurrentBowVec = mpCurrentKF->mBowVec;
+    const OrbBowVector &CurrentBowVec = mpCurrentKF->m_bagOfWords;
     float minScore = 1;
     for(size_t i=0; i<vpConnectedKeyFrames.size(); i++)
     {
         std::shared_ptr<OrbKeyFrame> pKF = vpConnectedKeyFrames[i];
         if(pKF->isBad())
             continue;
-        const OrbBowVector &BowVec = pKF->mBowVec;
+        const OrbBowVector &BowVec = pKF->m_bagOfWords;
 
-        float score = static_cast<float>(mpORBVocabulary->getScore(CurrentBowVec, BowVec));
+        float score = static_cast<float>(mpORBVocabulary->GetScore(CurrentBowVec, BowVec));
 
         if(score<minScore)
             minScore = score;
@@ -144,7 +138,7 @@ bool LoopClosing::DetectLoop()
     // If there are no loop candidates, just add new keyframe and return false
     if(vpCandidateKFs.empty())
     {
-        mpKeyFrameDB->add(mpCurrentKF);
+        mpKeyFrameDB->Add(mpCurrentKF);
         mvConsistentGroups.clear();
         mpCurrentKF->SetErase();
         return false;
@@ -213,7 +207,7 @@ bool LoopClosing::DetectLoop()
 
 
     // Add Current Keyframe to database
-    mpKeyFrameDB->add(mpCurrentKF);
+    mpKeyFrameDB->Add(mpCurrentKF);
 
     if(mvpEnoughConsistentCandidates.empty())
     {
@@ -324,6 +318,7 @@ bool LoopClosing::ComputeSim3()
                 matcher.SearchBySim3(mpCurrentKF,pKF,vpMapPointMatches,s,R,t,7.5);
 
                 g2o::Sim3 gScm(Orbconverter::toMatrix3d(R),Orbconverter::toVector3d(t),s);
+                //std::cout << "Optimizing Sim3" << std::endl;
                 nInliers = OrbOptimizer::OptimizeSim3(mpCurrentKF, pKF, vpMapPointMatches, gScm, 10, mbFixScale);
 
                 // If optimization is succesful stop ransacs and continue
@@ -363,12 +358,12 @@ bool LoopClosing::ComputeSim3()
             std::shared_ptr<OrbMapPoint> pMP = vpMapPoints[i];
             if(pMP)
             {
-                if(!pMP->IsCorrupt() && pMP->GetLoopPointForKF()!=mpCurrentKF->mnId)
+                if(!pMP->IsCorrupt() && pMP->GetLoopPointForKF()!=mpCurrentKF->m_id)
                 {
                     mvpLoopMapPoints.push_back(pMP);
                     //pMP->mnLoopPointForKF=mpCurrentKF->mnId;
 
-                    pMP->SetLoopPointForKF(mpCurrentKF->mnId);
+                    pMP->SetLoopPointForKF(mpCurrentKF->m_id);
                 }
             }
         }
@@ -404,7 +399,7 @@ bool LoopClosing::ComputeSim3()
 
 void LoopClosing::CorrectLoop()
 {
-    std::cout << "Loop detected!" << std::endl;
+    //std::cout << "Loop detected!" << std::endl;
 
     // Send a stop signal to Local Mapping
     // Avoid new keyframes are inserted while correcting the loop
@@ -487,7 +482,7 @@ void LoopClosing::CorrectLoop()
                     continue;
                 if(pMPi->IsCorrupt())
                     continue;
-                if(pMPi->GetCorrectedByKF()==mpCurrentKF->mnId)
+                if(pMPi->GetCorrectedByKF()==mpCurrentKF->m_id)
                     continue;
 
                 // Project with non-corrected pose and project back with corrected pose
@@ -499,8 +494,8 @@ void LoopClosing::CorrectLoop()
                 pMPi->SetWorldPosition(cvCorrectedP3Dw);
                 //pMPi->mnCorrectedByKF = mpCurrentKF->mnId;
                 //pMPi->mnCorrectedReference = pKFi->mnId;
-                pMPi->SetCorrectedByKF(mpCurrentKF->mnId);
-                pMPi->SetCorrectedReference(pKFi->mnId);
+                pMPi->SetCorrectedByKF(mpCurrentKF->m_id);
+                pMPi->SetCorrectedReference(pKFi->m_id);
 
                 pMPi->UpdateMeanAndDepthValues();
             }
@@ -581,12 +576,12 @@ void LoopClosing::CorrectLoop()
     mbRunningGBA = true;
     mbFinishedGBA = false;
     mbStopGBA = false;
-    mpThreadGBA = std::shared_ptr<std::thread>(new std::thread(&LoopClosing::RunGlobalBundleAdjustment,this,mpCurrentKF->mnId));
-
+    mpThreadGBA = std::shared_ptr<std::thread>(new std::thread(&LoopClosing::RunGlobalBundleAdjustment,this,mpCurrentKF->m_id));
+    mpThreadGBA->detach();
     // Loop closed. Release Local Mapping.
     mpLocalMapper->Release();    
 
-    mLastLoopKFid = mpCurrentKF->mnId;   
+    mLastLoopKFid = mpCurrentKF->m_id;
 }
 
 void LoopClosing::SearchAndFuse(const KeyFrameAndPose &CorrectedPosesMap)
@@ -679,8 +674,9 @@ void LoopClosing::RunGlobalBundleAdjustment(unsigned long nLoopKF)
             std::unique_lock<std::mutex> lock2(mpMap->m_MapUpdateMutex);
 
             // Correct keyframes starting at map first keyframe
-            std::list<std::shared_ptr<OrbKeyFrame>> lpKFtoCheck(mpMap->GetKeyFrameOrigins().begin(),mpMap->GetKeyFrameOrigins().end());
-
+            //std::list<std::shared_ptr<OrbKeyFrame>> lpKFtoCheck(m_orbMap->GetKeyFrameOrigins().begin(),m_orbMap->GetKeyFrameOrigins().end());
+            std::list<std::shared_ptr<OrbKeyFrame>> lpKFtoCheck;
+            lpKFtoCheck.push_back(mpMap->m_OrbKeyFrameOrigins[0]);
             while(!lpKFtoCheck.empty())
             {
                 std::shared_ptr<OrbKeyFrame> pKF = lpKFtoCheck.front();

@@ -19,11 +19,9 @@
 
 #include "kittirunner.hpp"
 
-KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_ptr<Selflocalization> slammer):
-        m_imagesCount(0), m_isStereo(isStereo), m_slammer(slammer), m_leftImages(), m_rightImages(), m_timeStamps(), m_timeTrackingStatistics(){
-//    std::vector<std::string> vstrImageLeft;
-//    std::vector<std::string> vstrImageRight;
-//    std::vector<double> vTimestamps;
+KittiRunner::KittiRunner(const std::string &kittiPath, bool isStereo, Selflocalization* slammer, cv::Mat a_rMap[2][2]):
+        m_imagesCount(0), m_isStereo(isStereo), m_slammer(slammer), m_leftImages(), m_rightImages(), m_timeStamps(), m_timeTrackingStatistics()
+{
     std::cout << "Loading Images" << std::endl;
     loadImages(kittiPath, m_leftImages, m_rightImages, m_timeStamps);
     this->m_imagesCount = m_leftImages.size();
@@ -31,6 +29,11 @@ KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_
     std::cout << std::endl << "-------" << std::endl;
     std::cout << "Start processing sequence ..." << std::endl;
     std::cout << "Images in the sequence: " << this->m_imagesCount << std::endl;
+
+    a_rMap[0][0].copyTo(m_rmap[0][0]);
+    a_rMap[0][1].copyTo(m_rmap[0][1]);
+    a_rMap[1][0].copyTo(m_rmap[1][0]);
+    a_rMap[1][1].copyTo(m_rmap[1][1]);
 }
 
 KittiRunner::~KittiRunner(){
@@ -58,18 +61,18 @@ void KittiRunner::loadImages(const std::string &path, std::vector<std::string> &
 
     std::cout << "Parsing times.txt" << std::endl;
     std::cout << "adding images to arrays" << std::endl;
-    std::string strPrefixLeft = path + "/image_2/";
-    std::string strPrefixRight = path + "/image_3/";
+    std::string strPrefixLeft = path + "/image_0/";
+    std::string strPrefixRight = path + "/image_1/";
 
     vstrImageLeft.resize(timeStamps.size());
     vstrImageRight.resize(timeStamps.size());
-
-    for(unsigned long i=0; i<timeStamps.size(); i++)
+    int offset = 0;
+    for(unsigned long i=offset; i<timeStamps.size(); i++)
     {
         std::stringstream ss;
         ss << std::setfill('0') << std::setw(6) << i;
-        vstrImageLeft[i] = strPrefixLeft + ss.str() + ".png";
-        vstrImageRight[i] = strPrefixRight + ss.str() + ".png";
+        vstrImageLeft[i-offset] = strPrefixLeft + ss.str() + ".png";
+        vstrImageRight[i-offset] = strPrefixRight + ss.str() + ".png";
     }
 }
 
@@ -91,28 +94,54 @@ void KittiRunner::ShutDown() {
     std::cout << "-------" << std::endl << std::endl;
     std::cout << "median tracking time: " << this->m_timeTrackingStatistics[this->m_imagesCount/2] << std::endl;
     std::cout << "mean tracking time: " << totaltime/this->m_imagesCount << std::endl;
-
-    // Save camera trajectory
-    //SLAM.SaveTrajectoryKITTI("CameraTrajectory.txt");
 }
 
-void KittiRunner::ProcessImage(size_t imageNumber) {
-    cv::Mat imLeft, imRight;
+void KittiRunner::ProcessImage(size_t imageNumber,float resizeScale)
+{
+    cv::Mat imLeft;
+    cv::Mat imRight;
+
+    //CAMERA PARAMETE  
+
     // Read left and right images from file
     std::cout << "reading image: " << this->m_leftImages[imageNumber] << std::endl;
-    imLeft = cv::imread(this->m_leftImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
-    if(this->m_isStereo){
-        std::cout << "reading image: " << this->m_rightImages[imageNumber] << std::endl;
-        imRight = cv::imread(this->m_rightImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
-    }
-    //std::cout << "loaded images " << std::endl;
-    double tframe = this->m_timeStamps[imageNumber];
-
-    if(imLeft.empty())
+    cv::Mat imgL = cv::imread(this->m_leftImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
+    if(imgL.empty())
     {
         std::cerr << std::endl << "Failed to load image at: "
                   << std::string(this->m_leftImages[imageNumber]) << std::endl;
+                  return;
     }
+    
+    if(this->m_isStereo)
+    {
+        std::cout << "reading image: " << this->m_rightImages[imageNumber] << std::endl;
+        cv::Mat imgR = cv::imread(this->m_rightImages[imageNumber],CV_LOAD_IMAGE_UNCHANGED);
+        if(m_rmap[0][0].cols==0)
+        {
+            imLeft=imgL;
+            imRight=imgR;
+        }
+        else
+        {
+            if(resizeScale < 1)
+            {
+                cv::resize(imgL, imgL, cv::Size(static_cast<int>(imgL.cols*resizeScale),static_cast<int>(imgL.rows*resizeScale)));
+                cv::resize(imgR, imgR, cv::Size(static_cast<int>(imgR.cols*resizeScale),static_cast<int>(imgR.rows*resizeScale)));
+            }
+            cv::remap(imgL,imLeft, m_rmap[0][0], m_rmap[0][1], cv::INTER_LINEAR);
+            cv::remap(imgR,imRight, m_rmap[1][0], m_rmap[1][1], cv::INTER_LINEAR);
+        }
+    }
+    else
+    {
+        if(resizeScale < 1)
+        {
+            cv::resize(imgL, imgL, cv::Size(static_cast<int>(imgL.cols*resizeScale),static_cast<int>(imgL.rows*resizeScale)));
+        }
+    }
+    //std::cout << "loaded images " << std::endl;
+    double tframe = this->m_timeStamps[imageNumber];
     std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
     //std::cout << "calling track " << std::endl;
     // Pass the images to the SLAM system
@@ -120,7 +149,7 @@ void KittiRunner::ProcessImage(size_t imageNumber) {
         m_slammer->Track(imLeft,imRight,tframe);
     }
     else {
-        m_slammer->Track(imLeft,tframe);
+        m_slammer->Track(imgL,tframe);
     }
 
 
@@ -131,14 +160,14 @@ void KittiRunner::ProcessImage(size_t imageNumber) {
     this->m_timeTrackingStatistics[imageNumber]=ttrack;
 
     // Wait to load the next frame
-    double T=0;
+    double Ti=0;
     if(imageNumber < this->m_imagesCount-1)
-        T = this->m_timeStamps[imageNumber+1]-tframe;
+        Ti = this->m_timeStamps[imageNumber+1]-tframe;
     else if(imageNumber>0)
-        T = tframe-this->m_timeStamps[imageNumber-1];
+        Ti = tframe-this->m_timeStamps[imageNumber-1];
 
-    if(ttrack<T)
-        usleep(static_cast<int>((T-ttrack)*1e6));
+    if(ttrack<Ti)
+        usleep(static_cast<int>((Ti-ttrack)*1e6));
 
-    std::cout << "Image " << imageNumber << " processed" << std::endl;
+    //std::cout << "Image " << imageNumber << " processed" << std::endl;
 }

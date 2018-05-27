@@ -1,0 +1,4 @@
+FROM alpine:3.7
+ADD . /data
+VOLUME /data
+ENTRYPOINT /usr/bin/tail -f /dev/null

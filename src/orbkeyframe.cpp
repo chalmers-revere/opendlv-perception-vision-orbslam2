@@ -1,21 +1,26 @@
 /**
- * Copyright (C) 2017 Chalmers Revere
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
- * USA.
- */
+* This file is part of ORB-SLAM2.
+*
+* Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
+* For more information see <https://github.com/raulmur/ORB_SLAM2>
+*
+* Modified for use within the OpenDLV framework by Marcus Andersson, Martin Baerveldt, Linus Eiderström Swahn and Pontus Pohl
+* Copyright (C) 2018 Chalmers Revere
+* For more information see <https://github.com/chalmers-revere/opendlv-perception-vision-orbslam2>
+*
+* ORB-SLAM2 is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* ORB-SLAM2 is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <orbkeyframe.hpp>
 
@@ -24,21 +29,21 @@ long unsigned int OrbKeyFrame::nNextId=0;
 OrbKeyFrame::OrbKeyFrame(std::shared_ptr<OrbFrame> frame, std::shared_ptr<OrbMap> map,
                          std::shared_ptr<OrbKeyFrameDatabase> keyFrameDatabase):
         mnFrameId(frame->mnId), mTimeStamp(frame->mTimeStamp), mnGridCols(FRAME_GRID_COLS), mnGridRows(FRAME_GRID_ROWS),
-        mfGridElementWidthInv(frame->mfGridElementWidthInv), mfGridElementHeightInv(frame->mfGridElementHeightInv),
+        mfGridElementWidthInv(frame->m_gridElementWidthInverse), mfGridElementHeightInv(frame->m_gridElementHeightInverse),
         mnTrackReferenceForFrame(0), mnFuseTargetForKF(0), mnBALocalForKF(0), mnBAFixedForKF(0),
-        mnLoopQuery(0), mnLoopWords(0), mnRelocQuery(0), mnRelocWords(0), mnBAGlobalForKF(0),
+        m_loopQuery(0), m_loopWords(0), mnRelocQuery(0), mnRelocWords(0), mnBAGlobalForKF(0),
         fx(frame->fx), fy(frame->fy), cx(frame->cx), cy(frame->cy), invfx(frame->invfx), invfy(frame->invfy),
-        mbf(frame->mbf), mb(frame->mb), mThDepth(frame->mThDepth), N(frame->N), mvKeys(frame->mvKeys), mvKeysUn(frame->mvKeysUn),
-        mvuRight(frame->mvuRight), mvDepth(frame->mvDepth), mDescriptors(frame->mDescriptors.clone()),
-        mBowVec(frame->mBowVec), mFeatVec(frame->mFeatVec), mnScaleLevels(frame->mnScaleLevels), mfScaleFactor(frame->mfScaleFactor),
-        mfLogScaleFactor(frame->mfLogScaleFactor), mvScaleFactors(frame->mvScaleFactors), mvLevelSigma2(frame->mvLevelSigma2),
-        mvInvLevelSigma2(frame->mvInvLevelSigma2), mnMinX(static_cast<const int>(frame->mnMinX)), mnMinY(
-        static_cast<const int>(frame->mnMinY)), mnMaxX(static_cast<const int>(frame->mnMaxX)),
-        mnMaxY(static_cast<const int>(frame->mnMaxY)), mK(frame->mK), m_mapPoints(frame->mvpMapPoints), m_keyFrameDatabase(keyFrameDatabase),
-        m_orbVocabulary(frame->mpORBvocabulary), m_isFirstConnection(true), m_parent(NULL), m_shoulNotBeErased(false),
+        mbf(frame->mbf), mb(frame->mb), mThDepth(frame->mThDepth), N(frame->N), mvKeys(frame->m_keys), mvKeysUn(frame->m_undistortedKeys),
+        mvuRight(frame->mvuRight), mvDepth(frame->m_depths), mDescriptors(frame->m_descriptors.clone()),
+        m_bagOfWords(frame->mBowVec), m_features(frame->mFeatVec), mnScaleLevels(frame->m_scaleLevels), mfScaleFactor(frame->m_scaleFactor),
+        mfLogScaleFactor(frame->m_logScaleFactor), mvScaleFactors(frame->m_scaleFactors), mvLevelSigma2(frame->m_levelSigma2),
+        mvInvLevelSigma2(frame->m_inverseLevelSigma2), mnMinX(static_cast<const int>(frame->m_minX)), mnMinY(
+        static_cast<const int>(frame->m_minY)), mnMaxX(static_cast<const int>(frame->m_maxX)),
+        mnMaxY(static_cast<const int>(frame->m_maxY)), mK(frame->mK), m_mapPoints(frame->m_mapPoints), m_keyFrameDatabase(keyFrameDatabase),
+        m_orbVocabulary(frame->m_ORBvocabulary), m_isFirstConnection(true), m_parent(NULL), m_shoulNotBeErased(false),
         m_shouldBeErased(false), m_isBad(false), mHalfBaseline(frame->mb/2), m_map(map)
 {
-    mnId = nNextId++;
+    m_id = nNextId++;
 
     m_grid.resize((unsigned long) mnGridCols);
     for(int i=0; i<mnGridCols;i++)
@@ -46,7 +51,7 @@ OrbKeyFrame::OrbKeyFrame(std::shared_ptr<OrbFrame> frame, std::shared_ptr<OrbMap
         m_grid[i].resize((unsigned long) mnGridRows);
         for(int j=0; j<mnGridRows; j++)
         {
-            m_grid[i][j] = frame->mGrid[i][j];
+            m_grid[i][j] = frame->m_grid[i][j];
         }
     }
 
@@ -55,17 +60,18 @@ OrbKeyFrame::OrbKeyFrame(std::shared_ptr<OrbFrame> frame, std::shared_ptr<OrbMap
 
 void OrbKeyFrame::ComputeBoW()
 {
-    if(mBowVec.empty() || mFeatVec.empty())
+    if(m_bagOfWords.empty() || m_features.empty())
     {
-        std::vector<cv::Mat> vCurrentDesc = Orbconverter::toDescriptorVector(mDescriptors);
+        std::vector<cv::Mat> currentDescriptors = Orbconverter::toDescriptorVector(mDescriptors);
         // Feature std::vector associate features with nodes in the 4th level (from leaves up)
         // We assume the vocabulary tree has 6 levels, change the 4 otherwise
-        m_orbVocabulary->transform4(vCurrentDesc, mBowVec, mFeatVec, 4);
+        m_orbVocabulary->transform4(currentDescriptors, m_bagOfWords, m_features, 4);
     }
 }
 
 void OrbKeyFrame::SetPose(const cv::Mat &cameraPose)
 {
+    //std::cout << "cameraPose: " << cameraPose << std::endl;
     std::unique_lock<std::mutex> lock(m_poseMutex);
     cameraPose.copyTo(m_cameraPose);
     cv::Mat Rcw = m_cameraPose.rowRange(0, 3).colRange(0, 3);
@@ -272,35 +278,35 @@ std::set<std::shared_ptr<OrbMapPoint>> OrbKeyFrame::GetMapPoints()
     return s;
 }
 
-int OrbKeyFrame::TrackedMapPoints(const int &minObs)
+int OrbKeyFrame::TrackedMapPoints(const int &minimumObservations)
 {
     std::unique_lock<std::mutex> lock(m_featuresMutex);
 
-    int nPoints=0;
-    const bool bCheckObs = minObs>0;
+    int points=0;
+    const bool checkObservations = minimumObservations>0;
     for(int i=0; i<N; i++)
     {
-        std::shared_ptr<OrbMapPoint> pMP = m_mapPoints[i];
-        if(pMP)
+        std::shared_ptr<OrbMapPoint> mapPoint = m_mapPoints[i];
+        if(mapPoint)
         {
-            if(!pMP->IsCorrupt())
+            if(!mapPoint->IsCorrupt())
             {
-                if(bCheckObs)
+                if(checkObservations)
                 {
-                    if(m_mapPoints[i]->GetObservingKeyFrameCount()>=minObs)
+                    if(m_mapPoints[i]->GetObservingKeyFrameCount()>=minimumObservations)
                     {
-                        nPoints++;
+                        points++;
                     }
                 }
                 else
                 {
-                    nPoints++;
+                    points++;
                 }
             }
         }
     }
 
-    return nPoints;
+    return points;
 }
 
 std::vector<std::shared_ptr<OrbMapPoint>> OrbKeyFrame::GetMapPointMatches()
@@ -317,94 +323,92 @@ std::shared_ptr<OrbMapPoint> OrbKeyFrame::GetMapPoint(const size_t &idx)
 
 void OrbKeyFrame::UpdateConnections()
 {
-    std::map<std::shared_ptr<OrbKeyFrame>,int> KFcounter;
-    std::vector<std::shared_ptr<OrbMapPoint>> vpMP;
+    std::map<std::shared_ptr<OrbKeyFrame>,int> keyFrameCounter;
+    std::vector<std::shared_ptr<OrbMapPoint>> mapPoints;
 
     {
         std::unique_lock<std::mutex> lockMPs(m_featuresMutex);
-        vpMP = m_mapPoints;
+        mapPoints = m_mapPoints;
     }
 
     //For all map points in keyframe check in which other keyframes are they seen
     //Increase counter for those keyframes
-    for(std::vector<std::shared_ptr<OrbMapPoint>>::iterator vit=vpMP.begin(), vend=vpMP.end(); vit!=vend; vit++)
+    for(auto mapPoint : mapPoints)
     {
-        std::shared_ptr<OrbMapPoint> pMP = *vit;
-
-        if(!pMP)
+        if(!mapPoint)
         {
             continue;
         }
 
-        if(pMP->IsCorrupt())
+        if(mapPoint->IsCorrupt())
         {
             continue;
         }
 
-        std::map<std::shared_ptr<OrbKeyFrame>,size_t> observations = pMP->GetObservingKeyframes();
+        std::map<std::shared_ptr<OrbKeyFrame>,size_t> observations = mapPoint->GetObservingKeyframes();
 
-        for(std::map<std::shared_ptr<OrbKeyFrame>,size_t>::iterator mit=observations.begin(), mend=observations.end(); mit!=mend; mit++)
+        for(auto observation : observations)
         {
-            if(mit->first->mnId==mnId)
+            if(observation.first->m_id==m_id)
             {
                 continue;
             }
-            KFcounter[mit->first]++;
+            keyFrameCounter[observation.first]++;
         }
     }
     // This should not happen
-    if(KFcounter.empty())
+    if(keyFrameCounter.empty())
     {
         return;
     }
 
     //If the counter is greater than threshold add connection
     //In case no keyframe counter is over threshold add the one with maximum counter
-    int nmax=0;
-    std::shared_ptr<OrbKeyFrame> pKFmax;
-    int th = 15;
+    int maxConnections=0;
+    std::shared_ptr<OrbKeyFrame> maximumKeyFrame;
+    int threshold = 15;
 
-    std::vector<std::pair<int,std::shared_ptr<OrbKeyFrame>> > vPairs;
-    vPairs.reserve(KFcounter.size());
-    for(std::map<std::shared_ptr<OrbKeyFrame>,int>::iterator mit=KFcounter.begin(), mend=KFcounter.end(); mit!=mend; mit++)
+    std::vector<std::pair<int,std::shared_ptr<OrbKeyFrame>> > pairs;
+    pairs.reserve(keyFrameCounter.size());
+    for(auto keyFrame : keyFrameCounter)
     {
-        if(mit->second>nmax)
+        if(keyFrame.second>maxConnections)
         {
-            nmax=mit->second;
-            pKFmax=mit->first;
+            maxConnections = keyFrame.second;
+            maximumKeyFrame = keyFrame.first;
         }
-        if(mit->second>=th)
+        if(keyFrame.second>=threshold)
         {
-            vPairs.push_back(make_pair(mit->second,mit->first));
-            (mit->first)->AddConnection(std::shared_ptr<OrbKeyFrame>(shared_from_this()), mit->second);
+            pairs.push_back(make_pair(keyFrame.second, keyFrame.first));
+            (keyFrame.first)->AddConnection(std::shared_ptr<OrbKeyFrame>(shared_from_this()), keyFrame.second);
         }
     }
 
-    if(vPairs.empty())
+    if(pairs.empty())
     {
-        vPairs.push_back(make_pair(nmax,pKFmax));
-        pKFmax->AddConnection(shared_from_this(),nmax);
+        pairs.push_back(make_pair(maxConnections,maximumKeyFrame));
+        maximumKeyFrame->AddConnection(shared_from_this(),maxConnections);
     }
 
-    std::sort(vPairs.begin(),vPairs.end());
-    std::list<std::shared_ptr<OrbKeyFrame>> lKFs;
+    std::sort(pairs.begin(),pairs.end());
+    std::list<std::shared_ptr<OrbKeyFrame>> keyFrames;
     std::list<int> lWs;
-    for(size_t i=0; i<vPairs.size();i++)
+    for(size_t i=0; i<pairs.size();i++)
     {
-        lKFs.push_front(vPairs[i].second);
-        lWs.push_front(vPairs[i].first);
+        keyFrames.push_front(pairs[i].second);
+        lWs.push_front(pairs[i].first);
     }
 
     {
         std::unique_lock<std::mutex> lockCon(m_connectionsMutex);
 
         // mspConnectedKeyFrames = spConnectedKeyFrames;
-        m_connectedKeyFrameWeights = KFcounter;
-        m_orderedConnectedKeyFrames = std::vector<std::shared_ptr<OrbKeyFrame>>(lKFs.begin(),lKFs.end());
-        std::cout << lWs.size() << std::endl;
+        m_connectedKeyFrameWeights = keyFrameCounter;
+        m_orderedConnectedKeyFrames = std::vector<std::shared_ptr<OrbKeyFrame>>(keyFrames.begin(),keyFrames.end());
+        //std::cout << lWs.size() << std::endl;
         m_orderedWeights = std::vector<int>(lWs.begin(), lWs.end());
 
-        if(m_isFirstConnection && mnId!=0)
+        if(m_isFirstConnection && m_id!=0)
         {
             m_parent = m_orderedConnectedKeyFrames.front();
             m_parent->AddChild(shared_from_this());
@@ -490,7 +494,7 @@ void OrbKeyFrame::SetBadFlag()
 {
     {
         std::unique_lock<std::mutex> lock(m_connectionsMutex);
-        if(mnId==0)
+        if(m_id==0)
         {
             return;
         }
@@ -501,14 +505,16 @@ void OrbKeyFrame::SetBadFlag()
         }
     }
 
-    for(std::map<std::shared_ptr<OrbKeyFrame>,int>::iterator mit = m_connectedKeyFrameWeights.begin(), mend=m_connectedKeyFrameWeights.end(); mit!=mend; mit++)
-        mit->first->EraseConnection(shared_from_this());
-
-    for(size_t i=0; i<m_mapPoints.size(); i++)
+    for(auto connectedKeyFrameWeight : m_connectedKeyFrameWeights)
     {
-        if(m_mapPoints[i])
+        connectedKeyFrameWeight.first->EraseConnection(shared_from_this());
+    }
+
+    for (auto &m_mapPoint : m_mapPoints)
+    {
+        if(m_mapPoint)
         {
-            m_mapPoints[i]->EraseObservingKeyframe(shared_from_this());
+            m_mapPoint->EraseObservingKeyframe(shared_from_this());
         }
     }
 
@@ -533,27 +539,26 @@ void OrbKeyFrame::SetBadFlag()
             std::shared_ptr<OrbKeyFrame> pC;
             std::shared_ptr<OrbKeyFrame> pP;
 
-            for(std::set<std::shared_ptr<OrbKeyFrame>>::iterator sit=m_children.begin(), send=m_children.end(); sit!=send; sit++)
+            for (auto keyFrame : m_children)
             {
-                std::shared_ptr<OrbKeyFrame> pKF = *sit;
-                if(pKF->isBad())
+                if(keyFrame->isBad())
                 {
                     continue;
                 }
 
                 // Check if a parent candidate is connected to the keyframe
-                std::vector<std::shared_ptr<OrbKeyFrame>> vpConnected = pKF->GetVectorCovisibleKeyFrames();
-                for(size_t i=0, iend=vpConnected.size(); i<iend; i++)
+                std::vector<std::shared_ptr<OrbKeyFrame>> connectedKeyFrames = keyFrame->GetVectorCovisibleKeyFrames();
+                for (auto &i : connectedKeyFrames)
                 {
-                    for(std::set<std::shared_ptr<OrbKeyFrame>>::iterator spcit=sParentCandidates.begin(), spcend=sParentCandidates.end(); spcit!=spcend; spcit++)
+                    for (const auto &sParentCandidate : sParentCandidates)
                     {
-                        if(vpConnected[i]->mnId == (*spcit)->mnId)
+                        if(i->m_id == sParentCandidate->m_id)
                         {
-                            int w = pKF->GetWeight(vpConnected[i]);
+                            int w = keyFrame->GetWeight(i);
                             if(w>max)
                             {
-                                pC = pKF;
-                                pP = vpConnected[i];
+                                pC = keyFrame;
+                                pP = i;
                                 max = w;
                                 bContinue = true;
                             }
@@ -577,9 +582,9 @@ void OrbKeyFrame::SetBadFlag()
         // If a children has no covisibility links with any parent candidate, assign to the original parent of this KF
         if(!m_children.empty())
         {
-            for(std::set<std::shared_ptr<OrbKeyFrame>>::iterator sit=m_children.begin(); sit!=m_children.end(); sit++)
+            for (const auto &sit : m_children)
             {
-                (*sit)->ChangeParent(m_parent);
+                sit->ChangeParent(m_parent);
             }
         }
 
@@ -590,7 +595,7 @@ void OrbKeyFrame::SetBadFlag()
 
 
     m_map->DeleteOrbKeyFrame(shared_from_this());
-    m_keyFrameDatabase->erase(shared_from_this());
+    m_keyFrameDatabase->Erase(shared_from_this());
 }
 
 bool OrbKeyFrame::isBad()

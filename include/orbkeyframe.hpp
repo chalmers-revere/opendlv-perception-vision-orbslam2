@@ -1,21 +1,26 @@
 /**
- * Copyright (C) 2017 Chalmers Revere
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
- * USA.
- */
+* This file is part of ORB-SLAM2.
+*
+* Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
+* For more information see <https://github.com/raulmur/ORB_SLAM2>
+*
+* Modified for use within the OpenDLV framework by Marcus Andersson, Martin Baerveldt, Linus Eiderström Swahn and Pontus Pohl
+* Copyright (C) 2018 Chalmers Revere
+* For more information see <https://github.com/chalmers-revere/opendlv-perception-vision-orbslam2>
+*
+* ORB-SLAM2 is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* ORB-SLAM2 is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #ifndef ORBKEYFRAME_HPP
 #define ORBKEYFRAME_HPP
@@ -46,6 +51,10 @@ public:
     cv::Mat GetStereoCenter();
     cv::Mat GetRotation();
     cv::Mat GetTranslation();
+
+    static bool FrameIDCompare(std::shared_ptr<OrbKeyFrame> keyFrame1, std::shared_ptr<OrbKeyFrame> keyFrame2){
+        return keyFrame1->m_id < keyFrame2->m_id;
+    }
 
     // Bag of Words Representation
     void ComputeBoW();
@@ -80,7 +89,7 @@ public:
     void ReplaceMapPointMatch(const size_t &idx, std::shared_ptr<OrbMapPoint> mapPoint);
     std::set<std::shared_ptr<OrbMapPoint>> GetMapPoints();
     std::vector<std::shared_ptr<OrbMapPoint>> GetMapPointMatches();
-    int TrackedMapPoints(const int &minObs);
+    int TrackedMapPoints(const int &minimumObservations);
     std::shared_ptr<OrbMapPoint> GetMapPoint(const size_t &idx);
 
     // KeyPoint functions
@@ -108,13 +117,13 @@ public:
 
     static bool lId(std::shared_ptr<OrbKeyFrame> keyFrame1, std::shared_ptr<OrbKeyFrame> keyFrame2)
     {
-        return keyFrame1->mnId < keyFrame2->mnId;
+        return keyFrame1->m_id < keyFrame2->m_id;
     }
 
     // The following variables are accesed from only 1 thread or never change (no mutex needed).
 public:
     static long unsigned int nNextId;
-    long unsigned int mnId = {};
+    long unsigned int m_id = {};
     const long unsigned int mnFrameId;
 
     const double mTimeStamp;
@@ -134,8 +143,8 @@ public:
     long unsigned int mnBAFixedForKF;
 
     // Variables used by the keyframe database
-    long unsigned int mnLoopQuery;
-    int mnLoopWords;
+    long unsigned int m_loopQuery;
+    int m_loopWords;
     float mLoopScore = {};
     long unsigned int mnRelocQuery;
     int mnRelocWords;
@@ -160,8 +169,8 @@ public:
     const cv::Mat mDescriptors;
 
     //BoW
-    OrbBowVector mBowVec;
-    OrbFeatureVector mFeatVec;
+    OrbBowVector m_bagOfWords;
+    OrbFeatureVector m_features;
 
     // Pose relative to parent (this is computed when bad flag is activated)
     cv::Mat mTcp = {};

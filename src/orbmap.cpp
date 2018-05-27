@@ -1,24 +1,28 @@
 /**
- * Copyright (C) 2017 Chalmers Revere
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
- * USA.
- */
+* This file is part of ORB-SLAM2.
+*
+* Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
+* For more information see <https://github.com/raulmur/ORB_SLAM2>
+*
+* Modified for use within the OpenDLV framework by Marcus Andersson, Martin Baerveldt, Linus Eiderström Swahn and Pontus Pohl
+* Copyright (C) 2018 Chalmers Revere
+* For more information see <https://github.com/chalmers-revere/opendlv-perception-vision-orbslam2>
+*
+* ORB-SLAM2 is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* ORB-SLAM2 is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "orbmap.hpp"
-#include "orbframe.hpp"
-#include <orbmappoint.hpp>
 
 OrbMap::OrbMap() : m_OrbKeyFrameOrigins(), m_keyFrames(), m_mapPoints(), m_referenceMapPoints(), m_maxOrbKeyFrameId(0), m_majorChangeIndex(0)
 {
@@ -30,31 +34,29 @@ OrbMap::~OrbMap()
 
 void OrbMap::PushOrbKeyFrame(std::shared_ptr<OrbKeyFrame> orbKeyFrame) {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
-    this->m_keyFrames.push_back(orbKeyFrame);
-    if (orbKeyFrame->mnId > this->m_maxOrbKeyFrameId) {
-        this->m_maxOrbKeyFrameId = orbKeyFrame->mnId;
+    this->m_keyFrames.insert(orbKeyFrame);
+    if (orbKeyFrame->m_id > this->m_maxOrbKeyFrameId) {
+        this->m_maxOrbKeyFrameId = orbKeyFrame->m_id;
     }
 }
 
 void OrbMap::PushOrbMapPoint(std::shared_ptr<OrbMapPoint> orbMapPoint)
 {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
-    this->m_mapPoints.push_back(orbMapPoint);
+    this->m_mapPoints.insert(orbMapPoint);
 }
 
 void OrbMap::DeleteOrbMapPoint(std::shared_ptr<OrbMapPoint> orbMapPoint)
 {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
-    this->m_mapPoints.erase(std::remove(this->m_mapPoints.begin(), this->m_mapPoints.end(), orbMapPoint),
-                            this->m_mapPoints.end());
+    this->m_mapPoints.erase(orbMapPoint);
 
 }
 
 void OrbMap::DeleteOrbKeyFrame(std::shared_ptr<OrbKeyFrame> orbKeyFrame)
 {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
-    this->m_keyFrames.erase(std::remove(this->m_keyFrames.begin(), this->m_keyFrames.end(), orbKeyFrame),
-                            this->m_keyFrames.end());
+    this->m_keyFrames.erase(orbKeyFrame);
 }
 
 void OrbMap::SetReferenceMapPoints(std::vector<std::shared_ptr<OrbMapPoint>> referenceMapPoints)
@@ -66,13 +68,13 @@ void OrbMap::SetReferenceMapPoints(std::vector<std::shared_ptr<OrbMapPoint>> ref
 std::vector<std::shared_ptr<OrbKeyFrame>> OrbMap::GetAllKeyFrames()
 {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
-    return this->m_keyFrames;
+    return std::vector<std::shared_ptr<OrbKeyFrame>>(m_keyFrames.begin(),m_keyFrames.end());
 }
 
 std::vector<std::shared_ptr<OrbMapPoint>> OrbMap::GetAllMapPoints()
 {
     std::lock_guard<std::mutex> lock(this->m_mapMutex);
-    return this->m_mapPoints;
+    return std::vector<std::shared_ptr<OrbMapPoint>>(m_mapPoints.begin(),m_mapPoints.end());
 }
 
 std::vector<std::shared_ptr<OrbMapPoint>> OrbMap::GetReferenceMapPoints()

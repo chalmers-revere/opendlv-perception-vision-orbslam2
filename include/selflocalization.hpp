@@ -20,36 +20,20 @@
 #ifndef SELFLOCALIZATION_HPP
 #define SELFLOCALIZATION_HPP
 
-
-//#include <iostream>
-//#include <memory>
-//#include <vector>
-//#include <cmath>
-//#include <opendavinci/odcore/data/TimeStamp.h>
-//#include <opendavinci/odcore/strings/StringToolbox.h>
-//#include <opendavinci/odcore/wrapper/Eigen.h>
-//#include <opendavinci/odcore/base/module/DataTriggeredConferenceClientModule.h>
-//#include <opendavinci/odcore/data/Container.h>
-//#include "opendavinci/GeneratedHeaders_OpenDaVINCI.h"
-//#include "opendavinci/odcore/wrapper/SharedMemoryFactory.h"
-//#include "opendavinci/odcore/wrapper/SharedMemory.h"
-//#include "opendavinci/generated/odcore/data/CompactPointCloud.h"
-
 #include <thread>
+#include <iomanip>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/imgcodecs/imgcodecs.hpp>
 #include <opencv2/features2d/features2d.hpp>
-//#include "opendavinci/odcore/base/KeyValueConfiguration.h"
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
-
+#include "WGS84toCartesian.hpp"
 #include "tracking.hpp"
 #include "mapping.hpp"
 #include "loopclosing.hpp"
-#include "imageextractor.hpp"
 #include "orbextractor.hpp"
 #include "orbvocabulary.hpp"
 #include "orbmap.hpp"
@@ -70,16 +54,24 @@ public:
     Selflocalization(Selflocalization const &) = delete;
     Selflocalization &operator=(Selflocalization const &) = delete;
     ~Selflocalization();
-    void nextContainer(cluon::data::Envelope &a_container);
+    void nextContainer(cv::Mat &img);
+    void runKitti(std::string kittiPath);
+    std::pair<bool,opendlv::logic::sensation::Geolocation> sendPose();
+    void sendMap(size_t &lastMapPoint,uint32_t &lastSentCameraIndex, uint32_t &lastSentIndex, size_t i, cluon::OD4Session &od4);
+    void writeToMapFile(std::string filepath);
+    void writeToFpsFile(std::string filepath, std::vector<long unsigned int> mapSizeVector, std::vector<double> fpsVector);
     void Shutdown();
     void Track(cv::Mat &imLeft, cv::Mat &imRight, double &timestamp);
     void Track(cv::Mat &imLeft, double &timestamp);
 
+
     // Reset the system (clear map)
     void Reset();
+    opendlv::proxy::OrbslamMap sendToWebb();
 
 private:
     void setUp(std::map<std::string, std::string> commandlineArgs);
+    void setUpRealtime(std::map<std::string, std::string> commandlineArgs);
     void tearDown();
     opendlv::proxy::PointCloudReading CreatePointCloudFromMap();
     bool m_isMonocular;
@@ -97,6 +89,18 @@ private:
 
     std::mutex mMutexReset = {};
     bool m_reset = false;
+    std::chrono::steady_clock::time_point m_last_envelope_ts;
+
+    std::array<double,2> m_gpsReference = {};
+    double m_referenceHeading=0;
+    int m_cid = 0;
+
+    const double DEG2RAD = 0.017453292522222; // PI/180.0
+    const double RAD2DEG = 57.295779513082325; // 1.0 / DEG2RAD;
+    const double PI = 3.14159265f;
+    //Rectification parameters
+    cv::Mat rmap[2][2];
+    float m_resizeScale;
 };
 
 

@@ -1,28 +1,33 @@
 /**
- * Copyright (C) 2017 Chalmers Revere
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
- * USA.
- */
+* This file is part of ORB-SLAM2.
+*
+* Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
+* For more information see <https://github.com/raulmur/ORB_SLAM2>
+*
+* Modified for use within the OpenDLV framework by Marcus Andersson, Martin Baerveldt, Linus Eiderström Swahn and Pontus Pohl
+* Copyright (C) 2018 Chalmers Revere
+* For more information see <https://github.com/chalmers-revere/opendlv-perception-vision-orbslam2>
+*
+* ORB-SLAM2 is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* ORB-SLAM2 is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <orbmappoint.hpp>
 #include <orbmatcher.hpp>
 long unsigned int OrbMapPoint::nNextId=0;
 
 OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> refenceKeyFrame, std::shared_ptr<OrbMap> map)
-    : m_firstKeyframeId(refenceKeyFrame->mnId), m_FirstKeyFrame(refenceKeyFrame->mnId),
+    : m_firstKeyframeId(refenceKeyFrame->m_id), m_FirstKeyFrame(refenceKeyFrame->m_id),
       m_refenceKeyFrame(refenceKeyFrame), m_map(map)
 {
     position.copyTo(m_worldPosition);
@@ -31,7 +36,6 @@ OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> r
     // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
     std::unique_lock<std::mutex> lock(m_constructorMutex);
     m_sequenceId = nNextId++;
-    this->ComputeDistinctiveDescriptors();
 }
 
 OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbKeyFrame> frame, std::shared_ptr<OrbMap> map, const int &keyPointIndex)
@@ -68,14 +72,14 @@ OrbMapPoint::OrbMapPoint(const cv::Mat &position, std::shared_ptr<OrbFrame> fram
 
     cv::Mat offset = position - cameraCenter;
     const float distance = (float)cv::norm(offset);
-    const int level = frame->mvKeysUn[keyPointIndex].octave;
-    const float levelScaleFactor = frame->mvScaleFactors[level];
-    const int levels = frame->mnScaleLevels;
+    const int level = frame->m_undistortedKeys[keyPointIndex].octave;
+    const float levelScaleFactor = frame->m_scaleFactors[level];
+    const int levels = frame->m_scaleLevels;
     m_constructorTag = 2;
     m_maxDistance = distance*levelScaleFactor;
-    m_minDistance = m_maxDistance/frame->mvScaleFactors[levels-1];
+    m_minDistance = m_maxDistance/frame->m_scaleFactors[levels-1];
 
-    frame->mDescriptors.row(keyPointIndex).copyTo(m_descriptor);
+    frame->m_descriptors.row(keyPointIndex).copyTo(m_descriptor);
 
     // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
     std::unique_lock<std::mutex> lock(m_constructorMutex);
@@ -166,8 +170,7 @@ void OrbMapPoint::AddObservingKeyframe(std::shared_ptr<OrbKeyFrame> keyFrame, si
 // 767:            pMPi->EraseObservingKeyframe(keyFramei);
 void OrbMapPoint::EraseObservingKeyframe(std::shared_ptr<OrbKeyFrame> keyFrame)
 {
-    // aquire proper mutex
-
+    std::unique_lock<std::mutex> lock(m_featureMutex);
     // check if OrbKeyFrame in m_observingKeyframes
     if (this->m_observingKeyframes.count(keyFrame))
     {
@@ -178,14 +181,14 @@ void OrbMapPoint::EraseObservingKeyframe(std::shared_ptr<OrbKeyFrame> keyFrame)
         else
             this->m_observingKeyFramesCount -= 1;
 
-        this->m_observingKeyframes.erase(keyFrame);
-
         if (m_refenceKeyFrame == keyFrame)
             m_refenceKeyFrame = this->m_observingKeyframes.begin()->first;
-
-        if (this->m_observingKeyFramesCount <= 2)
-            // release mutex
+        
+        this->m_observingKeyframes.erase(keyFrame);
+        if (this->m_observingKeyFramesCount <= 2){
+            lock.unlock();
             SetCorruptFlag();
+        }
     }
 }
 // src/orbframe.cpp
@@ -463,11 +466,11 @@ int OrbMapPoint::PredictScale(const float &currentDist, std::shared_ptr<OrbFrame
         ratio = m_maxDistance/currentDist;
     }
 
-    int nScale = static_cast<int>(ceil(log(ratio) / pF->mfLogScaleFactor));
+    int nScale = static_cast<int>(ceil(log(ratio) / pF->m_logScaleFactor));
     if(nScale<0)
         nScale = 0;
-    else if(nScale>=pF->mnScaleLevels)
-        nScale = pF->mnScaleLevels-1;
+    else if(nScale>=pF->m_scaleLevels)
+        nScale = pF->m_scaleLevels-1;
 
     return nScale;
 }
@@ -557,14 +560,15 @@ void OrbMapPoint::SetackViewCos(long unsigned int ackViewCos)
     {
     };
 }
-
+*/
 void OrbMapPoint::SetTrackReferenceForFrame(long unsigned int TrackReferenceForFrame)
 {
     if (TrackReferenceForFrame != 0)
     {
+        mnTrackReferenceForFrame = TrackReferenceForFrame;
     };
 }
-*/
+
 void OrbMapPoint::SetLastFrameSeen(long unsigned int LastFrameSeen)
 {
     if (LastFrameSeen != 0)

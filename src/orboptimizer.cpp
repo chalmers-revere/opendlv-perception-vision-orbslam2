@@ -1,40 +1,41 @@
 /**
- * Copyright (C) 2017 Chalmers Revere
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
- * USA.
- */
-//#include "cluon-complete.hpp"
-//#include "opendlv-standard-message-set.hpp"
+* This file is part of ORB-SLAM2.
+*
+* Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
+* For more information see <https://github.com/raulmur/ORB_SLAM2>
+*
+* Modified for use within the OpenDLV framework by Marcus Andersson, Martin Baerveldt, Linus Eiderström Swahn and Pontus Pohl
+* Copyright (C) 2018 Chalmers Revere
+* For more information see <https://github.com/chalmers-revere/opendlv-perception-vision-orbslam2>
+*
+* ORB-SLAM2 is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* ORB-SLAM2 is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
 #include "g2o/core/block_solver.h"
 #include "g2o/core/optimization_algorithm_levenberg.h"
 #include "g2o/solvers/eigen/linear_solver_eigen.h"
 #include "g2o/core/robust_kernel_impl.h"
 #include "g2o/solvers/dense/linear_solver_dense.h"
 #include "g2o/types/sba/types_six_dof_expmap.h"
-//#include "g2o/types/sim3/types_seven_dof_expmap.h"
-
 #include "orboptimizer.hpp"
 #include "orbconverter.hpp"
-/*typedef MatrixXd PoseMatrixType;
-typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3> > orbBlockSolver;
-typedef g2o::LinearSolverEigen<slamBlockSolver::PoseMatrixType> orbLinearSolver;
-typedef BlockSolver< BlockSolverTraits<6, 3> > BlockSolver_6_3;*/
 
 typedef g2o::BlockSolver<g2o::BlockSolverTraits<6,3>> orbBlockSolver; 
 typedef g2o::LinearSolverEigen<orbBlockSolver::PoseMatrixType> orbLinearSolver;
+typedef g2o::BlockSolver<g2o::BlockSolverTraits<7,3>> essentialBlockSolver;
+typedef g2o::LinearSolverEigen<essentialBlockSolver::PoseMatrixType> essentialLinearSolver;
 
 OrbOptimizer::OrbOptimizer()
 {
@@ -58,6 +59,7 @@ void OrbOptimizer::BundleAdjustment(const std::vector<std::shared_ptr<OrbKeyFram
     vbNotIncludedMP.resize(vpMP.size());
 
     auto linearSolver = g2o::make_unique<orbLinearSolver>();
+    linearSolver->setBlockOrdering(false);
 
     g2o::SparseOptimizer optimizer;
     g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<orbBlockSolver>(std::move(linearSolver)));
@@ -76,11 +78,11 @@ void OrbOptimizer::BundleAdjustment(const std::vector<std::shared_ptr<OrbKeyFram
             continue;
         g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
         vSE3->setEstimate(Orbconverter::toSE3Quat(pKF->GetPose()));
-        vSE3->setId(pKF->mnId);
-        vSE3->setFixed(pKF->mnId==0);
+        vSE3->setId(pKF->m_id);
+        vSE3->setFixed(pKF->m_id==0);
         optimizer.addVertex(vSE3);
-        if(pKF->mnId>maxKFid)
-            maxKFid=pKF->mnId;
+        if(pKF->m_id>maxKFid)
+            maxKFid=pKF->m_id;
     }
 
     const float thHuber2D = static_cast<float>(std::sqrt(5.99));
@@ -107,7 +109,7 @@ void OrbOptimizer::BundleAdjustment(const std::vector<std::shared_ptr<OrbKeyFram
         {
 
             std::shared_ptr<OrbKeyFrame> pKF = mit->first;
-            if(pKF->isBad() || pKF->mnId>maxKFid)
+            if(pKF->isBad() || pKF->m_id>maxKFid)
                 continue;
 
             nEdges++;
@@ -123,7 +125,7 @@ void OrbOptimizer::BundleAdjustment(const std::vector<std::shared_ptr<OrbKeyFram
                 g2o::EdgeSE3ProjectXYZ* e = new g2o::EdgeSE3ProjectXYZ();
 
                 e->setVertex(0, optimizer.vertex(id));
-                e->setVertex(1, optimizer.vertex(pKF->mnId));
+                e->setVertex(1, optimizer.vertex(pKF->m_id));
                 e->setMeasurement(obs);
 
                 std::vector<float> invSigma2Vector = pKF->mvInvLevelSigma2;
@@ -153,7 +155,7 @@ void OrbOptimizer::BundleAdjustment(const std::vector<std::shared_ptr<OrbKeyFram
                 g2o::EdgeStereoSE3ProjectXYZ* e = new g2o::EdgeStereoSE3ProjectXYZ();
 
                 e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id)));
-                e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKF->mnId)));
+                e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKF->m_id)));
                 e->setMeasurement(obs);
 
 
@@ -202,7 +204,7 @@ void OrbOptimizer::BundleAdjustment(const std::vector<std::shared_ptr<OrbKeyFram
         std::shared_ptr<OrbKeyFrame> pKF = vpKFs[i];
         if(pKF->isBad())
             continue;
-        g2o::VertexSE3Expmap* vSE3 = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(pKF->mnId));
+        g2o::VertexSE3Expmap* vSE3 = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(pKF->m_id));
         g2o::SE3Quat SE3quat = vSE3->estimate();
         if(nLoopKF==0)
         {
@@ -253,7 +255,6 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
 
     int nInitialCorrespondences=0;
     const int N = pFrame->N;
-    std::cout << "Number of keypoints in Frame is: " << N << std::endl;
     // Set Frame vertex
     g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
     vSE3->setEstimate(Orbconverter::toSE3Quat(pFrame->mTcw));
@@ -279,12 +280,12 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
     //std::unique_lock<std::mutex> lock(OrbMapPoint::mGlobalMutex); //WHICH MUTEX??
 
     std::vector<float> vectorRight = pFrame->mvuRight;
-    std::vector<cv::KeyPoint> vectorUndistortedKeyPoints = pFrame->mvKeysUn;
-    std::vector<float> vectorInvLevelSigma2 = pFrame->mvInvLevelSigma2;
-    std::vector<bool> vectorBoolKeyPoints = pFrame->mvbOutlier;
+    std::vector<cv::KeyPoint> vectorUndistortedKeyPoints = pFrame->m_undistortedKeys;
+    std::vector<float> vectorInvLevelSigma2 = pFrame->m_inverseLevelSigma2;
+    std::vector<bool> vectorBoolKeyPoints = pFrame->m_outliers;
     for(int i=0; i<N; i++)
     {
-        std::shared_ptr<OrbMapPoint> pMP = pFrame->mvpMapPoints[i];
+        std::shared_ptr<OrbMapPoint> pMP = pFrame->m_mapPoints[i];
         if(pMP)
         {
             // Monocular observation
@@ -292,7 +293,7 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
             if(vectorRight[i]<0)
             {
                 nInitialCorrespondences++;
-                pFrame->mvbOutlier[i] = false;
+                pFrame->m_outliers[i] = false;
 
                 Eigen::Matrix<double,2,1> obs;
 
@@ -327,7 +328,7 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
             else  // Stereo observation
             {
                 nInitialCorrespondences++;
-                pFrame->mvbOutlier[i] = false;
+                pFrame->m_outliers[i] = false;
 
                 //SET EDGE
                 Eigen::Matrix<double,3,1> obs;
@@ -376,14 +377,15 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
     const float chi2Mono[4]={5.991f,5.991f,5.991f,5.991f};
     const float chi2Stereo[4]={7.815f,7.815f,7.815f, 7.815f};
     const int its[4]={10,10,10,10};    
-
+    //std::cout << vpEdgesMono.size() << std::endl;
     int nBad=0;
-    std::vector<bool> vectorBoolOutliers = pFrame->mvbOutlier;
     for(size_t it=0; it<4; it++)
     {
-        std::cout << "Number of stereo edges " << vpEdgesStereo.size()<< std::endl;
+        std::vector<bool> vectorBoolOutliers = pFrame->m_outliers;
         vSE3->setEstimate(Orbconverter::toSE3Quat(pFrame->mTcw));
+        //std::cout << "input pose: " << Orbconverter::toSE3Quat(pFrame->mTcw) << std::endl; 
         optimizer.initializeOptimization(0);
+        //optimizer.setVerbose(true);
         optimizer.optimize(its[it]);
 
         nBad=0;
@@ -402,13 +404,13 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
 
             if(chi2>chi2Mono[it])
             {                
-                pFrame->mvbOutlier[idx]=true;
+                pFrame->m_outliers[idx]=true;
                 e->setLevel(1);
                 nBad++;
             }
             else
             {
-                pFrame->mvbOutlier[idx]=false;
+                pFrame->m_outliers[idx]=false;
                 e->setLevel(0);
             }
 
@@ -431,14 +433,14 @@ int OrbOptimizer::PoseOptimization(std::shared_ptr<OrbFrame> pFrame)
 
             if(chi2>chi2Stereo[it])
             {
-                pFrame->mvbOutlier[idx]=true;
+                pFrame->m_outliers[idx]=true;
                 e->setLevel(1);
                 nBad++;
             }
             else
             {                
                 e->setLevel(0);
-                pFrame->mvbOutlier[idx]=false;
+                pFrame->m_outliers[idx]=false;
             }
 
             if(it==2)
@@ -466,13 +468,13 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
     lLocalKeyFrames.push_back(pKF);
     //pKF->mnBALocalForKF = pKF->Id;
 
-    pKF->mnBALocalForKF = pKF->mnId;
+    pKF->mnBALocalForKF = pKF->m_id;
 
     const std::vector<std::shared_ptr<OrbKeyFrame>> vNeighKFs = pKF->GetVectorCovisibleKeyFrames();
     for(int i=0, iend=vNeighKFs.size(); i<iend; i++)
     {
         std::shared_ptr<OrbKeyFrame> pKFi = vNeighKFs[i];
-        pKFi->mnBALocalForKF = pKF->mnId;
+        pKFi->mnBALocalForKF = pKF->m_id;
         if(!pKFi->isBad())
             lLocalKeyFrames.push_back(pKFi);
     }
@@ -487,10 +489,10 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
             std::shared_ptr<OrbMapPoint> pMP = *vit;
             if(pMP)
                 if(!pMP->IsCorrupt())
-                    if(pMP->GetBALocalForKF()!=pKF->mnId)
+                    if(pMP->GetBALocalForKF()!=pKF->m_id)
                     {
                         lLocalMapPoints.push_back(pMP);
-                        pMP->SetBALocalForKF(pKF->mnId);
+                        pMP->SetBALocalForKF(pKF->m_id);
                     }
         }
     }
@@ -504,9 +506,9 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
         {
             std::shared_ptr<OrbKeyFrame> pKFi = mit->first;
 
-            if(pKFi->mnBALocalForKF!=pKF->mnId && pKFi->mnBAFixedForKF!=pKF->mnId)
+            if(pKFi->mnBALocalForKF!=pKF->m_id && pKFi->mnBAFixedForKF!=pKF->m_id)
             {
-                pKFi->mnBAFixedForKF=pKF->mnId;
+                pKFi->mnBAFixedForKF=pKF->m_id;
                 if(!pKFi->isBad())
                     lFixedCameras.push_back(pKFi);
             }
@@ -530,11 +532,12 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
         std::shared_ptr<OrbKeyFrame> pKFi = *lit;
         g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
         vSE3->setEstimate(Orbconverter::toSE3Quat(pKFi->GetPose()));
-        vSE3->setId(pKFi->mnId);
-        vSE3->setFixed(pKFi->mnId==0);
+        //std::cout << "Pose: " << pKFi->GetPose() << std::endl;
+        vSE3->setId(pKFi->m_id);
+        vSE3->setFixed(pKFi->m_id==0);
         optimizer.addVertex(vSE3);
-        if(pKFi->mnId>maxKFid)
-            maxKFid=pKFi->mnId;
+        if(pKFi->m_id>maxKFid)
+            maxKFid=pKFi->m_id;
     }
 
     // Set Fixed KeyFrame vertices
@@ -543,11 +546,12 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
         std::shared_ptr<OrbKeyFrame> pKFi = *lit;
         g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
         vSE3->setEstimate(Orbconverter::toSE3Quat(pKFi->GetPose()));
-        vSE3->setId(pKFi->mnId);
+        //std::cout << "Pose: " << pKFi->GetPose() << std::endl;
+        vSE3->setId(pKFi->m_id);
         vSE3->setFixed(true);
         optimizer.addVertex(vSE3);
-        if(pKFi->mnId>maxKFid)
-            maxKFid=pKFi->mnId;
+        if(pKFi->m_id>maxKFid)
+            maxKFid=pKFi->m_id;
     }
 
     // Set MapPoint vertices
@@ -580,15 +584,12 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
 
         g2o::VertexSBAPointXYZ* vPoint = new g2o::VertexSBAPointXYZ();
         vPoint->setEstimate(Orbconverter::toVector3d(pMP->GetWorldPosition()));
-        std::cout << pMP->GetSequenceId() << " sequence id" << std::endl;
         int id = pMP->GetSequenceId()+maxKFid+1;
         vPoint->setId(id);
         vPoint->setMarginalized(true);
         optimizer.addVertex(vPoint);
 
         const std::map<std::shared_ptr<OrbKeyFrame>,size_t> observations = pMP->GetObservingKeyframes();
-        std::vector<cv::KeyPoint> vectorKP = pKF->mvKeysUn;
-        std::vector<float> vectorRight = pKF->mvuRight;
                 
 
         //Set edges
@@ -596,6 +597,9 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
         {
             std::shared_ptr<OrbKeyFrame> pKFi = mit->first;
         	std::vector<float> invSigma2Vector = pKFi->mvInvLevelSigma2;
+            std::vector<cv::KeyPoint> vectorKP = pKFi->mvKeysUn;
+            std::vector<float> vectorRight = pKFi->mvuRight;
+
 
 
             if(!pKFi->isBad())
@@ -612,7 +616,7 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
                     g2o::EdgeSE3ProjectXYZ* e = new g2o::EdgeSE3ProjectXYZ();
 
                     e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id)));
-                    e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKFi->mnId)));
+                    e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKFi->m_id)));
                     e->setMeasurement(obs);
                     const float invSigma2 = invSigma2Vector[kpUn.octave];
                     e->setInformation(Eigen::Matrix2d::Identity()*invSigma2);
@@ -640,7 +644,7 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
                     g2o::EdgeStereoSE3ProjectXYZ* e = new g2o::EdgeStereoSE3ProjectXYZ();
 
                     e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id)));
-                    e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKFi->mnId)));
+                    e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKFi->m_id)));
                     e->setMeasurement(obs);
                     const float invSigma2 = invSigma2Vector[kpUn.octave];
                     Eigen::Matrix3d Info = Eigen::Matrix3d::Identity()*invSigma2;
@@ -670,6 +674,7 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
             return;
 
     optimizer.initializeOptimization();
+    //optimizer.setVerbose(true);
     optimizer.optimize(5);
 
     bool bDoMore= true;
@@ -775,7 +780,7 @@ void OrbOptimizer::LocalBundleAdjustment(std::shared_ptr<OrbKeyFrame> pKF, bool*
     for(std::list<std::shared_ptr<OrbKeyFrame>>::iterator lit=lLocalKeyFrames.begin(), lend=lLocalKeyFrames.end(); lit!=lend; lit++)
     {
         std::shared_ptr<OrbKeyFrame> pKFl = *lit;
-        g2o::VertexSE3Expmap* vSE3 = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(pKFl->mnId));
+        g2o::VertexSE3Expmap* vSE3 = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(pKFl->m_id));
         g2o::SE3Quat SE3quat = vSE3->estimate();
         pKFl->SetPose(Orbconverter::toCvMat(SE3quat));
     }
@@ -799,8 +804,8 @@ void OrbOptimizer::OptimizeEssentialGraph(std::shared_ptr<OrbMap> pMap, std::sha
 {
     // Setup optimizer
     g2o::SparseOptimizer optimizer;
-    auto linearSolver = g2o::make_unique<orbLinearSolver>();
-    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<orbBlockSolver>(std::move(linearSolver)));
+    auto linearSolver = g2o::make_unique<essentialLinearSolver>();
+    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<essentialBlockSolver>(std::move(linearSolver)));
     optimizer.setAlgorithm(solver);
 
     solver->setUserLambdaInit(1e-16);
@@ -825,7 +830,7 @@ void OrbOptimizer::OptimizeEssentialGraph(std::shared_ptr<OrbMap> pMap, std::sha
             continue;
         g2o::VertexSim3Expmap* VSim3 = new g2o::VertexSim3Expmap();
 
-        const int nIDi = pKF->mnId;
+        const int nIDi = pKF->m_id;
 
         LoopClosing::KeyFrameAndPose::const_iterator it = CorrectedSim3.find(pKF);
 
@@ -864,15 +869,15 @@ void OrbOptimizer::OptimizeEssentialGraph(std::shared_ptr<OrbMap> pMap, std::sha
     for(std::map<std::shared_ptr<OrbKeyFrame>, std::set<std::shared_ptr<OrbKeyFrame>> >::const_iterator mit = LoopConnections.begin(), mend=LoopConnections.end(); mit!=mend; mit++)
     {
         std::shared_ptr<OrbKeyFrame> pKF = mit->first;
-        const long unsigned int nIDi = pKF->mnId;
+        const long unsigned int nIDi = pKF->m_id;
         const std::set<std::shared_ptr<OrbKeyFrame>> &spConnections = mit->second;
         const g2o::Sim3 Siw = vScw[nIDi];
         const g2o::Sim3 Swi = Siw.inverse();
 
         for(std::set<std::shared_ptr<OrbKeyFrame>>::const_iterator sit=spConnections.begin(), send=spConnections.end(); sit!=send; sit++)
         {
-            const long unsigned int nIDj = (*sit)->mnId;
-            if((nIDi!=pCurKF->mnId || nIDj!=pLoopKF->mnId) && pKF->GetWeight(*sit)<minFeat)
+            const long unsigned int nIDj = (*sit)->m_id;
+            if((nIDi!=pCurKF->m_id || nIDj!=pLoopKF->m_id) && pKF->GetWeight(*sit)<minFeat)
                 continue;
 
             const g2o::Sim3 Sjw = vScw[nIDj];
@@ -896,7 +901,7 @@ void OrbOptimizer::OptimizeEssentialGraph(std::shared_ptr<OrbMap> pMap, std::sha
     {
         std::shared_ptr<OrbKeyFrame> pKF = vpKFs[i];
 
-        const int nIDi = pKF->mnId;
+        const int nIDi = pKF->m_id;
 
         g2o::Sim3 Swi;
 
@@ -912,7 +917,7 @@ void OrbOptimizer::OptimizeEssentialGraph(std::shared_ptr<OrbMap> pMap, std::sha
         // Spanning tree edge
         if(pParentKF)
         {
-            int nIDj = pParentKF->mnId;
+            int nIDj = pParentKF->m_id;
 
             g2o::Sim3 Sjw;
 
@@ -939,7 +944,7 @@ void OrbOptimizer::OptimizeEssentialGraph(std::shared_ptr<OrbMap> pMap, std::sha
         for(std::set<std::shared_ptr<OrbKeyFrame>>::const_iterator sit=sLoopEdges.begin(), send=sLoopEdges.end(); sit!=send; sit++)
         {
             std::shared_ptr<OrbKeyFrame> pLKF = *sit;
-            if(pLKF->mnId<pKF->mnId)
+            if(pLKF->m_id<pKF->m_id)
             {
                 g2o::Sim3 Slw;
 
@@ -948,11 +953,11 @@ void OrbOptimizer::OptimizeEssentialGraph(std::shared_ptr<OrbMap> pMap, std::sha
                 if(itl!=NonCorrectedSim3.end())
                     Slw = itl->second;
                 else
-                    Slw = vScw[pLKF->mnId];
+                    Slw = vScw[pLKF->m_id];
 
                 g2o::Sim3 Sli = Slw * Swi;
                 g2o::EdgeSim3* el = new g2o::EdgeSim3();
-                el->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pLKF->mnId)));
+                el->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pLKF->m_id)));
                 el->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(nIDi)));
                 el->setMeasurement(Sli);
                 el->information() = matLambda;
@@ -967,9 +972,9 @@ void OrbOptimizer::OptimizeEssentialGraph(std::shared_ptr<OrbMap> pMap, std::sha
             std::shared_ptr<OrbKeyFrame> pKFn = *vit;
             if(pKFn && pKFn!=pParentKF && !pKF->hasChild(pKFn) && !sLoopEdges.count(pKFn))
             {
-                if(!pKFn->isBad() && pKFn->mnId<pKF->mnId)
+                if(!pKFn->isBad() && pKFn->m_id<pKF->m_id)
                 {
-                    if(sInsertedEdges.count(std::make_pair(std::min(pKF->mnId,pKFn->mnId),std::max(pKF->mnId,pKFn->mnId))))
+                    if(sInsertedEdges.count(std::make_pair(std::min(pKF->m_id,pKFn->m_id),std::max(pKF->m_id,pKFn->m_id))))
                         continue;
 
                     g2o::Sim3 Snw;
@@ -979,12 +984,12 @@ void OrbOptimizer::OptimizeEssentialGraph(std::shared_ptr<OrbMap> pMap, std::sha
                     if(itn!=NonCorrectedSim3.end())
                         Snw = itn->second;
                     else
-                        Snw = vScw[pKFn->mnId];
+                        Snw = vScw[pKFn->m_id];
 
                     g2o::Sim3 Sni = Snw * Swi;
 
                     g2o::EdgeSim3* en = new g2o::EdgeSim3();
-                    en->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKFn->mnId)));
+                    en->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKFn->m_id)));
                     en->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(nIDi)));
                     en->setMeasurement(Sni);
                     en->information() = matLambda;
@@ -1005,7 +1010,7 @@ void OrbOptimizer::OptimizeEssentialGraph(std::shared_ptr<OrbMap> pMap, std::sha
     {
         std::shared_ptr<OrbKeyFrame> pKFi = vpKFs[i];
 
-        const int nIDi = pKFi->mnId;
+        const int nIDi = pKFi->m_id;
 
         g2o::VertexSim3Expmap* VSim3 = static_cast<g2o::VertexSim3Expmap*>(optimizer.vertex(nIDi));
         g2o::Sim3 CorrectedSiw =  VSim3->estimate();
@@ -1030,14 +1035,14 @@ void OrbOptimizer::OptimizeEssentialGraph(std::shared_ptr<OrbMap> pMap, std::sha
             continue;
 
         int nIDr;
-        if(pMP->GetCorrectedByKF()==pCurKF->mnId)
+        if(pMP->GetCorrectedByKF()==pCurKF->m_id)
         {
             nIDr = pMP->GetCorrectedReference();
         }
         else
         {
             std::shared_ptr<OrbKeyFrame> pRefKF = pMP->GetReferenceKeyFrame();
-            nIDr = pRefKF->mnId;
+            nIDr = pRefKF->m_id;
         }
 
 
@@ -1059,8 +1064,8 @@ void OrbOptimizer::OptimizeEssentialGraph(std::shared_ptr<OrbMap> pMap, std::sha
 int OrbOptimizer::OptimizeSim3(std::shared_ptr<OrbKeyFrame> pKF1, std::shared_ptr<OrbKeyFrame> pKF2, std::vector<std::shared_ptr<OrbMapPoint>> &vpMatches1, g2o::Sim3 &g2oS12, const float th2, const bool bFixScale)
 {
     g2o::SparseOptimizer optimizer;
-    auto linearSolver = g2o::make_unique<orbLinearSolver>();
-    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<orbBlockSolver>(std::move(linearSolver)));
+    auto linearSolver = g2o::make_unique<essentialLinearSolver>();
+    g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<essentialBlockSolver>(std::move(linearSolver)));
 	optimizer.setAlgorithm(solver);
 
     // Calibration
@@ -1153,8 +1158,8 @@ int OrbOptimizer::OptimizeSim3(std::shared_ptr<OrbKeyFrame> pKF1, std::shared_pt
         obs1 << kpUn1.pt.x, kpUn1.pt.y;
 
         g2o::EdgeSim3ProjectXYZ* e12 = new g2o::EdgeSim3ProjectXYZ();
-        e12->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id2)));
-        e12->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(0)));
+        e12->setVertex(0, optimizer.vertex(id2));
+        e12->setVertex(1, optimizer.vertex(0));
         e12->setMeasurement(obs1);
 
 
@@ -1174,8 +1179,8 @@ int OrbOptimizer::OptimizeSim3(std::shared_ptr<OrbKeyFrame> pKF1, std::shared_pt
 
         g2o::EdgeInverseSim3ProjectXYZ* e21 = new g2o::EdgeInverseSim3ProjectXYZ();
 
-        e21->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id1)));
-        e21->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(0)));
+        e21->setVertex(0, optimizer.vertex(id1));
+        e21->setVertex(1, optimizer.vertex(0));
         e21->setMeasurement(obs2);
 
 

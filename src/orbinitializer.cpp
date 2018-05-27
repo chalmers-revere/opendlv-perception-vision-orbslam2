@@ -4,6 +4,10 @@
 * Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
 * For more information see <https://github.com/raulmur/ORB_SLAM2>
 *
+* Modified for use within the OpenDLV framework by Marcus Andersson, Martin Baerveldt, Linus Eiderström Swahn and Pontus Pohl
+* Copyright (C) 2018 Chalmers Revere
+* For more information see <https://github.com/chalmers-revere/opendlv-perception-vision-orbslam2>
+*
 * ORB-SLAM2 is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
@@ -19,12 +23,6 @@
 */
 
 #include "orbinitializer.hpp"
-
-//#include "Thirdparty/DBoW2/DUtils/Random.h"
-
-//#include "Optimizer.h"
-//#include "ORBmatcher.h"
-
 #include <thread>
 
 OrbInitializer::OrbInitializer(std::shared_ptr<OrbFrame> referenceFrame, float sigma, int iterations) : m_referenceKeys(),
@@ -37,9 +35,9 @@ OrbInitializer::OrbInitializer(std::shared_ptr<OrbFrame> referenceFrame, float s
                                                                                         m_maxIterations(),
                                                                                         m_ransacSets()
 {
-    //m_calibration = referenceFrame.m_calibration.clone(); We have to come up with something uniform
+    m_calibration = referenceFrame->mK.clone(); //We have to come up with something uniform
 
-    m_referenceKeys = referenceFrame->mvKeysUn;
+    m_referenceKeys = referenceFrame->m_undistortedKeys;
 
     m_sigma = sigma;
     m_sigma2 = sigma * sigma;
@@ -51,7 +49,7 @@ bool OrbInitializer::Initialize(std::shared_ptr<OrbFrame> currentFrame, const st
 {
     // Fill structures with current keypoints and matches with reference frame
     // Reference Frame: 1, Current Frame: 2
-    m_currentKeys = currentFrame->mvKeysUn;
+    m_currentKeys = currentFrame->m_undistortedKeys;
 
     m_matches.clear();
     m_matches.reserve(m_currentKeys.size());
@@ -91,7 +89,7 @@ bool OrbInitializer::Initialize(std::shared_ptr<OrbFrame> currentFrame, const st
         // Select a minimum set
         for (size_t j = 0; j < 8; j++)
         {
-            int randi = 4; //DUtils::Random::RandomInt(0,availableIndices.size()-1);
+            int randi = randomInt(0,availableIndices.size()-1);
             int idx = availableIndices[randi];
 
             m_ransacSets[it][j] = idx;
@@ -350,8 +348,8 @@ float OrbInitializer::CheckHomography(const cv::Mat &homographyMatrix, const cv:
         // x2in1 = homographyMatrixInv*x2
 
         const float wCurrInRefInv = 1.0f / (h31inv * uCurr + h32inv * vCurr + h33inv);
-        const float uCurrInRef = (h11inv * uCurr + h12inv + vCurr * h13inv) * wCurrInRefInv;
-        const float vCurrInRef = (h21inv * uCurr * h22inv + vCurr + h23inv) * wCurrInRefInv;
+        const float uCurrInRef = (h11inv * uCurr + h12inv*vCurr + h13inv) * wCurrInRefInv;
+        const float vCurrInRef = (h21inv * uCurr + h22inv*vCurr + h23inv) * wCurrInRefInv;
 
         const float squareDist1 = (uRef - uCurrInRef) * (uRef - uCurrInRef) + (vRef - vCurrInRef) * (vRef - vCurrInRef);
 
@@ -443,9 +441,9 @@ float OrbInitializer::CheckFundamental(const cv::Mat &fundamentalMatrix, std::ve
         // Reprojection error in second image
         // l1 =x2tfundamentalMatrix=(a1,b1,c1)
 
-        const float a1 = f11 * uCurr + f21 + vCurr + f31;
-        const float b1 = f12 * uCurr + f22 + vCurr + f32;
-        const float c1 = f13 * uCurr + f23 + vCurr + f33;
+        const float a1 = f11 * uCurr + f21*vCurr + f31;
+        const float b1 = f12 * uCurr + f22*vCurr + f32;
+        const float c1 = f13 * uCurr + f23*vCurr + f33;
 
         const float num1 = a1 * uRef + b1 * vRef + c1;
 
@@ -925,4 +923,9 @@ void OrbInitializer::DecomposeE(const cv::Mat &E, cv::Mat &R1, cv::Mat &R2, cv::
     R2 = u * W.t() * vt;
     if (cv::determinant(R2) < 0)
         R2 = -R2;
+}
+
+int OrbInitializer::randomInt(int min, int max){
+	int d = max - min + 1;
+	return int(((double)rand()/((double)RAND_MAX + 1.0)) * d) + min;
 }
