@@ -66,7 +66,7 @@ void Selflocalization::runKitti(std::string kittiPath)
 {
 	std::cout << "Starting Kittirunner" << std::endl;
 	std::cout << kittiPath << std::endl;
-	KittiRunner kittiRunner(kittiPath,!m_isMonocular,std::shared_ptr<Selflocalization>(this),rmap);
+	KittiRunner kittiRunner(kittiPath, !m_isMonocular, this, rmap);
    	cluon::OD4Session od4{static_cast<uint16_t>(m_cid), [](auto){}};
    	std::vector<long unsigned int> mapSizeVector;
    	std::vector<double> fpsVector;

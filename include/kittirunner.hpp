@@ -32,7 +32,7 @@
 class KittiRunner
 {
 public:
-    KittiRunner(const std::string &path, bool isStereo, std::shared_ptr<Selflocalization> slammer,cv::Mat a_rMap[2][2]);
+    KittiRunner(const std::string &path, bool isStereo, Selflocalization* slammer,cv::Mat a_rMap[2][2]);
     KittiRunner(KittiRunner const &) = delete;
     KittiRunner &operator=(KittiRunner const &) = delete;
     ~KittiRunner();
@@ -45,7 +45,7 @@ private:
                 std::vector<std::string> &vstrImageRight, std::vector<double> &vTimestamps);
     size_t m_imagesCount;
     bool m_isStereo;
-    std::shared_ptr<Selflocalization> m_slammer;
+    Selflocalization* m_slammer;
     std::vector<std::string> m_leftImages;
     std::vector<std::string> m_rightImages;
     std::vector<double> m_timeStamps;

@@ -19,7 +19,7 @@
 
 #include "kittirunner.hpp"
 
-KittiRunner::KittiRunner(const std::string &kittiPath,bool isStereo,std::shared_ptr<Selflocalization> slammer, cv::Mat a_rMap[2][2]):
+KittiRunner::KittiRunner(const std::string &kittiPath, bool isStereo, Selflocalization* slammer, cv::Mat a_rMap[2][2]):
         m_imagesCount(0), m_isStereo(isStereo), m_slammer(slammer), m_leftImages(), m_rightImages(), m_timeStamps(), m_timeTrackingStatistics()
 {
     std::cout << "Loading Images" << std::endl;
