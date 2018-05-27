@@ -55,16 +55,16 @@ void LoopClosing::Run()
         // Check if there are keyframes in the queue
         if(CheckNewKeyFrames())
         {
-            std::cout << "Checking for loop..." << std::endl;
+            //std::cout << "Checking for loop..." << std::endl;
             // Detect loop candidates and check covisibility consistency
             if(DetectLoop())
             {
-                std::cout << "computing sim3" << std::endl;
+                //std::cout << "computing sim3" << std::endl;
                // Compute similarity transformation [sR|t]
                // In the stereo/RGBD case s=1
                if(ComputeSim3())
                {
-                   std::cout << "Correcting Loop" << std::endl;
+                   //std::cout << "Correcting Loop" << std::endl;
                    // Perform loop fusion and pose graph optimization
                    CorrectLoop();
                }
@@ -318,7 +318,7 @@ bool LoopClosing::ComputeSim3()
                 matcher.SearchBySim3(mpCurrentKF,pKF,vpMapPointMatches,s,R,t,7.5);
 
                 g2o::Sim3 gScm(Orbconverter::toMatrix3d(R),Orbconverter::toVector3d(t),s);
-                std::cout << "Optimizing Sim3" << std::endl;
+                //std::cout << "Optimizing Sim3" << std::endl;
                 nInliers = OrbOptimizer::OptimizeSim3(mpCurrentKF, pKF, vpMapPointMatches, gScm, 10, mbFixScale);
 
                 // If optimization is succesful stop ransacs and continue
@@ -399,7 +399,7 @@ bool LoopClosing::ComputeSim3()
 
 void LoopClosing::CorrectLoop()
 {
-    std::cout << "Loop detected!" << std::endl;
+    //std::cout << "Loop detected!" << std::endl;
 
     // Send a stop signal to Local Mapping
     // Avoid new keyframes are inserted while correcting the loop

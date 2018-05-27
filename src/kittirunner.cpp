@@ -143,7 +143,7 @@ void KittiRunner::ProcessImage(size_t imageNumber,float resizeScale)
     //std::cout << "loaded images " << std::endl;
     double tframe = this->m_timeStamps[imageNumber];
     std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-    std::cout << "calling track " << std::endl;
+    //std::cout << "calling track " << std::endl;
     // Pass the images to the SLAM system
     if(this->m_isStereo){
         m_slammer->Track(imLeft,imRight,tframe);

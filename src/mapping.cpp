@@ -58,7 +58,7 @@ void Mapping::Run()
         // Check if there are keyframes in the queue
         if(CheckNewKeyFrames())
         {
-            std::cout << "Making a new keyframe" << std::endl;
+            //std::cout << "Making a new keyframe" << std::endl;
             // BoW conversion and insertion in Map
             ProcessNewKeyFrame();
 
@@ -88,7 +88,7 @@ void Mapping::Run()
             }
 
             mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
-            std::cout << "Mapping done, amount of keyframes is "<< mpMap->OrbKeyFramesCount() << " and map points " << mpMap->OrbMapPointsCount() << std::endl;
+            //std::cout << "Mapping done, amount of keyframes is "<< mpMap->OrbKeyFramesCount() << " and map points " << mpMap->OrbMapPointsCount() << std::endl;
         }
         else if(Stop())
         {
@@ -154,7 +154,7 @@ bool Mapping::Stop()
     if(mbStopRequested && !mbNotStop)
     {
         mbStopped = true;
-        std::cout << "Local Mapping STOP" << std::endl;
+        //std::cout << "Local Mapping STOP" << std::endl;
         return true;
     }
 
@@ -173,7 +173,7 @@ void Mapping::Release()
     for(std::list<std::shared_ptr<OrbKeyFrame>>::iterator lit = mlNewKeyFrames.begin(), lend=mlNewKeyFrames.end(); lit!=lend; lit++)
     	mlNewKeyFrames.clear();
 
-    std::cout << "Local Mapping RELEASE" << std::endl;
+    //std::cout << "Local Mapping RELEASE" << std::endl;
 }
 
 bool Mapping::isStopped()

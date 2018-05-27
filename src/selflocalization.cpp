@@ -78,7 +78,7 @@ void Selflocalization::runKitti(std::string kittiPath)
         std::chrono::system_clock::time_point timePoint = std::chrono::system_clock::now();
 		kittiRunner.ProcessImage(i,m_resizeScale);
 
-        std::cout << "Sending OD4" << std::endl;
+        //std::cout << "Sending OD4" << std::endl;
 		if(!m_isMonocular){
 			std::pair<bool,opendlv::logic::sensation::Geolocation> posePacket = sendPose();
         	if(posePacket.first){
@@ -307,7 +307,7 @@ std::pair<bool,opendlv::logic::sensation::Geolocation> Selflocalization::sendPos
 	cv::Mat R = m_pTracker->m_currentFrame->GetRotationInverse();
     cv::Mat T = m_pTracker->m_currentFrame->mTcw.rowRange(0, 3).col(3);
     cv::Mat cameraPosition = -R*T;
-	std::cout << cameraPosition << std::endl;
+	//std::cout << cameraPosition << std::endl;
 	double x = static_cast<double>(cameraPosition.at<float>(0,2));
 	double y = -static_cast<double>(cameraPosition.at<float>(0,0));
 	//double z = -static_cast<double>(cameraPosition.at<float>(0,1));
@@ -316,7 +316,7 @@ std::pair<bool,opendlv::logic::sensation::Geolocation> Selflocalization::sendPos
 	double newX=x*cos(m_referenceHeading)-y*sin(m_referenceHeading);
 	double newY=y*cos(m_referenceHeading)+x*sin(m_referenceHeading);
 	std::array<double,2> cartesianPos;
-	std::cout << "x: " << newX << "y: " << newY << std::endl; 
+	//std::cout << "x: " << newX << "y: " << newY << std::endl;
   	cartesianPos[0] = newX;
   	cartesianPos[1] = newY;
   	std::array<double,2> sendGPS = wgs84::fromCartesian(m_gpsReference, cartesianPos);
@@ -333,13 +333,12 @@ void Selflocalization::setUp(std::map<std::string, std::string> commandlineArgs)
 	m_isMonocular = std::stoi(commandlineArgs["cameraType"]) == 0;
 	std::string vocFilePath = commandlineArgs["vocFilePath"]; //Create mount
 	m_pVocabulary = std::shared_ptr<OrbVocabulary>(new OrbVocabulary(vocFilePath));
-	int size = m_pVocabulary->GetSize();
-	std::cout << "Size of Vocabulary: " << size << std::endl;
+	//std::cout << "Size of Vocabulary: " << size << std::endl;
 	//int colorChannel = 1;
 	m_cid = std::stoi(commandlineArgs["cid"]);
 
 	m_map = std::shared_ptr<OrbMap>(new OrbMap());
-	std::cout << "Created map" << std::endl;
+	//std::cout << "Created map" << std::endl;
 	//m_pImageGrab = std::shared_ptr<ImageExtractor>(new ImageExtractor(colorChannel));
 	/*int nFeatures = 1000;
     float scaleFactor = 1.2f;
