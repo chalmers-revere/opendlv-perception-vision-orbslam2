@@ -40,7 +40,7 @@ services:
        volumes:
            - data:/data
            - /tmp/.X11-unix:/tmp/.X11-unix
-       command: "/usr/bin/opendlv-perception-vision-orbslam2 --name=cam0 --width=2560 --height=720 --bpp=24  --cid=${CID} --cameraType=1 --vocFilePath=/data/media/ORBvoc.txt --Camera.fx=718.856 --Camera.fy=718.856 --Camera.cx=607.1928 --Camera.cy=185.2157 --Camera.k1=0 --Camera.k2=0 --Camera.k3=0 --Camera.p1=0 --Camera.p2=0 --Camera.fps=15 --Camera.bf=386.1448 --Camera.RGB=1 --ThDepth=35 --ORBextractor.nFeatures=2000 --ORBextractor.scaleFactor=1.2 --ORBextractor.nLevels=8 --ORBextractor.iniThFAST=20 --ORBextractor.minThFAST=7 --kittiPath=/data/kitty/00"
+       command: "/usr/bin/opendlv-perception-vision-orbslam2 --name=cam0 --width=2560 --height=720 --bpp=24  --cid=120 --cameraType=1 --vocFilePath=/data/media/ORBvoc.txt --Camera.fx=718.856 --Camera.fy=718.856 --Camera.cx=607.1928 --Camera.cy=185.2157 --Camera.k1=0 --Camera.k2=0 --Camera.k3=0 --Camera.p1=0 --Camera.p2=0 --Camera.fps=15 --Camera.bf=386.1448 --Camera.RGB=1 --ThDepth=35 --ORBextractor.nFeatures=2000 --ORBextractor.scaleFactor=1.2 --ORBextractor.nLevels=8 --ORBextractor.iniThFAST=20 --ORBextractor.minThFAST=7 --kittiPath=/data/kitty/00"
        network_mode: host
        depends_on:
             - data
